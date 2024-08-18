@@ -12,20 +12,20 @@ io_leontief_inverse <- function(data,
   endogenize_import <- io_endogenize_import(data, endogenize_import)
 
   if (inherits(data, "io_table_noncompetitive_import")) {
-    input_coef <- io_input_coefficients(data)
+    input_coef <- io_input_coef(data)
     dibble::broadcast(solve(dibble::eye(input_coef) - input_coef),
                       dim_names = c("output", "input"))
   } else if (inherits(data, "io_table_competitive_import")) {
     if (endogenize_import) {
-      input_coef <- io_input_coefficients(data)
-      import_coef <- io_import_coefficients(data)
-      input_coef_same_region <- io_input_coefficients(data,
-                                                      same_region = TRUE)
+      input_coef <- io_input_coef(data)
+      import_coef <- io_import_coef(data)
+      input_coef_same_region <- io_input_coef(data,
+                                              same_region = TRUE)
 
       solve(dibble::eye(input_coef) - (input_coef - import_coef * input_coef_same_region)) |>
         dibble::broadcast(dim_names = c("output", "input"))
     } else {
-      input_coef <- io_input_coefficients(data)
+      input_coef <- io_input_coef(data)
       dibble::broadcast(solve(dibble::eye(input_coef) - input_coef),
                         dim_names = c("output", "input"))
     }

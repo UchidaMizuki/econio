@@ -7,8 +7,8 @@
 #' @return An `econ_io_table` object of input coefficients.
 #'
 #' @export
-io_input_coefficients <- function(data,
-                                  same_region = FALSE) {
+io_input_coef <- function(data,
+                          same_region = FALSE) {
   input <- data |>
     dplyr::filter(io_sector_type(.data$input) == "industry",
                   io_sector_type(.data$output) == "industry")
@@ -29,7 +29,7 @@ io_input_coefficients <- function(data,
 #' @return An `econ_io_table` object of import coefficients.
 #'
 #' @export
-io_import_coefficients <- function(data) {
+io_import_coef <- function(data) {
   if (inherits(data, "io_table_noncompetitive_import")) {
     data |>
       dplyr::filter(io_sector_type(.data$input) == "industry") |>
@@ -54,6 +54,6 @@ io_import_coefficients <- function(data) {
 
     -import_same_region / regional_demand_same_region
   } else {
-    cli::cli_abort("{.fn io_import_coefficients} is not implemented for {.cls {class(data)}}.")
+    cli::cli_abort("{.fn io_import_coef} is not implemented for {.cls {class(data)}}.")
   }
 }
