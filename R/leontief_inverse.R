@@ -31,22 +31,3 @@ io_leontief_inverse <- function(data,
     }
   }
 }
-
-io_endogenize_import <- function(data, endogenize_import) {
-  if (inherits(data, "io_table_noncompetitive_import")) {
-    endogenize_import <- endogenize_import %||% TRUE
-    if (!endogenize_import) {
-      cli::cli_abort("{.code endogenize_import = FALSE} is not allowed for {.cls {class(data)}}.")
-    }
-  } else if (inherits(data, "io_table_competitive_import")) {
-    if (is.null(endogenize_import)) {
-      endogenize_import <- TRUE
-      cli::cli_inform("Assuming {.code endogenize_import = TRUE}.")
-    }
-  }
-
-  if (!rlang::is_scalar_logical(endogenize_import)) {
-    cli::cli_abort('{.code endogenize_import} must be a scalar logical.')
-  }
-  endogenize_import
-}
