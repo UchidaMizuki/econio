@@ -6,12 +6,15 @@
 \usage{
 io_total_output(
   data,
+  input_sector_type = "industry",
   output_sector_type = c("industry", "final_demand", "export", "import"),
   same_region = FALSE
 )
 }
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
+
+\item{input_sector_type}{A character vector of input sector types.}
 
 \item{output_sector_type}{A character vector of output sector types.}
 

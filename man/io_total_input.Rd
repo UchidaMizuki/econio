@@ -7,6 +7,7 @@
 io_total_input(
   data,
   input_sector_type = c("industry", "import", "value_added"),
+  output_sector_type = "industry",
   same_region = FALSE
 )
 }
@@ -14,6 +15,8 @@ io_total_input(
 \item{data}{An \code{econ_io_table} object.}
 
 \item{input_sector_type}{A character vector of input sector types.}
+
+\item{output_sector_type}{A character vector of output sector types.}
 
 \item{same_region}{A logical scalar. If \code{TRUE}, values between different
 regions are ignored.}

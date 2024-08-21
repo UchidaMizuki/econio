@@ -1,7 +1,9 @@
 get_data_total_output <- function(iotable) {
   input_coef <- io_input_coef(iotable)
   total_input <- io_total_input(iotable)
-  list(object = input_coef %*% total_input + io_total_output(iotable, c("final_demand", "export", "import")),
+  list(object = input_coef %*% total_input +
+         io_total_output(iotable,
+                         output_sector_type = c("final_demand", "export", "import")),
        expected = io_total_output(iotable))
 }
 
