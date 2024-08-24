@@ -1,34 +1,59 @@
 #' Import coefficients
 #'
 #' @param data An `econ_io_table` object.
+#' @param axis A scalar character. By default, `"output"`.
 #'
 #' @return An `econ_io_table` object of import coefficients.
 #'
 #' @export
-io_import_coef <- function(data) {
+io_import_coef <- function(data,
+                           axis = c("output", "input")) {
+  axis <- rlang::arg_match(axis, c("output", "input"))
+
   if (inherits(data, "io_table_noncompetitive_import")) {
-    data |>
-      dplyr::filter(io_sector_type(.data$input) == "industry") |>
-      dibble::apply("input", \(x) 0)
+    if (axis == "input") {
+      same_region <- io_same_region(data)
+
+      import <- data |>
+        dplyr::filter(io_sector_type(.data$input) == "import",
+                      io_sector_type(.data$output) %in% c("industry", "final_demand")) |>
+        dibble::apply("output", sum)
+
+      regional_demand <- data |>
+        dplyr::filter(io_sector_type(.data$input) == "industry",
+                      io_sector_type(.data$output) %in% c("industry", "final_demand"))
+      regional_demand_same_region <- dibble::broadcast(regional_demand * same_region,
+                                                       dim_names = dimnames(regional_demand)) |>
+        dibble::apply("output", sum)
+
+      import / regional_demand_same_region
+    } else if (axis == "output") {
+      data |>
+        dplyr::filter(io_sector_type(.data$input) == "industry") |>
+        dibble::apply("input", \(x) 0)
+    }
   } else if (inherits(data, "io_table_competitive_import")) {
-    same_region <- io_same_region(data)
+    if (axis == "input") {
+      data |>
+        dplyr::filter(io_sector_type(.data$output) %in% c("industry", "final_demand")) |>
+        dibble::apply("output", \(x) 0)
+    } else if (axis == "output") {
+      same_region <- io_same_region(data)
 
-    regional_demand <- data |>
-      dplyr::filter(io_sector_type(.data$input) == "industry",
-                    io_sector_type(.data$output) %in% c("industry", "final_demand"))
-    import <- data |>
-      dplyr::filter(io_sector_type(.data$input) == "industry",
-                    io_sector_type(.data$output) == "import")
+      import <- data |>
+        dplyr::filter(io_sector_type(.data$input) == "industry",
+                      io_sector_type(.data$output) == "import") |>
+        dibble::apply("input", sum)
 
-    same_region <- io_same_region(data)
-    regional_demand_same_region <- dibble::broadcast(regional_demand * same_region,
-                                                     dim_names = dimnames(regional_demand)) |>
-      dibble::apply("input", sum)
-    import_same_region <- dibble::broadcast(import * same_region,
-                                            dim_names = dimnames(import)) |>
-      dibble::apply("input", sum)
+      regional_demand <- data |>
+        dplyr::filter(io_sector_type(.data$input) == "industry",
+                      io_sector_type(.data$output) %in% c("industry", "final_demand"))
+      regional_demand_same_region <- dibble::broadcast(regional_demand * same_region,
+                                                       dim_names = dimnames(regional_demand)) |>
+        dibble::apply("input", sum)
 
-    -import_same_region / regional_demand_same_region
+      -import / regional_demand_same_region
+    }
   } else {
     cli::cli_abort("{.fn io_import_coef} is not implemented for {.cls {class(data)}}.")
   }

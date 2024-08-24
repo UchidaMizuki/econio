@@ -4,10 +4,12 @@
 \alias{io_import_coef}
 \title{Import coefficients}
 \usage{
-io_import_coef(data)
+io_import_coef(data, axis = c("output", "input"))
 }
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
+
+\item{axis}{A scalar character. By default, \code{"output"}.}
 }
 \value{
 An \code{econ_io_table} object of import coefficients.
