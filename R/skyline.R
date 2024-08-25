@@ -32,12 +32,11 @@ io_tidy_skyline <- function(x, ...) {
 }
 
 io_autolayer_skyline <- function(object, geom, ...) {
-  geom <- rlang::arg_match(geom, c("rect", "segment", "text_repel"))
+  geom <- rlang::arg_match(geom, c("rect", "segment"))
 
   switch(geom,
          rect = io_autolayer_skyline_rect(object, ...),
-         segment = io_autolayer_skyline_segment(object, ...),
-         text_repel = io_autolayer_skyline_text_repel(object, ...))
+         segment = io_autolayer_skyline_segment(object, ...))
 }
 
 io_autolayer_skyline_rect <- function(object, ...) {

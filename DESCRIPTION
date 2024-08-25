@@ -18,6 +18,7 @@ Imports:
     ggplot2,
     pillar,
     rlang,
+    scales,
     tibble,
     tidyr,
     tidyselect,
