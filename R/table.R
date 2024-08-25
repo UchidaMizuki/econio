@@ -44,7 +44,7 @@ io_table_regional <- function(data,
   if (dibble::ncol(data) != 1) {
     cli::cli_abort("An input-output table must have only one column of amounts.")
   }
-  new_io_table(data[[1]],
+  new_io_table(tidyr::replace_na(data[[1]], 0),
                class = c(if (competitive_import) "io_table_competitive_import" else "io_table_noncompetitive_import",
                          "io_table_regional"))
 }
@@ -93,7 +93,7 @@ io_table_multiregional <- function(data,
   if (dibble::ncol(data) != 1) {
     cli::cli_abort("An input-output table must have only one column of amounts.")
   }
-  new_io_table(data[[1]],
+  new_io_table(tidyr::replace_na(data[[1]], 0),
                class = c(if (competitive_import) "io_table_competitive_import" else "io_table_noncompetitive_import",
                          "io_table_multiregional"))
 }

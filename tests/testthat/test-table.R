@@ -1,4 +1,4 @@
-test_that("iotable_regional_noncompetitive_import works", {
+test_that("iotable_regional_noncompetitive_import() works", {
   iotable_dummy <- readRDS(test_path("data", "iotable_dummy.rds"))
 
   name <- "regional_noncompetitive_import"
@@ -15,7 +15,7 @@ test_that("iotable_regional_noncompetitive_import works", {
   expect_true(all(dplyr::near(data_total_input$object, data_total_input$expected)))
 })
 
-test_that("iotable_regional_competitive_import works", {
+test_that("iotable_regional_competitive_import() works", {
   iotable_dummy <- readRDS(test_path("data", "iotable_dummy.rds"))
 
   name <- "regional_competitive_import"
@@ -37,7 +37,7 @@ test_that("iotable_regional_competitive_import works", {
   expect_true(all(dplyr::near(data_total_input$object, data_total_input$expected)))
 })
 
-test_that("iotable_multiregional_noncompetitive_import works", {
+test_that("iotable_multiregional_noncompetitive_import() works", {
   iotable_dummy <- readRDS(test_path("data", "iotable_dummy.rds"))
 
   name <- "multiregional_noncompetitive_import"
@@ -54,7 +54,7 @@ test_that("iotable_multiregional_noncompetitive_import works", {
   expect_true(all(dplyr::near(data_total_input$object, data_total_input$expected)))
 })
 
-test_that("iotable_multiregional_competitive_import works", {
+test_that("iotable_multiregional_competitive_import() works", {
   iotable_dummy <- readRDS(test_path("data", "iotable_dummy.rds"))
 
   name <- "multiregional_competitive_import"
