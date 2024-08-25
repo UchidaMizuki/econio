@@ -85,13 +85,14 @@ io_autoplot_skyline <- function(object, ...) {
                          color = "red") +
     ggplot2::geom_hline(yintercept = 1,
                         linetype = "dashed") +
-    ggplot2::scale_x_continuous(NULL,
-                                breaks = data$x,
-                                labels = data$label,
-                                guide = ggplot2::guide_axis(angle = 90),
+    ggplot2::scale_x_continuous("Total",
+                                labels = scales::label_comma(),
+                                position = "top",
                                 sec.axis = ggplot2::sec_axis(identity,
-                                                             name = "Total",
-                                                             labels = scales::label_comma())) +
+                                                             name = NULL,
+                                                             breaks = data$x,
+                                                             labels = data$label,
+                                                             guide = ggplot2::guide_axis(angle = 90))) +
     ggplot2::scale_y_continuous("Rate",
                                 labels = scales::label_percent()) +
     ggplot2::scale_fill_manual("Rate type",
