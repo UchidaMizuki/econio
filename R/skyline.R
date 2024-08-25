@@ -28,7 +28,7 @@ io_tidy_skyline <- function(x, ...) {
     tidyr::pivot_longer(tidyselect::starts_with(c("rate", "ymin", "ymax", "yend")),
                         names_to = c(".value", "rate_type"),
                         names_pattern = "^(rate|ymin|ymax|yend)_(.*)",
-                        names_transform = list(rate_type = \(x) factor(x, c("self_sufficiency_rate", "import_rate"))))
+                        names_transform = list(rate_type = \(x) factor(x, c("import_rate", "self_sufficiency_rate"))))
 }
 
 io_autolayer_skyline <- function(object, geom, ...) {
@@ -40,8 +40,8 @@ io_autolayer_skyline <- function(object, geom, ...) {
 }
 
 io_autolayer_skyline_rect <- function(object, ...) {
-  data <- tidy(object,
-               type = "skyline")
+  data <- broom::tidy(object,
+                      type = "skyline")
 
   ggplot2::geom_rect(data = data,
                      ggplot2::aes(xmin = .data$xmin,
@@ -52,8 +52,8 @@ io_autolayer_skyline_rect <- function(object, ...) {
 }
 
 io_autolayer_skyline_segment <- function(object, ...) {
-  data <- tidy(object,
-               type = "skyline") |>
+  data <- broom::tidy(object,
+                      type = "skyline") |>
     dplyr::filter(.data$rate_type == "self_sufficiency_rate")
 
   list(ggplot2::geom_segment(data = data,
@@ -70,19 +70,21 @@ io_autolayer_skyline_segment <- function(object, ...) {
 }
 
 io_autoplot_skyline <- function(object, ...) {
-  data <- tidy(object,
-               type = "skyline") |>
+  data <- broom::tidy(object,
+                      type = "skyline") |>
     dplyr::filter(.data$rate_type == "self_sufficiency_rate") |>
     dplyr::mutate(x = (.data$xmin + .data$xmax) / 2,
                   label = io_sector_name(.data$sector))
 
   ggplot2::ggplot() +
-    io_autolayer_skyline(object,
-                         geom = "rect",
-                         color = "dimgray") +
-    io_autolayer_skyline(object,
-                         geom = "segment",
-                         color = "red") +
+    ggplot2::autolayer(object,
+                       type = "skyline",
+                       geom = "rect",
+                       color = "dimgray") +
+    ggplot2::autolayer(object,
+                       type = "skyline",
+                       geom = "segment",
+                       color = "red") +
     ggplot2::geom_hline(yintercept = 1,
                         linetype = "dashed") +
     ggplot2::scale_x_continuous("Total",
@@ -97,7 +99,7 @@ io_autoplot_skyline <- function(object, ...) {
                                 labels = scales::label_percent()) +
     ggplot2::scale_fill_manual("Rate type",
                                values = c("self_sufficiency_rate" = "white",
-                                         "import_rate" = "gray"),
+                                          "import_rate" = "gray"),
                                labels = c("self_sufficiency_rate" = "Self-sufficiency rate",
                                           "import_rate" = "Import rate"))
 }
