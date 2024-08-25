@@ -31,3 +31,26 @@ get_data_total_input <- function(iotable,
          expected = io_total_input(iotable))
   }
 }
+
+read_iotable_dummy <- function(name) {
+  name <- rlang::arg_match(name,
+                           c("regional_noncompetitive_import",
+                             "regional_competitive_import",
+                             "multiregional_noncompetitive_import",
+                             "multiregional_competitive_import"))
+  iotable_dummy <- readRDS(test_path("data", "iotable_dummy.rds"))
+
+  if (name == "regional_noncompetitive_import") {
+    io_table_regional(iotable_dummy$regional_noncompetitive_import,
+                      competitive_import = FALSE)
+  } else if (name == "regional_competitive_import") {
+    io_table_regional(iotable_dummy$regional_competitive_import,
+                      competitive_import = TRUE)
+  } else if (name == "multiregional_noncompetitive_import") {
+    io_table_multiregional(iotable_dummy$multiregional_noncompetitive_import,
+                           competitive_import = FALSE)
+  } else if (name == "multiregional_competitive_import") {
+    io_table_multiregional(iotable_dummy$multiregional_competitive_import,
+                           competitive_import = TRUE)
+  }
+}
