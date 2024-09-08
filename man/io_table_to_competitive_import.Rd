@@ -4,13 +4,16 @@
 \alias{io_table_to_competitive_import}
 \title{Convert an input-output table to a competitive import type table}
 \usage{
-io_table_to_competitive_import(data)
+io_table_to_competitive_import(data, import_sector_name = NA_character_)
 }
 \arguments{
 \item{data}{An input-output table}
+
+\item{import_sector_name}{A name for the import sector. By default,
+\code{NA_character_}.}
 }
 \value{
-A competitive import type input-output table
+A competitive import type input-output table.
 }
 \description{
 Convert an input-output table to a competitive import type table

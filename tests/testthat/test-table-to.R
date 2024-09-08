@@ -33,3 +33,39 @@ test_that("io_table_to_noncompetitive_import() works", {
                                 io_total_input(iotable_dummy))))
   }
 })
+
+test_that("io_table_to_regional() works", {
+  names <- c("multiregional_noncompetitive_import",
+             "multiregional_competitive_import")
+
+  for (name in names) {
+    iotable_dummy <- read_iotable_dummy(name)
+    total_output <- io_total_output(iotable_dummy) |>
+      tibble::as_tibble()
+    total_input <- io_total_input(iotable_dummy) |>
+      tibble::as_tibble()
+
+    iotable_dummy_regional <- io_table_to_regional(iotable_dummy)
+    total_output_regional <- iotable_dummy_regional |>
+      purrr::imap(\(x, i) {
+        io_total_output(x) |>
+          tibble::as_tibble() |>
+          dplyr::mutate(input = input |>
+                          tibble::add_column(region = i,
+                                             .before = 1))
+      }) |>
+      dplyr::bind_rows()
+    total_input_regional <- iotable_dummy_regional |>
+      purrr::imap(\(x, i) {
+        io_total_input(x) |>
+          tibble::as_tibble() |>
+          dplyr::mutate(output = output |>
+                          tibble::add_column(region = i,
+                                             .before = 1))
+      }) |>
+      dplyr::bind_rows()
+
+    expect_equal(total_output_regional, total_output)
+    expect_equal(total_input_regional, total_input)
+  }
+})

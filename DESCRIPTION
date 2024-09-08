@@ -17,6 +17,7 @@ Imports:
     dplyr,
     ggplot2,
     pillar,
+    purrr,
     rlang,
     scales,
     tibble,
