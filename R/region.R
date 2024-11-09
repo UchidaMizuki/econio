@@ -25,56 +25,49 @@ io_same_region <- function(data) {
 io_sum_region <- function(data, axis) {
   axis <- rlang::arg_match(axis, c("input", "output"))
 
+  dim_names <- dimnames(data)
   region <- io_region(data)
 
-  outs <- vctrs::vec_init(list(), length(region))
-  for (i in seq_along(region)) {
-    if (axis == "input") {
-      out <- data |>
-        dplyr::filter(.data$output$region == region[[i]])
-    } else {
-      out <- data |>
-        dplyr::filter(.data$input$region == region[[i]])
-    }
+  if (axis == "input") {
+    output <- tibble::tibble(output_old = dim_names$output,
+                             output = dim_names$output |>
+                               dplyr::select("sector")) |>
+      tibble::tibble(value = 1) |>
+      dibble::dibble_by("output_old", "output") |>
+      purrr::chuck("value") |>
+      tidyr::replace_na(0)
+    data <- data %*% output
 
-    dim_names <- dimnames(out)
-    if (axis == "input") {
-      dimnames(out) <- list(input = dim_names$input,
-                            output = dim_names$output |>
-                              dplyr::select(!"region"))
-    } else {
-      dimnames(out) <- list(input = dim_names$input |>
-                              dplyr::select(!"region"),
-                            output = dim_names$output)
-    }
-    outs[[i]] <- out
-  }
-  data <- purrr::reduce(outs, `+`)
-
-  outs <- vctrs::vec_init(list(), length(region)) |>
-    rlang::set_names(region)
-  for (i in seq_along(region)) {
-    if (axis == "input") {
+    outs <- vctrs::vec_init(list(), length(region)) |>
+      rlang::set_names(region)
+    for (i in seq_along(region)) {
       out <- data |>
         dplyr::filter(.data$input$region == region[[i]])
-    } else {
+      dimnames(out)$input <- dimnames(out)$input |>
+        dplyr::select("sector")
+      class(out)[class(out) == "io_table_multiregional"] <- "io_table_regional"
+      outs[[i]] <- out
+    }
+  } else {
+    input <- tibble::tibble(input = dim_names$input |>
+                              dplyr::select("sector"),
+                            input_old = dim_names$input) |>
+      tibble::tibble(value = 1) |>
+      dibble::dibble_by("input", "input_old") |>
+      purrr::chuck("value") |>
+      tidyr::replace_na(0)
+    data <- input %*% data
+
+    outs <- vctrs::vec_init(list(), length(region)) |>
+      rlang::set_names(region)
+    for (i in seq_along(region)) {
       out <- data |>
         dplyr::filter(.data$output$region == region[[i]])
+      dimnames(out)$output <- dimnames(out)$output |>
+        dplyr::select("sector")
+      class(out)[class(out) == "io_table_multiregional"] <- "io_table_regional"
+      outs[[i]] <- out
     }
-
-    dim_names <- dimnames(out)
-    if (axis == "input") {
-      dimnames(out) <- list(input = dim_names$input |>
-                              dplyr::select(!"region"),
-                            output = dim_names$output)
-    } else {
-      dimnames(out) <- list(input = dim_names$input,
-                            output = dim_names$output |>
-                              dplyr::select(!"region"))
-    }
-
-    class(out)[class(out) == "io_table_multiregional"] <- "io_table_regional"
-    outs[[i]] <- out
   }
   outs
 }
