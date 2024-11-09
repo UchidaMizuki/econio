@@ -25,17 +25,21 @@ io_input_coef <- function(data,
 #' Import coefficients
 #'
 #' @param data An `econ_io_table` object.
-#' @param axis A scalar character. By default, `"output"`.
+#' @param axis A scalar character. By default, `"input"`.
 #'
 #' @return An `econ_io_table` object of import coefficients.
 #'
 #' @export
 io_import_coef <- function(data,
-                           axis = c("output", "input")) {
-  axis <- rlang::arg_match(axis, c("output", "input"))
+                           axis = c("input", "output")) {
+  axis <- rlang::arg_match(axis, c("input", "output"))
 
   if (inherits(data, "io_table_noncompetitive_import")) {
     if (axis == "input") {
+      data |>
+        dplyr::filter(io_sector_type(.data$input) == "industry") |>
+        dibble::apply("input", \(x) 0)
+    } else if (axis == "output") {
       same_region <- io_same_region(data)
 
       import <- data |>
@@ -51,17 +55,9 @@ io_import_coef <- function(data,
         dibble::apply("output", sum)
 
       import / regional_demand_same_region
-    } else if (axis == "output") {
-      data |>
-        dplyr::filter(io_sector_type(.data$input) == "industry") |>
-        dibble::apply("input", \(x) 0)
     }
   } else if (inherits(data, "io_table_competitive_import")) {
     if (axis == "input") {
-      data |>
-        dplyr::filter(io_sector_type(.data$output) %in% c("industry", "final_demand")) |>
-        dibble::apply("output", \(x) 0)
-    } else if (axis == "output") {
       same_region <- io_same_region(data)
 
       import <- data |>
@@ -77,6 +73,10 @@ io_import_coef <- function(data,
         dibble::apply("input", sum)
 
       -import / regional_demand_same_region
+    } else if (axis == "output") {
+      data |>
+        dplyr::filter(io_sector_type(.data$output) %in% c("industry", "final_demand")) |>
+        dibble::apply("output", \(x) 0)
     }
   } else {
     cli::cli_abort("{.fn io_import_coef} is not implemented for {.cls {class(data)}}.")
