@@ -16,7 +16,7 @@ io_table_to_competitive_import <- function(data,
   regional_demand <- data |>
     dplyr::filter(io_sector_type(.data$input) == "industry",
                   io_sector_type(.data$output) %in% c("industry", "final_demand"))
-  import <- dibble::broadcast(regional_demand * io_same_region(regional_demand) * io_import_coef(data, axis = "output"),
+  import <- dibble::broadcast(regional_demand * io_same_region(regional_demand) * io_import_coef_output(data),
                               dim_names = c("input", "output"))
 
   regional_demand <- regional_demand + import
