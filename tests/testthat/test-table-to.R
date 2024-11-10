@@ -6,7 +6,8 @@ test_that("io_table_to_competitive_import() works", {
 
   for (name in names) {
     iotable_dummy <- read_iotable_dummy(name)
-    iotable_dummy_competitive_import <- io_table_to_competitive_import(iotable_dummy)
+    iotable_dummy_competitive_import <- io_table_to_competitive_import(iotable_dummy,
+                                                                       import_sector_name = "import")
 
     expect_s3_class(iotable_dummy_competitive_import, "io_table_competitive_import")
     expect_true(all(dplyr::near(io_total_output(iotable_dummy_competitive_import),
@@ -24,7 +25,8 @@ test_that("io_table_to_noncompetitive_import() works", {
 
   for (name in names) {
     iotable_dummy <- read_iotable_dummy(name)
-    iotable_dummy_noncompetitive_import <- io_table_to_noncompetitive_import(iotable_dummy)
+    iotable_dummy_noncompetitive_import <- io_table_to_noncompetitive_import(iotable_dummy,
+                                                                             import_sector_name = "import")
 
     expect_s3_class(iotable_dummy_noncompetitive_import, "io_table_noncompetitive_import")
     expect_true(all(dplyr::near(io_total_output(iotable_dummy_noncompetitive_import),
@@ -45,7 +47,9 @@ test_that("io_table_to_regional() works", {
     total_input <- io_total_input(iotable_dummy) |>
       tibble::as_tibble()
 
-    iotable_dummy_regional <- io_table_to_regional(iotable_dummy)
+    iotable_dummy_regional <- io_table_to_regional(iotable_dummy,
+                                                   export_sector_name = "export",
+                                                   import_sector_name = "import")
     total_output_regional <- iotable_dummy_regional |>
       purrr::imap(\(x, i) {
         io_total_output(x) |>

@@ -1,14 +1,12 @@
 #' Convert an input-output table to a competitive import type table
 #'
 #' @param data An input-output table
-#' @param import_sector_name A name for the import sector. By default,
-#' `NA_character_`.
+#' @param import_sector_name A name for the import sector.
 #'
 #' @return A competitive import type input-output table.
 #'
 #' @export
-io_table_to_competitive_import <- function(data,
-                                           import_sector_name = NA_character_) {
+io_table_to_competitive_import <- function(data, import_sector_name) {
   if (inherits(data, "io_table_competitive_import")) {
     return(data)
   }
@@ -45,14 +43,12 @@ io_table_to_competitive_import <- function(data,
 #' Convert an input-output table to a noncompetitive import type table
 #'
 #' @param data An input-output table
-#' @param import_sector_name A name for the import sector. By default,
-#' `NA_character_`.
+#' @param import_sector_name A name for the import sector.
 #'
 #' @return A noncompetitive import type input-output table.
 #'
 #' @export
-io_table_to_noncompetitive_import <- function(data,
-                                              import_sector_name = NA_character_) {
+io_table_to_noncompetitive_import <- function(data, import_sector_name) {
   if (inherits(data, "io_table_noncompetitive_import")) {
     return(data)
   }
@@ -124,17 +120,13 @@ io_table_to_blocks <- function(data) {
 #' Convert a multiregional input-output table to a regional input-output table
 #'
 #' @param data A multiregional input-output table
-#' @param export_sector_name A name for the export sector. By default,
-#' `NA_character_`.
-#' @param import_sector_name A name for the import sector. By default,
-#' `NA_character_`.
+#' @param export_sector_name A name for the export sector.
+#' @param import_sector_name A name for the import sector.
 #'
 #' @return A list of regional input-output tables.
 #'
 #' @export
-io_table_to_regional <- function(data,
-                                 export_sector_name = NA_character_,
-                                 import_sector_name = NA_character_) {
+io_table_to_regional <- function(data, export_sector_name, import_sector_name) {
   region <- io_region(data)
 
   blocks <- io_table_to_blocks(data)

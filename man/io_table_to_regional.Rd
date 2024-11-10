@@ -4,20 +4,14 @@
 \alias{io_table_to_regional}
 \title{Convert a multiregional input-output table to a regional input-output table}
 \usage{
-io_table_to_regional(
-  data,
-  export_sector_name = NA_character_,
-  import_sector_name = NA_character_
-)
+io_table_to_regional(data, export_sector_name, import_sector_name)
 }
 \arguments{
 \item{data}{A multiregional input-output table}
 
-\item{export_sector_name}{A name for the export sector. By default,
-\code{NA_character_}.}
+\item{export_sector_name}{A name for the export sector.}
 
-\item{import_sector_name}{A name for the import sector. By default,
-\code{NA_character_}.}
+\item{import_sector_name}{A name for the import sector.}
 }
 \value{
 A list of regional input-output tables.
