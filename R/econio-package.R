@@ -8,6 +8,7 @@
 #' @importFrom pillar pillar_shaft
 #' @importFrom pillar tbl_format_setup
 #' @importFrom rlang .data
+#' @importFrom rlang .env
 #' @importFrom rlang :=
 #' @importFrom vctrs vec_cast
 #' @importFrom vctrs vec_ptype_abbr

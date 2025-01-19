@@ -22,9 +22,7 @@ read_iotable_dummy_regional <- function(file) {
     pivot_longer(!starts_with("input"),
                  names_to = c("output_sector_type", "output_sector_name"),
                  names_sep = "/",
-                 values_transform = list(value = parse_number)) |>
-    filter(input_sector_type != "total",
-           output_sector_type != "total")
+                 values_transform = list(value = parse_number))
 }
 
 read_iotable_dummy_multiregional <- function(file) {
@@ -47,9 +45,7 @@ read_iotable_dummy_multiregional <- function(file) {
     pivot_longer(!starts_with("input"),
                  names_to = c("output_region", "output_sector_type", "output_sector_name"),
                  names_sep = "/",
-                 values_transform = list(value = parse_number)) |>
-    filter(input_sector_type != "total",
-           output_sector_type != "total")
+                 values_transform = list(value = parse_number))
 }
 
 dir <- "data-raw/iotable_dummy"

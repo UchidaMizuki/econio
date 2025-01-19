@@ -6,9 +6,13 @@ io_sector <- function(sector_type, sector_name) {
 
 io_input_sector <- function(sector_type, sector_name, competitive_import) {
   values <- if(competitive_import) {
-    c("industry", "value_added")
+    c("industry", "value_added",
+      "industry_total", "value_added_total",
+      "total")
   } else {
-    c("industry", "import", "value_added")
+    c("industry", "import", "value_added",
+      "industry_total", "import_total", "value_added_total",
+      "total")
   }
   if (competitive_import && "import" %in% sector_type) {
     cli::cli_abort('{.code "import"} is not allowed in input sector types when {.code competitive_import = TRUE}.')
@@ -22,9 +26,13 @@ io_input_sector <- function(sector_type, sector_name, competitive_import) {
 
 io_output_sector <- function(sector_type, sector_name, competitive_import) {
   values <- if (competitive_import) {
-    c("industry", "final_demand", "export", "import")
+    c("industry", "final_demand", "export", "import",
+      "industry_total", "final_demand_total", "export_total", "import_total",
+      "total")
   } else {
-    c("industry", "final_demand", "export")
+    c("industry", "final_demand", "export",
+      "industry_total", "final_demand_total", "export_total",
+      "total")
   }
   if (!competitive_import && "import" %in% sector_type) {
     cli::cli_abort('{.code "import"} is not allowed in output sector types when {.code competitive_import = FALSE}.')
