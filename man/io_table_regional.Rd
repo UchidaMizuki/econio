@@ -8,7 +8,8 @@ io_table_regional(
   data,
   input = c("input_sector_type", "input_sector_name"),
   output = c("output_sector_type", "output_sector_name"),
-  competitive_import = NULL
+  competitive_import = NULL,
+  check_total = TRUE
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ name columns.}
 
 \item{competitive_import}{A scalar logical. If \code{TRUE}, the table is assumed
 to be a competitive import type.}
+
+\item{check_total}{A scalar logical. If \code{TRUE}, the total input and output
+values are checked. By default, \code{TRUE}.}
 }
 \value{
 An \code{econ_io_table} object.

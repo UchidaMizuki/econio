@@ -13,6 +13,8 @@ new_io_table <- function(data, ...,
 #' name columns.
 #' @param competitive_import A scalar logical. If `TRUE`, the table is assumed
 #' to be a competitive import type.
+#' @param check_total A scalar logical. If `TRUE`, the total input and output
+#' values are checked. By default, `TRUE`.
 #'
 #' @return An `econ_io_table` object.
 #'
@@ -20,7 +22,8 @@ new_io_table <- function(data, ...,
 io_table_regional <- function(data,
                               input = c("input_sector_type", "input_sector_name"),
                               output = c("output_sector_type", "output_sector_name"),
-                              competitive_import = NULL) {
+                              competitive_import = NULL,
+                              check_total = TRUE) {
   names_input <- names(tidyselect::eval_select(rlang::enquo(input), data))
   names_output <- names(tidyselect::eval_select(rlang::enquo(output), data))
 
@@ -29,7 +32,7 @@ io_table_regional <- function(data,
                                               output_sector_type = names_output[[1]],
                                               competitive_import = competitive_import)
 
-  data <- data |>
+  data |>
     io_add_sector("input",
                   sector_type = !!rlang::sym(names_input[[1]]),
                   sector_name = !!rlang::sym(names_input[[2]]),
@@ -40,13 +43,10 @@ io_table_regional <- function(data,
                   competitive_import = competitive_import) |>
     dibble::dibble_by(input = "input_sector",
                       output = "output_sector",
-                      .names_sep = "_")
-  if (dibble::ncol(data) != 1) {
-    cli::cli_abort("An input-output table must have only one column of amounts.")
-  }
-  new_io_table(tidyr::replace_na(data[[1]], 0),
-               class = c(if (competitive_import) "io_table_competitive_import" else "io_table_noncompetitive_import",
-                         "io_table_regional"))
+                      .names_sep = "_") |>
+    io_check_total(check_total = check_total) |>
+    new_io_table(class = c(if (competitive_import) "io_table_competitive_import" else "io_table_noncompetitive_import",
+                           "io_table_regional"))
 }
 
 #' Create a multi-regional input-output table
@@ -58,6 +58,8 @@ io_table_regional <- function(data,
 #' and name columns.
 #' @param competitive_import A scalar logical. If `TRUE`, the table is assumed
 #' to be a competitive import type.
+#' @param check_total A scalar logical. If `TRUE`, the total input and output
+#' values are checked. By default, `TRUE`.
 #'
 #' @return An `econ_io_table` object.
 #'
@@ -65,7 +67,8 @@ io_table_regional <- function(data,
 io_table_multiregional <- function(data,
                                    input = c("input_region", "input_sector_type", "input_sector_name"),
                                    output = c("output_region", "output_sector_type", "output_sector_name"),
-                                   competitive_import = NULL) {
+                                   competitive_import = NULL,
+                                   check_total = TRUE) {
   names_input <- names(tidyselect::eval_select(rlang::enquo(input), data))
   names_output <- names(tidyselect::eval_select(rlang::enquo(output), data))
 
@@ -89,13 +92,10 @@ io_table_multiregional <- function(data,
                   region = !!rlang::sym(names_output[[1]])) |>
     dibble::dibble_by(input = c("input_region", "input_sector"),
                       output = c("output_region", "output_sector"),
-                      .names_sep = "_")
-  if (dibble::ncol(data) != 1) {
-    cli::cli_abort("An input-output table must have only one column of amounts.")
-  }
-  new_io_table(tidyr::replace_na(data[[1]], 0),
-               class = c(if (competitive_import) "io_table_competitive_import" else "io_table_noncompetitive_import",
-                         "io_table_multiregional"))
+                      .names_sep = "_") |>
+    io_check_total(check_total = check_total) |>
+    new_io_table(class = c(if (competitive_import) "io_table_competitive_import" else "io_table_noncompetitive_import",
+                           "io_table_multiregional"))
 }
 
 io_competitive_import <- function(data, input_sector_type, output_sector_type, competitive_import) {
@@ -148,6 +148,70 @@ io_add_region <- function(data, axis, region) {
     dplyr::rename(!!region_column := {{ region }}) |>
     dplyr::relocate(!!region_column,
                     .before = !!sector_column)
+}
+
+io_check_total <- function(data, check_total) {
+  if (dibble::ncol(data) != 1) {
+    cli::cli_abort("An input-output table must have only one column of amounts.")
+  }
+  data <- data[[1]]
+
+  if (check_total) {
+    # Check total input
+    c("industry_total", "import_total", "value_added_total", "total") |>
+      purrr::walk(\(input_sector_type_total) {
+        data_input_total_expected <- data |>
+          dplyr::filter(io_sector_type(.data$input) == .env$input_sector_type_total)
+
+        if (!vctrs::vec_is_empty(dimnames(data_input_total_expected)[["input"]])) {
+          data_input_total_expected <- data_input_total_expected |>
+            dibble::apply("output", sum)
+
+          input_sector_type <- switch(input_sector_type_total,
+                                      "industry_total" = "industry",
+                                      "import_total" = "import",
+                                      "value_added_total" = "value_added",
+                                      "total" = c("industry", "import", "value_added"))
+          data_input_total <- data |>
+            dplyr::filter(io_sector_type(.data$input) %in% .env$input_sector_type) |>
+            dibble::apply("output", sum,
+                          na.rm = TRUE)
+          if (!all(dplyr::near(data_input_total, data_input_total_expected), na.rm = TRUE)) {
+            cli::cli_abort("The total input values do not match in {.code {input_sector_type_total}}.")
+          }
+        }
+      })
+
+    # Check total output
+    c("industry_total", "final_demand_total", "export_total", "import_total", "total") |>
+      purrr::walk(\(output_sector_type_total) {
+        data_output_total_expected <- data |>
+          dplyr::filter(io_sector_type(.data$output) == .env$output_sector_type_total)
+
+        if (!vctrs::vec_is_empty(dimnames(data_output_total_expected)[["output"]])) {
+          data_output_total_expected <- data_output_total_expected |>
+            dibble::apply("input", sum)
+
+          output_sector_type <- switch(output_sector_type_total,
+                                       "industry_total" = "industry",
+                                       "final_demand_total" = "final_demand",
+                                       "export_total" = "export",
+                                       "import_total" = "import",
+                                       "total" = c("industry", "final_demand", "export", "import"))
+          data_output_total <- data |>
+            dplyr::filter(io_sector_type(.data$output) %in% .env$output_sector_type) |>
+            dibble::apply("input", sum,
+                          na.rm = TRUE)
+          if (!all(dplyr::near(data_output_total, data_output_total_expected), na.rm = TRUE)) {
+            cli::cli_abort("The total output values do not match in {.code {output_sector_type_total}}.")
+          }
+        }
+      })
+  }
+  data |>
+    dplyr::filter(io_sector_type(.data$input) %in% c("industry", "import", "value_added"),
+                  io_sector_type(.data$output) %in% c("industry", "final_demand", "export", "import")) |>
+    tidyr::replace_na(0)
 }
 
 #' @export
