@@ -24,8 +24,9 @@ and name columns.}
 \item{competitive_import}{A scalar logical. If \code{TRUE}, the table is assumed
 to be a competitive import type.}
 
-\item{check_total}{A scalar logical. If \code{TRUE}, the total input and output
-values are checked. By default, \code{TRUE}.}
+\item{check_total}{A scalar logical or numeric. If \code{TRUE}, the total input
+and output values are checked. If a numeric, the tolerance for the check.
+By default, \code{TRUE}.}
 }
 \value{
 An \code{econ_io_table} object.
