@@ -90,8 +90,8 @@ io_self_sufficiency_rate <- function(data,
   total_import <- production_induce$total_import
 
   if (summary) {
-    (sum(total_final_demand) + sum(total_export) - sum(total_import)) / sum(total_final_demand)
+    safe_divide(sum(total_final_demand) + sum(total_export) - sum(total_import), sum(total_final_demand))
   } else {
-    (total_final_demand + total_export - total_import) / total_final_demand
+    safe_divide(total_final_demand + total_export - total_import, total_final_demand)
   }
 }

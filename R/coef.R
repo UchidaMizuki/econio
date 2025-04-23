@@ -13,7 +13,7 @@ io_input_coef <- function(data,
     dplyr::filter(io_sector_type(.data$input) == "industry",
                   io_sector_type(.data$output) == "industry")
   total_input <- io_total_input(data)
-  input_coef <- dibble::broadcast(input / total_input,
+  input_coef <- dibble::broadcast(safe_divide(input, total_input),
                                   dim_names = c("input", "output"))
   if (same_region) {
     input_coef <- dibble::broadcast(input_coef * io_same_region(data),
@@ -54,7 +54,7 @@ io_import_coef <- function(data,
                                                        dim_names = dimnames(regional_demand)) |>
         dibble::apply("output", sum)
 
-      import / regional_demand_same_region
+      safe_divide(import, regional_demand_same_region)
     }
   } else if (inherits(data, "io_table_competitive_import")) {
     if (axis == "input") {
@@ -72,7 +72,7 @@ io_import_coef <- function(data,
                                                        dim_names = dimnames(regional_demand)) |>
         dibble::apply("input", sum)
 
-      -import / regional_demand_same_region
+      -safe_divide(import, regional_demand_same_region)
     } else if (axis == "output") {
       data |>
         dplyr::filter(io_sector_type(.data$output) %in% c("industry", "final_demand")) |>
