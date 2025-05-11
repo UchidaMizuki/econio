@@ -1,24 +1,30 @@
 io_sector <- function(sector_type, sector_name) {
-  vctrs::new_rcrd(list(type = sector_type,
-                       name = sector_name),
-                  class = "econ_io_sector")
+  vctrs::new_rcrd(
+    list(type = sector_type, name = sector_name),
+    class = "econ_io_sector"
+  )
 }
 
 io_input_sector <- function(sector_type, sector_name, competitive_import) {
-  values <- if(competitive_import) {
-    c("industry", "value_added",
-      "industry_total", "value_added_total",
-      "total")
+  values <- if (competitive_import) {
+    c("industry", "value_added", "industry_total", "value_added_total", "total")
   } else {
-    c("industry", "import", "value_added",
-      "industry_total", "import_total", "value_added_total",
-      "total")
+    c(
+      "industry",
+      "import",
+      "value_added",
+      "industry_total",
+      "import_total",
+      "value_added_total",
+      "total"
+    )
   }
   if (competitive_import && "import" %in% sector_type) {
-    cli::cli_abort('{.code "import"} is not allowed in input sector types when {.code competitive_import = TRUE}.')
+    cli::cli_abort(
+      '{.code "import"} is not allowed in input sector types when {.code competitive_import = TRUE}.'
+    )
   }
-  sector_type <- rlang::arg_match(sector_type, values,
-                                  multiple = TRUE)
+  sector_type <- rlang::arg_match(sector_type, values, multiple = TRUE)
   sector_type <- factor(sector_type, values)
 
   io_sector(sector_type, sector_name)
@@ -26,19 +32,34 @@ io_input_sector <- function(sector_type, sector_name, competitive_import) {
 
 io_output_sector <- function(sector_type, sector_name, competitive_import) {
   values <- if (competitive_import) {
-    c("industry", "final_demand", "export", "import",
-      "industry_total", "final_demand_total", "export_total", "import_total",
-      "total")
+    c(
+      "industry",
+      "final_demand",
+      "export",
+      "import",
+      "industry_total",
+      "final_demand_total",
+      "export_total",
+      "import_total",
+      "total"
+    )
   } else {
-    c("industry", "final_demand", "export",
-      "industry_total", "final_demand_total", "export_total",
-      "total")
+    c(
+      "industry",
+      "final_demand",
+      "export",
+      "industry_total",
+      "final_demand_total",
+      "export_total",
+      "total"
+    )
   }
   if (!competitive_import && "import" %in% sector_type) {
-    cli::cli_abort('{.code "import"} is not allowed in output sector types when {.code competitive_import = FALSE}.')
+    cli::cli_abort(
+      '{.code "import"} is not allowed in output sector types when {.code competitive_import = FALSE}.'
+    )
   }
-  sector_type <- rlang::arg_match(sector_type, values,
-                                  multiple = TRUE)
+  sector_type <- rlang::arg_match(sector_type, values, multiple = TRUE)
   sector_type <- factor(sector_type, values)
 
   io_sector(sector_type, sector_name)
@@ -85,7 +106,10 @@ format.econ_io_sector <- function(x, ...) {
 pillar_shaft.econ_io_sector <- function(x, ...) {
   sector_type <- vctrs::field(x, "type")
   sector_name <- vctrs::field(x, "name")
-  formatted <- paste(pillar::style_subtle(paste0("<", sector_type, ">")), sector_name)
+  formatted <- paste(
+    pillar::style_subtle(paste0("<", sector_type, ">")),
+    sector_name
+  )
   pillar::new_pillar_shaft_simple(formatted)
 }
 
@@ -106,7 +130,13 @@ vec_ptype2.econ_io_sector <- function(x, y, ..., x_arg = "", y_arg = "") {
 }
 
 #' @export
-vec_ptype2.econ_io_sector.econ_io_sector <- function(x, y, ..., x_arg = "", y_arg = "") {
+vec_ptype2.econ_io_sector.econ_io_sector <- function(
+  x,
+  y,
+  ...,
+  x_arg = "",
+  y_arg = ""
+) {
   type <- vec_ptype2(vctrs::field(x, "type"), vctrs::field(y, "type"))
   name <- vec_ptype2(vctrs::field(x, "name"), vctrs::field(y, "name"))
   io_sector(type, name)

@@ -38,25 +38,40 @@ you can create an input-output table object by using
 `io_table_regional()` function.
 
 ``` r
-table_germany_1995 <- iotable_get(source = "germany_1995") |> 
+table_germany_1995 <- iotable_get(source = "germany_1995") |>
   rename(input_sector_name = iotables_row) |>
-  pivot_longer(!input_sector_name,
-               names_to = "output_sector_name",
-               values_to = "value") |>
-  mutate(input_sector_type = case_match(input_sector_name,
-                                        "total" ~ "industry",
-                                        "imports" ~ "import",
-                                        "net_tax_products" ~ "value_added"),
-         output_sector_type = case_match(output_sector_name,
-                                         "total" ~ "industry",
-                                         "gross_capital_formation" ~ "final_demand",
-                                         "exports" ~ "export")) |>
-  relocate(input_sector_type, input_sector_name, output_sector_type, output_sector_name) |>
-  fill(input_sector_type, output_sector_type,
-       .direction = "up") |>
+  pivot_longer(
+    !input_sector_name,
+    names_to = "output_sector_name",
+    values_to = "value"
+  ) |>
+  mutate(
+    input_sector_type = case_match(
+      input_sector_name,
+      "total" ~ "industry",
+      "imports" ~ "import",
+      "net_tax_products" ~ "value_added"
+    ),
+    output_sector_type = case_match(
+      output_sector_name,
+      "total" ~ "industry",
+      "gross_capital_formation" ~ "final_demand",
+      "exports" ~ "export"
+    )
+  ) |>
+  relocate(
+    input_sector_type,
+    input_sector_name,
+    output_sector_type,
+    output_sector_name
+  ) |>
+  fill(input_sector_type, output_sector_type, .direction = "up") |>
   drop_na(input_sector_type, output_sector_type) |>
-  filter(!input_sector_name %in% c("total", "intermediate_consumption", "gva", "output"),
-         !output_sector_name %in% c("total", "total_final_use"))
+  filter(
+    !input_sector_name %in%
+      c("total", "intermediate_consumption", "gva", "output"),
+    !output_sector_name %in% c("total", "total_final_use")
+  )
 table_germany_1995
 #> # A tibble: 132 × 5
 #>    input_sector_type input_sector_name output_sector_type output_sector_name    
