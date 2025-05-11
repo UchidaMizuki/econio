@@ -1,11 +1,10 @@
 Package: econio
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Input-Output Analysis
 Version: 0.1.0
 Authors@R: 
     person("Mizuki", "Uchida", , "uchidamizuki@vivaldi.net", role = c("aut", "cre"))
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Description: Provides a set of functions for input-output analysis.
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true

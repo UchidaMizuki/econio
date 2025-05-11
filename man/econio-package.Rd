@@ -4,9 +4,9 @@
 \name{econio-package}
 \alias{econio}
 \alias{econio-package}
-\title{econio: What the Package Does (Title Case)}
+\title{econio: Input-Output Analysis}
 \description{
-More about what it does (maybe more than one line) Use four spaces when indenting paragraphs within the Description.
+Provides a set of functions for input-output analysis.
 }
 \author{
 \strong{Maintainer}: Mizuki Uchida \email{uchidamizuki@vivaldi.net}
