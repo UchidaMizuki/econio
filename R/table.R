@@ -223,70 +223,55 @@ io_check_total <- function(data, check_total) {
       tol <- check_total
     }
 
-    # Check total input
-    data_input_total_expected <- data |>
-      dplyr::filter(io_sector_type(.data$input) == "total")
-
-    if (!vctrs::vec_is_empty(dimnames(data_input_total_expected)[["input"]])) {
-      data_input_total_expected <- data_input_total_expected |>
-        dibble::apply("output", sum)
-
-      data_input_total <- data |>
-        dplyr::filter(
-          io_sector_type(.data$input) %in%
-            c("industry", "import", "value_added")
-        ) |>
-        dibble::apply("output", sum, na.rm = TRUE)
-
-      tol_input_total <- dibble::dibble(
-        tol,
-        .dim_names = dimnames(data_input_total)
+    for (axis in c("input", "output")) {
+      axis_other <- switch(
+        axis,
+        input = "output",
+        output = "input"
       )
-      if (
-        !all(
-          dplyr::near(
-            data_input_total,
-            data_input_total_expected,
-            tol = tol_input_total
-          ),
-          na.rm = TRUE
+      data_total_expected <- data |>
+        dplyr::filter(
+          io_sector_type(.data[[axis_other]]) == "industry",
+          io_sector_type(.data[[axis]]) == "total"
         )
-      ) {
-        cli::cli_abort("The total input values do not match.")
-      }
 
-      # Check total output
-      data_output_total_expected <- data |>
-        dplyr::filter(io_sector_type(.data$output) == "total")
-
-      if (
-        !vctrs::vec_is_empty(dimnames(data_output_total_expected)[["output"]])
-      ) {
-        data_output_total_expected <- data_output_total_expected |>
-          dibble::apply("input", sum)
-
-        data_output_total <- data |>
+      if (!vctrs::vec_is_empty(dimnames(data_total_expected)[[axis]])) {
+        sector_type <- switch(
+          axis,
+          input = c("industry", "import", "value_added"),
+          output = c("industry", "final_demand", "export", "import")
+        )
+        data_total_actual <- data |>
           dplyr::filter(
-            io_sector_type(.data$output) %in%
-              c("industry", "final_demand", "export", "import")
+            io_sector_type(.data[[axis_other]]) %in% "industry",
+            io_sector_type(.data[[axis]]) %in% sector_type
           ) |>
-          dibble::apply("input", sum, na.rm = TRUE)
-
-        tol_output_total <- dibble::dibble(
-          tol,
-          .dim_names = dimnames(data_output_total)
-        )
-        if (
-          !all(
-            dplyr::near(
-              data_output_total,
-              data_output_total_expected,
-              tol = tol_output_total
-            ),
-            na.rm = TRUE
+          dibble::apply(axis_other, sum, na.rm = TRUE)
+        data_total_expected <- data_total_expected |>
+          dibble::apply(axis_other, sum)
+        data_total <- dibble::dibble(
+          total_actual = data_total_actual,
+          total_expected = data_total_expected,
+        ) |>
+          tibble::as_tibble() |>
+          dplyr::filter(
+            !dplyr::near(
+              .data$total_actual,
+              .data$total_expected,
+              tol = .env$tol
+            )
           )
-        ) {
-          cli::cli_abort("The total output values do not match.")
+
+        if (!vctrs::vec_is_empty(data_total)) {
+          cli::cli_abort(
+            c(
+              "The total {axis} values do not match.",
+              glue::glue(
+                "{io_sector_name(data_total[[axis_other]])}: {data_total$total_actual} (`actual`) not nearly equal to {data_total$total_expected} (`expected`)."
+              ) |>
+                rlang::set_names("x")
+            )
+          )
         }
       }
     }
