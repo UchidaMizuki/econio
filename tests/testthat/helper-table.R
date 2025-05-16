@@ -2,7 +2,7 @@ get_data_total_output <- function(iotable) {
   input_coef <- io_input_coef(iotable)
   total_input <- io_total_input(iotable)
   list(
-    object = input_coef %*%
+    actual = input_coef %*%
       total_input +
       io_total_output(
         iotable,
@@ -34,7 +34,7 @@ get_data_total_input <- function(iotable, endogenize_import = NULL) {
     )
 
     list(
-      object = leontief_inv %*%
+      actual = leontief_inv %*%
         (total_final_demand_export -
           io_import_coef(iotable) * final_demand_saml_region),
       expected = io_total_input(iotable)
@@ -46,7 +46,7 @@ get_data_total_input <- function(iotable, endogenize_import = NULL) {
     )
 
     list(
-      object = leontief_inv %*% total_final_demand_export_import,
+      actual = leontief_inv %*% total_final_demand_export_import,
       expected = io_total_input(iotable)
     )
   }
