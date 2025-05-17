@@ -9,7 +9,7 @@ io_table_regional(
   input = c("input_sector_type", "input_sector_name"),
   output = c("output_sector_type", "output_sector_name"),
   competitive_import = NULL,
-  check_total = TRUE
+  total_tolerance = .Machine$double.eps^0.5
 )
 }
 \arguments{
@@ -24,9 +24,8 @@ name columns.}
 \item{competitive_import}{A scalar logical. If \code{TRUE}, the table is assumed
 to be a competitive import type.}
 
-\item{check_total}{A scalar logical or numeric. If \code{TRUE}, the total input
-and output values are checked. If a numeric, the tolerance for the check.
-By default, \code{TRUE}.}
+\item{total_tolerance}{A numeric. The tolerance for the total check. By
+default, \code{.Machine$double.eps^0.5}.}
 }
 \value{
 An \code{econ_io_table} object.

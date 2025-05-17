@@ -12,9 +12,8 @@ new_io_table <- function(data, ..., class = character()) {
 #' name columns.
 #' @param competitive_import A scalar logical. If `TRUE`, the table is assumed
 #' to be a competitive import type.
-#' @param check_total A scalar logical or numeric. If `TRUE`, the total input
-#' and output values are checked. If a numeric, the tolerance for the check.
-#' By default, `TRUE`.
+#' @param total_tolerance A numeric. The tolerance for the total check. By
+#' default, `.Machine$double.eps^0.5`.
 #'
 #' @return An `econ_io_table` object.
 #'
@@ -24,7 +23,7 @@ io_table_regional <- function(
   input = c("input_sector_type", "input_sector_name"),
   output = c("output_sector_type", "output_sector_name"),
   competitive_import = NULL,
-  check_total = TRUE
+  total_tolerance = .Machine$double.eps^0.5
 ) {
   names_input <- names(tidyselect::eval_select(rlang::enquo(input), data))
   names_output <- names(tidyselect::eval_select(rlang::enquo(output), data))
@@ -54,11 +53,16 @@ io_table_regional <- function(
       output = "output_sector",
       .names_sep = "_"
     ) |>
-    io_check_total(check_total = check_total) |>
+    io_check_total(
+      total_tolerance = total_tolerance
+    ) |>
     new_io_table(
       class = c(
-        if (competitive_import) "io_table_competitive_import" else
-          "io_table_noncompetitive_import",
+        if (competitive_import) {
+          "io_table_competitive_import"
+        } else {
+          "io_table_noncompetitive_import"
+        },
         "io_table_regional"
       )
     )
@@ -73,9 +77,8 @@ io_table_regional <- function(
 #' and name columns.
 #' @param competitive_import A scalar logical. If `TRUE`, the table is assumed
 #' to be a competitive import type.
-#' @param check_total A scalar logical or numeric. If `TRUE`, the total input
-#' and output values are checked. If a numeric, the tolerance for the check.
-#' By default, `TRUE`.
+#' @param total_tolerance A numeric. The tolerance for the total check. By
+#' default, `.Machine$double.eps^0.5`.
 #'
 #' @return An `econ_io_table` object.
 #'
@@ -85,7 +88,7 @@ io_table_multiregional <- function(
   input = c("input_region", "input_sector_type", "input_sector_name"),
   output = c("output_region", "output_sector_type", "output_sector_name"),
   competitive_import = NULL,
-  check_total = TRUE
+  total_tolerance = .Machine$double.eps^0.5
 ) {
   names_input <- names(tidyselect::eval_select(rlang::enquo(input), data))
   names_output <- names(tidyselect::eval_select(rlang::enquo(output), data))
@@ -117,7 +120,9 @@ io_table_multiregional <- function(
       output = c("output_region", "output_sector"),
       .names_sep = "_"
     ) |>
-    io_check_total(check_total = check_total) |>
+    io_check_total(
+      total_tolerance = total_tolerance
+    ) |>
     new_io_table(
       class = c(
         if (competitive_import) "io_table_competitive_import" else
@@ -208,7 +213,7 @@ io_add_region <- function(data, axis, region) {
     dplyr::relocate(!!region_column, .before = !!sector_column)
 }
 
-io_check_total <- function(data, check_total) {
+io_check_total <- function(data, total_tolerance) {
   if (dibble::ncol(data) != 1) {
     cli::cli_abort(
       "An input-output table must have only one column of amounts."
@@ -216,66 +221,59 @@ io_check_total <- function(data, check_total) {
   }
   data <- data[[1]]
 
-  if (rlang::is_true(check_total) || is.numeric(check_total)) {
-    if (rlang::is_true(check_total)) {
-      tol <- .Machine$double.eps^0.5
-    } else {
-      tol <- check_total
-    }
-
-    for (axis in c("input", "output")) {
-      axis_other <- switch(
-        axis,
-        input = "output",
-        output = "input"
+  for (axis in c("input", "output")) {
+    axis_other <- switch(
+      axis,
+      input = "output",
+      output = "input"
+    )
+    data_total_expected <- data |>
+      dplyr::filter(
+        io_sector_type(.data[[axis_other]]) == "industry",
+        io_sector_type(.data[[axis]]) == "total"
       )
-      data_total_expected <- data |>
+
+    if (!vctrs::vec_is_empty(dimnames(data_total_expected)[[axis]])) {
+      sector_type <- switch(
+        axis,
+        input = c("industry", "import", "value_added"),
+        output = c("industry", "final_demand", "export", "import")
+      )
+      data_total_actual <- data |>
         dplyr::filter(
           io_sector_type(.data[[axis_other]]) == "industry",
-          io_sector_type(.data[[axis]]) == "total"
-        )
-
-      if (!vctrs::vec_is_empty(dimnames(data_total_expected)[[axis]])) {
-        sector_type <- switch(
-          axis,
-          input = c("industry", "import", "value_added"),
-          output = c("industry", "final_demand", "export", "import")
-        )
-        data_total_actual <- data |>
-          dplyr::filter(
-            io_sector_type(.data[[axis_other]]) %in% "industry",
-            io_sector_type(.data[[axis]]) %in% sector_type
-          ) |>
-          dibble::apply(axis_other, sum, na.rm = TRUE)
-        data_total_expected <- data_total_expected |>
-          dibble::apply(axis_other, sum)
-        data_total <- dibble::dibble(
-          total_actual = data_total_actual,
-          total_expected = data_total_expected,
+          io_sector_type(.data[[axis]]) %in% sector_type
         ) |>
-          tibble::as_tibble() |>
-          dplyr::filter(
-            !dplyr::near(
-              .data$total_actual,
-              .data$total_expected,
-              tol = .env$tol
-            )
+        dibble::apply(axis_other, sum, na.rm = TRUE)
+      data_total_expected <- data_total_expected |>
+        dibble::apply(axis_other, sum)
+      data_total <- dibble::dibble(
+        total_actual = data_total_actual,
+        total_expected = data_total_expected,
+      ) |>
+        tibble::as_tibble() |>
+        dplyr::filter(
+          !dplyr::near(
+            .data$total_actual,
+            .data$total_expected,
+            tol = .env$total_tolerance
           )
+        )
 
-        if (!vctrs::vec_is_empty(data_total)) {
-          cli::cli_abort(
-            c(
-              "The total {axis} values do not match.",
-              glue::glue(
-                "{io_sector_name(data_total[[axis_other]])}: {data_total$total_actual} (`actual`) not nearly equal to {data_total$total_expected} (`expected`)."
-              ) |>
-                rlang::set_names("x")
-            )
+      if (!vctrs::vec_is_empty(data_total)) {
+        cli::cli_abort(
+          c(
+            "The total {axis} values do not match.",
+            glue::glue(
+              "{io_sector_name(data_total[[axis_other]])}: {data_total$total_actual} (`actual`) not nearly equal to {data_total$total_expected} (`expected`)."
+            ) |>
+              rlang::set_names("x")
           )
-        }
+        )
       }
     }
   }
+
   data |>
     dplyr::filter(
       io_sector_type(.data$input) %in% c("industry", "import", "value_added"),
