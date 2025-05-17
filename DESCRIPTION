@@ -12,9 +12,10 @@ RoxygenNote: 7.3.2
 Imports: 
     broom,
     cli,
-    dibble (>= 0.3.0.9000),
+    dibble (>= 0.3.1.9000),
     dplyr,
     ggplot2,
+    glue,
     pillar,
     purrr,
     rlang,

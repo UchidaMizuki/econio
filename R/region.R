@@ -12,12 +12,16 @@ io_same_region <- function(data) {
     outs <- vctrs::vec_init(list(), length(region))
     for (i in seq_along(region)) {
       outs[[i]] <- data |>
-        dplyr::filter(.data$input$region == region[[i]],
-                      .data$output$region == region[[i]]) |>
+        dplyr::filter(
+          .data$input$region == region[[i]],
+          .data$output$region == region[[i]]
+        ) |>
         dibble::ones()
     }
-    dibble::broadcast(rlang::exec(rbind, !!!outs),
-                      dim_names = c("input", "output")) |>
+    dibble::broadcast(
+      rlang::exec(rbind, !!!outs),
+      dim_names = c("input", "output")
+    ) |>
       tidyr::replace_na(0)
   }
 }
@@ -39,13 +43,17 @@ io_sum_region <- function(data, axis) {
 
     dim_names <- dimnames(out)
     if (axis == "input") {
-      dimnames(out) <- list(input = dim_names$input,
-                            output = dim_names$output |>
-                              dplyr::select(!"region"))
+      dimnames(out) <- list(
+        input = dim_names$input,
+        output = dim_names$output |>
+          dplyr::select(!"region")
+      )
     } else {
-      dimnames(out) <- list(input = dim_names$input |>
-                              dplyr::select(!"region"),
-                            output = dim_names$output)
+      dimnames(out) <- list(
+        input = dim_names$input |>
+          dplyr::select(!"region"),
+        output = dim_names$output
+      )
     }
     outs[[i]] <- out
   }
@@ -64,13 +72,17 @@ io_sum_region <- function(data, axis) {
 
     dim_names <- dimnames(out)
     if (axis == "input") {
-      dimnames(out) <- list(input = dim_names$input |>
-                              dplyr::select(!"region"),
-                            output = dim_names$output)
+      dimnames(out) <- list(
+        input = dim_names$input |>
+          dplyr::select(!"region"),
+        output = dim_names$output
+      )
     } else {
-      dimnames(out) <- list(input = dim_names$input,
-                            output = dim_names$output |>
-                              dplyr::select(!"region"))
+      dimnames(out) <- list(
+        input = dim_names$input,
+        output = dim_names$output |>
+          dplyr::select(!"region")
+      )
     }
 
     class(out)[class(out) == "io_table_multiregional"] <- "io_table_regional"
