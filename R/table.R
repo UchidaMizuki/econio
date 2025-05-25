@@ -56,6 +56,7 @@ io_table_regional <- function(
     io_check_total(
       total_tolerance = total_tolerance
     ) |>
+    io_check_axis() |>
     new_io_table(
       class = c(
         if (competitive_import) {
@@ -123,6 +124,7 @@ io_table_multiregional <- function(
     io_check_total(
       total_tolerance = total_tolerance
     ) |>
+    io_check_axis() |>
     new_io_table(
       class = c(
         if (competitive_import) "io_table_competitive_import" else
@@ -281,6 +283,46 @@ io_check_total <- function(data, total_tolerance) {
         c("industry", "final_demand", "export", "import")
     ) |>
     tidyr::replace_na(0)
+}
+
+io_check_axis <- function(data) {
+  dim_names <- dimnames(data)
+
+  data_input <- dim_names$input |>
+    dplyr::filter(
+      io_sector_type(.data$sector) == "industry"
+    ) |>
+    dplyr::mutate(
+      dplyr::across("sector", io_sector_name)
+    )
+  data_output <- dim_names$output |>
+    dplyr::filter(
+      io_sector_type(.data$sector) == "industry"
+    ) |>
+    dplyr::mutate(
+      dplyr::across("sector", io_sector_name)
+    )
+
+  data_input_mismatch <- data_input |>
+    dplyr::anti_join(data_output, by = names(data_input))
+  data_output_mismatch <- data_output |>
+    dplyr::anti_join(data_input, by = names(data_output))
+
+  if (
+    !vctrs::vec_is_empty(vctrs::vec_c(
+      data_input_mismatch,
+      data_output_mismatch
+    ))
+  ) {
+    cli::cli_abort(
+      c(
+        "The input and output axes do not match.",
+        "x" = "Input axis mismatch: {data_input_mismatch}",
+        "x" = "Output axis mismatch: {data_output_mismatch}"
+      )
+    )
+  }
+  data
 }
 
 #' @export
