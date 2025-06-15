@@ -7,7 +7,13 @@ io_sector <- function(sector_type, sector_name) {
 
 io_input_sector <- function(sector_type, sector_name, competitive_import) {
   values <- if (competitive_import) {
-    c("industry", "value_added", "industry_total", "value_added_total", "total")
+    c(
+      "industry",
+      "value_added",
+      "industry_total",
+      "value_added_total",
+      "total"
+    )
   } else {
     c(
       "industry",
