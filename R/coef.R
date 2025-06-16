@@ -1,27 +1,18 @@
 #' Input coefficients
 #'
 #' @param data An `econ_io_table` object.
-#' @param input_sector_type A scalar character. The type of input sector.
-#' By default, `"industry"`.
-#' @param same_region A scalar logical. If `TRUE`, values between different
-#' regions are set to zero.
+#' @param open_economy A scalar logical. If `TRUE`, open economy assumptions are
+#' used.
 #'
 #' @return An `econ_io_table` object of input coefficients.
 #'
 #' @export
-io_input_coef <- function(
-  data,
-  input_sector_type = "industry",
-  same_region = FALSE
-) {
-  input_sector_type <- rlang::arg_match(
-    input_sector_type,
-    c("industry", "import", "value_added"),
-    multiple = TRUE
-  )
+io_input_coef <- function(data, open_economy = NULL) {
+  open_economy <- io_open_economy(data, open_economy)
+
   input <- data |>
     dplyr::filter(
-      io_sector_type(.data$input) %in% .env$input_sector_type,
+      io_sector_type(.data$input) == "industry",
       io_sector_type(.data$output) == "industry"
     )
   total_input <- io_total_input(data)
@@ -29,13 +20,73 @@ io_input_coef <- function(
     safe_divide(input, total_input),
     dim_names = c("input", "output")
   )
-  if (same_region) {
-    input_coef <- dibble::broadcast(
+
+  if (isTRUE(open_economy)) {
+    import_coef <- io_import_coef(data)
+    input_coef_same_region <- dibble::broadcast(
       input_coef * io_same_region(data),
       dim_names = dimnames(input_coef)
     )
+    dibble::broadcast(
+      input_coef - import_coef * input_coef_same_region,
+      dim_names = c("input", "output")
+    )
+  } else {
+    input_coef
   }
-  input_coef
+}
+
+#' Output coefficients
+#'
+#' @param data An `econ_io_table` object.
+#' @param open_economy A scalar logical. If `TRUE`, open economy assumptions are
+#' used.
+#'
+#' @return An `econ_io_table` object of output coefficients.
+#'
+#' @export
+io_output_coef <- function(data, open_economy = NULL) {
+  open_economy <- io_open_economy(data, open_economy)
+
+  output <- data |>
+    dplyr::filter(
+      io_sector_type(.data$input) == "industry",
+      io_sector_type(.data$output) == "industry"
+    )
+  if (isTRUE(open_economy)) {
+    total_output <- io_total_output(
+      data,
+      output_sector_type = c("industry", "final_demand"),
+      same_region = TRUE
+    )
+  } else {
+    total_output <- io_total_output(data)
+  }
+
+  dibble::broadcast(
+    safe_divide(output, total_output),
+    dim_names = c("input", "output")
+  )
+}
+
+io_open_economy <- function(data, open_economy) {
+  if (inherits(data, "io_table_noncompetitive_import")) {
+    if (!is.null(open_economy)) {
+      cli::cli_abort(
+        "{.code open_economy = NULL} is required for {.cls {class(data)}}."
+      )
+    }
+  } else if (inherits(data, "io_table_competitive_import")) {
+    if (is.null(open_economy)) {
+      open_economy <- FALSE
+      cli::cli_inform(
+        "Assuming {.code open_economy = {open_economy}}."
+      )
+    } else if (!rlang::is_scalar_logical(open_economy)) {
+      cli::cli_abort('{.code open_economy} must be a scalar logical.')
+    }
+  }
+  open_economy
 }
 
 #' Import coefficients
