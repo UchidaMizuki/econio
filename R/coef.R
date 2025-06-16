@@ -1,16 +1,27 @@
 #' Input coefficients
 #'
 #' @param data An `econ_io_table` object.
+#' @param input_sector_type A scalar character. The type of input sector.
+#' By default, `"industry"`.
 #' @param same_region A scalar logical. If `TRUE`, values between different
 #' regions are set to zero.
 #'
 #' @return An `econ_io_table` object of input coefficients.
 #'
 #' @export
-io_input_coef <- function(data, same_region = FALSE) {
+io_input_coef <- function(
+  data,
+  input_sector_type = "industry",
+  same_region = FALSE
+) {
+  input_sector_type <- rlang::arg_match(
+    input_sector_type,
+    c("industry", "import", "value_added"),
+    multiple = TRUE
+  )
   input <- data |>
     dplyr::filter(
-      io_sector_type(.data$input) == "industry",
+      io_sector_type(.data$input) %in% .env$input_sector_type,
       io_sector_type(.data$output) == "industry"
     )
   total_input <- io_total_input(data)
