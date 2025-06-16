@@ -4,10 +4,13 @@
 \alias{io_input_coef}
 \title{Input coefficients}
 \usage{
-io_input_coef(data, same_region = FALSE)
+io_input_coef(data, input_sector_type = "industry", same_region = FALSE)
 }
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
+
+\item{input_sector_type}{A scalar character. The type of input sector.
+By default, \code{"industry"}.}
 
 \item{same_region}{A scalar logical. If \code{TRUE}, values between different
 regions are set to zero.}

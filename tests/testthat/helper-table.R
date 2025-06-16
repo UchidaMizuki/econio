@@ -12,13 +12,13 @@ get_data_total_output <- function(iotable) {
   )
 }
 
-get_data_total_input <- function(iotable, endogenize_import = NULL) {
+get_data_total_input <- function(iotable, open_economy = NULL) {
   leontief_inv <- io_leontief_inverse(
     iotable,
-    endogenize_import = endogenize_import
+    open_economy = open_economy
   )
 
-  if (is.null(endogenize_import) || endogenize_import) {
+  if (is.null(open_economy) || open_economy) {
     total_final_demand_export <- io_total_output(
       iotable,
       output_sector_type = c("final_demand", "export")

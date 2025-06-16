@@ -1,14 +1,14 @@
 #' Leontief inverse matrix
 #'
 #' @param data An `econ_io_table` object.
-#' @param endogenize_import A scalar logical. If `TRUE`, imports are
+#' @param open_economy A scalar logical. If `TRUE`, imports are
 #' endogenized.
 #'
 #' @return An `econ_io_table` object of the Leontief inverse matrix.
 #'
 #' @export
-io_leontief_inverse <- function(data, endogenize_import = NULL) {
-  endogenize_import <- io_endogenize_import(data, endogenize_import)
+io_leontief_inverse <- function(data, open_economy = NULL) {
+  open_economy <- io_open_economy(data, open_economy)
 
   if (inherits(data, "io_table_noncompetitive_import")) {
     input_coef <- io_input_coef(data)
@@ -17,7 +17,7 @@ io_leontief_inverse <- function(data, endogenize_import = NULL) {
       dim_names = c("output", "input")
     )
   } else if (inherits(data, "io_table_competitive_import")) {
-    if (endogenize_import) {
+    if (open_economy) {
       input_coef <- io_input_coef(data)
       import_coef <- io_import_coef(data)
       input_coef_same_region <- io_input_coef(data, same_region = TRUE)
@@ -37,30 +37,32 @@ io_leontief_inverse <- function(data, endogenize_import = NULL) {
   }
 }
 
-io_endogenize_import <- function(data, endogenize_import) {
+io_open_economy <- function(data, open_economy) {
   if (inherits(data, "io_table_noncompetitive_import")) {
-    if (!is.null(endogenize_import)) {
+    if (!is.null(open_economy)) {
       cli::cli_abort(
-        "{.code endogenize_import = NULL} is required for {.cls {class(data)}}."
+        "{.code open_economy = NULL} is required for {.cls {class(data)}}."
       )
     }
   } else if (inherits(data, "io_table_competitive_import")) {
-    if (is.null(endogenize_import)) {
-      endogenize_import <- TRUE
-      cli::cli_inform("Assuming {.code endogenize_import = TRUE}.")
-    } else if (!rlang::is_scalar_logical(endogenize_import)) {
-      cli::cli_abort('{.code endogenize_import} must be a scalar logical.')
+    if (is.null(open_economy)) {
+      open_economy <- FALSE
+      cli::cli_inform(
+        "Assuming {.code open_economy = {open_economy}}."
+      )
+    } else if (!rlang::is_scalar_logical(open_economy)) {
+      cli::cli_abort('{.code open_economy} must be a scalar logical.')
     }
   }
-  endogenize_import
+  open_economy
 }
 
-io_production_induce <- function(data, endogenize_import = NULL) {
-  endogenize_import <- io_endogenize_import(data, endogenize_import)
+io_production_induce <- function(data, open_economy = NULL) {
+  open_economy <- io_open_economy(data, open_economy)
 
   leontief_inverse <- io_leontief_inverse(
     data,
-    endogenize_import = endogenize_import
+    open_economy = open_economy
   )
   total_final_demand <- io_total_output(
     data,
@@ -74,7 +76,7 @@ io_production_induce <- function(data, endogenize_import = NULL) {
       total_export = leontief_inverse %*% total_export
     )
   } else if (inherits(data, "io_table_competitive_import")) {
-    if (endogenize_import) {
+    if (open_economy) {
       import_coef <- io_import_coef(data)
       dibble::dibble(
         total_final_demand = leontief_inverse %*%
@@ -99,7 +101,7 @@ io_self_sufficiency_rate <- function(data, summary = FALSE) {
     )
   }
 
-  production_induce <- io_production_induce(data, endogenize_import = FALSE)
+  production_induce <- io_production_induce(data, open_economy = FALSE)
   total_final_demand <- production_induce$total_final_demand
   total_export <- production_induce$total_export
   total_import <- production_induce$total_import

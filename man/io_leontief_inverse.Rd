@@ -4,12 +4,12 @@
 \alias{io_leontief_inverse}
 \title{Leontief inverse matrix}
 \usage{
-io_leontief_inverse(data, endogenize_import = NULL)
+io_leontief_inverse(data, open_economy = NULL)
 }
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
 
-\item{endogenize_import}{A scalar logical. If \code{TRUE}, imports are
+\item{open_economy}{A scalar logical. If \code{TRUE}, imports are
 endogenized.}
 }
 \value{

@@ -42,7 +42,7 @@ test_that("io_table_regional() and io_table_multiregional() work", {
     if (competitive_import) {
       data_total_input <- get_data_total_input(
         iotable,
-        endogenize_import = TRUE
+        open_economy = TRUE
       )
       expect_true(all(dplyr::near(
         data_total_input$actual,
@@ -51,7 +51,7 @@ test_that("io_table_regional() and io_table_multiregional() work", {
 
       data_total_input <- get_data_total_input(
         iotable,
-        endogenize_import = FALSE
+        open_economy = FALSE
       )
       expect_true(all(dplyr::near(
         data_total_input$actual,

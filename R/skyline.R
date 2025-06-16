@@ -7,7 +7,7 @@ io_tidy_skyline <- function(x, ...) {
     )
   }
 
-  io_production_induce(x, endogenize_import = FALSE) |>
+  io_production_induce(x, open_economy = FALSE) |>
     tibble::as_tibble() |>
     tidyr::unpack("output") |>
     dplyr::mutate(
