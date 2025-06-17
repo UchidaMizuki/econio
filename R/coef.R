@@ -53,20 +53,33 @@ io_output_coef <- function(data, open_economy = NULL) {
       io_sector_type(.data$input) == "industry",
       io_sector_type(.data$output) == "industry"
     )
-  if (isTRUE(open_economy)) {
-    total_output <- io_total_output(
-      data,
-      output_sector_type = c("industry", "final_demand"),
-      same_region = TRUE
-    )
-  } else {
-    total_output <- io_total_output(data)
-  }
 
-  dibble::broadcast(
+  total_output <- io_total_output(data)
+  output_coef <- dibble::broadcast(
     safe_divide(output, total_output),
     dim_names = c("input", "output")
   )
+
+  if (isTRUE(open_economy)) {
+    total_export <- io_total_output(
+      data,
+      output_sector_type = "export"
+    )
+    total_import <- io_total_input(
+      data,
+      input_sector_type = "import"
+    )
+    same_region <- io_same_region(output)
+
+    dibble::broadcast(
+      output_coef *
+        total_output /
+        (total_output - (total_export - total_import) * same_region),
+      dim_names = c("input", "output")
+    )
+  } else {
+    output_coef
+  }
 }
 
 io_open_economy <- function(data, open_economy) {
