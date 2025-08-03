@@ -1,8 +1,8 @@
 #' Leontief inverse matrix
 #'
 #' @param data An `econ_io_table` object.
-#' @param open_economy A scalar logical. If `TRUE`, imports are
-#' endogenized.
+#' @param open_economy A scalar logical. If `TRUE`, open economy assumptions are
+#' used.
 #'
 #' @return An `econ_io_table` object of the Leontief inverse matrix.
 #'
@@ -10,51 +10,30 @@
 io_leontief_inverse <- function(data, open_economy = NULL) {
   open_economy <- io_open_economy(data, open_economy)
 
-  if (inherits(data, "io_table_noncompetitive_import")) {
-    input_coef <- io_input_coef(data)
-    dibble::broadcast(
-      solve(dibble::eye(input_coef) - input_coef),
-      dim_names = c("output", "input")
-    )
-  } else if (inherits(data, "io_table_competitive_import")) {
-    if (open_economy) {
-      input_coef <- io_input_coef(data)
-      import_coef <- io_import_coef(data)
-      input_coef_same_region <- io_input_coef(data, same_region = TRUE)
-
-      solve(
-        dibble::eye(input_coef) -
-          (input_coef - import_coef * input_coef_same_region)
-      ) |>
-        dibble::broadcast(dim_names = c("output", "input"))
-    } else {
-      input_coef <- io_input_coef(data)
-      dibble::broadcast(
-        solve(dibble::eye(input_coef) - input_coef),
-        dim_names = c("output", "input")
-      )
-    }
-  }
+  input_coef <- io_input_coef(data, open_economy = open_economy)
+  dibble::broadcast(
+    solve(dibble::eye(input_coef) - input_coef),
+    dim_names = c("output", "input")
+  )
 }
 
-io_open_economy <- function(data, open_economy) {
-  if (inherits(data, "io_table_noncompetitive_import")) {
-    if (!is.null(open_economy)) {
-      cli::cli_abort(
-        "{.code open_economy = NULL} is required for {.cls {class(data)}}."
-      )
-    }
-  } else if (inherits(data, "io_table_competitive_import")) {
-    if (is.null(open_economy)) {
-      open_economy <- FALSE
-      cli::cli_inform(
-        "Assuming {.code open_economy = {open_economy}}."
-      )
-    } else if (!rlang::is_scalar_logical(open_economy)) {
-      cli::cli_abort('{.code open_economy} must be a scalar logical.')
-    }
-  }
-  open_economy
+#' Ghosh inverse matrix
+#'
+#' @param data An `econ_io_table` object.
+#' @param open_economy A scalar logical. If `TRUE`, open economy assumptions are
+#' used.
+#'
+#' @return An `econ_io_table` object of the Ghosh inverse matrix.
+#'
+#' @export
+io_ghosh_inverse <- function(data, open_economy = NULL) {
+  open_economy <- io_open_economy(data, open_economy)
+
+  output_coef <- io_output_coef(data, open_economy = open_economy)
+  dibble::broadcast(
+    solve(dibble::eye(output_coef) - output_coef),
+    dim_names = c("output", "input")
+  )
 }
 
 io_production_induce <- function(data, open_economy = NULL) {
@@ -84,11 +63,11 @@ io_production_induce <- function(data, open_economy = NULL) {
         total_export = leontief_inverse %*% total_export
       )
     } else {
-      total_import <- io_total_output(data, output_sector_type = "import")
+      total_import <- -io_total_output(data, output_sector_type = "import")
       dibble::dibble(
         total_final_demand = leontief_inverse %*% total_final_demand,
         total_export = leontief_inverse %*% total_export,
-        total_import = -leontief_inverse %*% total_import
+        total_import = leontief_inverse %*% total_import
       )
     }
   }
