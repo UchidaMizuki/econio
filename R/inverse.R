@@ -63,11 +63,11 @@ io_production_induce <- function(data, open_economy = NULL) {
         total_export = leontief_inverse %*% total_export
       )
     } else {
-      total_import <- io_total_output(data, output_sector_type = "import")
+      total_import <- -io_total_output(data, output_sector_type = "import")
       dibble::dibble(
         total_final_demand = leontief_inverse %*% total_final_demand,
         total_export = leontief_inverse %*% total_export,
-        total_import = -leontief_inverse %*% total_import
+        total_import = leontief_inverse %*% total_import
       )
     }
   }

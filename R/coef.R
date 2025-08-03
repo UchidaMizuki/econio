@@ -65,9 +65,9 @@ io_output_coef <- function(data, open_economy = NULL) {
       data,
       output_sector_type = "export"
     )
-    total_import <- io_total_input(
+    total_import <- -io_total_output(
       data,
-      input_sector_type = "import"
+      output_sector_type = "import"
     )
     same_region <- io_same_region(output)
 
@@ -81,6 +81,8 @@ io_output_coef <- function(data, open_economy = NULL) {
     output_coef
   }
 }
+
+# import ------------------------------------------------------------------
 
 io_open_economy <- function(data, open_economy) {
   if (inherits(data, "io_table_noncompetitive_import")) {
