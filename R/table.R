@@ -101,7 +101,7 @@ io_table_multiregional <- function(
     competitive_import = competitive_import
   )
 
-  data <- data |>
+  data |>
     io_add_sector(
       "input",
       sector_type = !!rlang::sym(names_input[[2]]),
