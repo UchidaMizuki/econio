@@ -186,7 +186,7 @@ io_table_to_regional <- function(
   same_region_regional_demand <- io_same_region(regional_demand)
 
   if (inherits(data, "io_table_competitive_import")) {
-    regional_demand_regional <- io_sum_region(regional_demand, axis = "input")
+    regional_demand_regional <- io_sum_region(regional_demand, axis = "output")
     import_sector <- io_output_sector(
       "import",
       import_sector_name,
@@ -209,7 +209,7 @@ io_table_to_regional <- function(
   } else if (inherits(data, "io_table_noncompetitive_import")) {
     regional_demand_regional <- io_sum_region(
       regional_demand * same_region_regional_demand,
-      axis = "input"
+      axis = "output"
     )
     import_sector <- io_input_sector(
       "import",
