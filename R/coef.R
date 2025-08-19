@@ -55,10 +55,6 @@ io_output_coef <- function(data, open_economy = NULL) {
     )
 
   total_output <- io_total_output(data)
-  output_coef <- dibble::broadcast(
-    safe_divide(output, total_output),
-    dim_names = c("input", "output")
-  )
 
   if (isTRUE(open_economy)) {
     total_export <- io_total_output(
@@ -69,16 +65,19 @@ io_output_coef <- function(data, open_economy = NULL) {
       data,
       output_sector_type = "import"
     )
-    same_region <- io_same_region(output)
 
     dibble::broadcast(
-      output_coef *
-        total_output /
-        (total_output - (total_export - total_import) * same_region),
+      safe_divide(
+        output,
+        total_output - (total_export - total_import)
+      ),
       dim_names = c("input", "output")
     )
   } else {
-    output_coef
+    dibble::broadcast(
+      safe_divide(output, total_output),
+      dim_names = c("input", "output")
+    )
   }
 }
 
