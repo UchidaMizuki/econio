@@ -14,6 +14,8 @@ new_io_table <- function(data, ..., class = character()) {
 #' to be a competitive import type.
 #' @param total_tolerance A numeric. The tolerance for the total check. By
 #' default, `.Machine$double.eps^0.5`.
+#' @param check_axis A scalar logical. If `TRUE`, the input and output axes are
+#' checked to be identical. Default is `TRUE`.
 #'
 #' @return An `econ_io_table` object.
 #'
@@ -23,7 +25,8 @@ io_table_regional <- function(
   input = c("input_sector_type", "input_sector_name"),
   output = c("output_sector_type", "output_sector_name"),
   competitive_import = NULL,
-  total_tolerance = .Machine$double.eps^0.5
+  total_tolerance = .Machine$double.eps^0.5,
+  check_axis = TRUE
 ) {
   names_input <- names(tidyselect::eval_select(rlang::enquo(input), data))
   names_output <- names(tidyselect::eval_select(rlang::enquo(output), data))
@@ -56,7 +59,7 @@ io_table_regional <- function(
     io_check_total(
       total_tolerance = total_tolerance
     ) |>
-    io_check_axis() |>
+    io_check_axis(check = check_axis) |>
     new_io_table(
       class = c(
         if (competitive_import) {
@@ -80,6 +83,8 @@ io_table_regional <- function(
 #' to be a competitive import type.
 #' @param total_tolerance A numeric. The tolerance for the total check. By
 #' default, `.Machine$double.eps^0.5`.
+#' @param check_axis A scalar logical. If `TRUE`, the input and output axes are
+#' checked to be identical. Default is `TRUE`.
 #'
 #' @return An `econ_io_table` object.
 #'
@@ -89,7 +94,8 @@ io_table_multiregional <- function(
   input = c("input_region", "input_sector_type", "input_sector_name"),
   output = c("output_region", "output_sector_type", "output_sector_name"),
   competitive_import = NULL,
-  total_tolerance = .Machine$double.eps^0.5
+  total_tolerance = .Machine$double.eps^0.5,
+  check_axis = TRUE
 ) {
   names_input <- names(tidyselect::eval_select(rlang::enquo(input), data))
   names_output <- names(tidyselect::eval_select(rlang::enquo(output), data))
@@ -124,7 +130,7 @@ io_table_multiregional <- function(
     io_check_total(
       total_tolerance = total_tolerance
     ) |>
-    io_check_axis() |>
+    io_check_axis(check = check_axis) |>
     new_io_table(
       class = c(
         if (competitive_import) "io_table_competitive_import" else
@@ -285,7 +291,11 @@ io_check_total <- function(data, total_tolerance) {
     tidyr::replace_na(0)
 }
 
-io_check_axis <- function(data) {
+io_check_axis <- function(data, check) {
+  if (!check) {
+    return(data)
+  }
+
   dim_names <- dimnames(data)
 
   data_input <- dim_names$input |>

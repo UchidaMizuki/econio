@@ -9,16 +9,17 @@ io_table_regional(
   input = c("input_sector_type", "input_sector_name"),
   output = c("output_sector_type", "output_sector_name"),
   competitive_import = NULL,
-  total_tolerance = .Machine$double.eps^0.5
+  total_tolerance = .Machine$double.eps^0.5,
+  check_axis = TRUE
 )
 }
 \arguments{
 \item{data}{A data frame.}
 
-\item{input}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> Input sector type and name
+\item{input}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> Input sector type and name
 columns.}
 
-\item{output}{<\code{\link[=dplyr_tidy_select]{tidy-select}}> Output sector type and
+\item{output}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> Output sector type and
 name columns.}
 
 \item{competitive_import}{A scalar logical. If \code{TRUE}, the table is assumed
@@ -26,6 +27,9 @@ to be a competitive import type.}
 
 \item{total_tolerance}{A numeric. The tolerance for the total check. By
 default, \code{.Machine$double.eps^0.5}.}
+
+\item{check_axis}{A scalar logical. If \code{TRUE}, the input and output axes are
+checked to be identical. Default is \code{TRUE}.}
 }
 \value{
 An \code{econ_io_table} object.
