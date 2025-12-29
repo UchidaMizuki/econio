@@ -6,8 +6,8 @@
 \usage{
 io_table_regional(
   data,
-  input = c("input_sector_type", "input_sector_name"),
-  output = c("output_sector_type", "output_sector_name"),
+  input_cols = c("input_sector_type", "input_sector_name"),
+  output_cols = c("output_sector_type", "output_sector_name"),
   competitive_import = NULL,
   total_tolerance = .Machine$double.eps^0.5,
   check_axis = TRUE
@@ -16,10 +16,10 @@ io_table_regional(
 \arguments{
 \item{data}{A data frame.}
 
-\item{input}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> Input sector type and name
+\item{input_cols}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> Input sector type and name
 columns.}
 
-\item{output}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> Output sector type and
+\item{output_cols}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> Output sector type and
 name columns.}
 
 \item{competitive_import}{A scalar logical. If \code{TRUE}, the table is assumed

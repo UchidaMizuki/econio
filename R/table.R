@@ -6,9 +6,9 @@ new_io_table <- function(data, ..., class = character()) {
 #' Create a regional input-output table
 #'
 #' @param data A data frame.
-#' @param input <[`tidy-select`][dplyr_tidy_select]> Input sector type and name
+#' @param input_cols <[`tidy-select`][dplyr_tidy_select]> Input sector type and name
 #' columns.
-#' @param output <[`tidy-select`][dplyr_tidy_select]> Output sector type and
+#' @param output_cols <[`tidy-select`][dplyr_tidy_select]> Output sector type and
 #' name columns.
 #' @param competitive_import A scalar logical. If `TRUE`, the table is assumed
 #' to be a competitive import type.
@@ -22,33 +22,36 @@ new_io_table <- function(data, ..., class = character()) {
 #' @export
 io_table_regional <- function(
   data,
-  input = c("input_sector_type", "input_sector_name"),
-  output = c("output_sector_type", "output_sector_name"),
+  input_cols = c("input_sector_type", "input_sector_name"),
+  output_cols = c("output_sector_type", "output_sector_name"),
   competitive_import = NULL,
   total_tolerance = .Machine$double.eps^0.5,
   check_axis = TRUE
 ) {
-  names_input <- names(tidyselect::eval_select(rlang::enquo(input), data))
-  names_output <- names(tidyselect::eval_select(rlang::enquo(output), data))
+  input_names <- names(tidyselect::eval_select(rlang::enquo(input_cols), data))
+  output_names <- names(tidyselect::eval_select(
+    rlang::enquo(output_cols),
+    data
+  ))
 
   competitive_import <- io_competitive_import(
     data,
-    input_sector_type = names_input[[1]],
-    output_sector_type = names_output[[1]],
+    input_sector_type = input_names[[1]],
+    output_sector_type = output_names[[1]],
     competitive_import = competitive_import
   )
 
   data |>
     io_add_sector(
       "input",
-      sector_type = !!rlang::sym(names_input[[1]]),
-      sector_name = !!rlang::sym(names_input[[2]]),
+      sector_type = !!rlang::sym(input_names[[1]]),
+      sector_name = !!rlang::sym(input_names[[2]]),
       competitive_import = competitive_import
     ) |>
     io_add_sector(
       "output",
-      sector_type = !!rlang::sym(names_output[[1]]),
-      sector_name = !!rlang::sym(names_output[[2]]),
+      sector_type = !!rlang::sym(output_names[[1]]),
+      sector_name = !!rlang::sym(output_names[[2]]),
       competitive_import = competitive_import
     ) |>
     dibble::dibble_by(
@@ -75,9 +78,9 @@ io_table_regional <- function(
 #' Create a multi-regional input-output table
 #'
 #' @param data A data frame.
-#' @param input <[`tidy-select`][dplyr_tidy_select]> Input region, sector type
+#' @param input_cols <[`tidy-select`][dplyr_tidy_select]> Input region, sector type
 #' and name columns.
-#' @param output <[`tidy-select`][dplyr_tidy_select]> Output region, sector type
+#' @param output_cols <[`tidy-select`][dplyr_tidy_select]> Output region, sector type
 #' and name columns.
 #' @param competitive_import A scalar logical. If `TRUE`, the table is assumed
 #' to be a competitive import type.
@@ -91,37 +94,40 @@ io_table_regional <- function(
 #' @export
 io_table_multiregional <- function(
   data,
-  input = c("input_region", "input_sector_type", "input_sector_name"),
-  output = c("output_region", "output_sector_type", "output_sector_name"),
+  input_cols = c("input_region", "input_sector_type", "input_sector_name"),
+  output_cols = c("output_region", "output_sector_type", "output_sector_name"),
   competitive_import = NULL,
   total_tolerance = .Machine$double.eps^0.5,
   check_axis = TRUE
 ) {
-  names_input <- names(tidyselect::eval_select(rlang::enquo(input), data))
-  names_output <- names(tidyselect::eval_select(rlang::enquo(output), data))
+  input_names <- names(tidyselect::eval_select(rlang::enquo(input_cols), data))
+  output_names <- names(tidyselect::eval_select(
+    rlang::enquo(output_cols),
+    data
+  ))
 
   competitive_import <- io_competitive_import(
     data,
-    input_sector_type = names_input[[2]],
-    output_sector_type = names_output[[2]],
+    input_sector_type = input_names[[2]],
+    output_sector_type = output_names[[2]],
     competitive_import = competitive_import
   )
 
   data |>
     io_add_sector(
       "input",
-      sector_type = !!rlang::sym(names_input[[2]]),
-      sector_name = !!rlang::sym(names_input[[3]]),
+      sector_type = !!rlang::sym(input_names[[2]]),
+      sector_name = !!rlang::sym(input_names[[3]]),
       competitive_import = competitive_import
     ) |>
-    io_add_region("input", region = !!rlang::sym(names_input[[1]])) |>
+    io_add_region("input", region = !!rlang::sym(input_names[[1]])) |>
     io_add_sector(
       "output",
-      sector_type = !!rlang::sym(names_output[[2]]),
-      sector_name = !!rlang::sym(names_output[[3]]),
+      sector_type = !!rlang::sym(output_names[[2]]),
+      sector_name = !!rlang::sym(output_names[[3]]),
       competitive_import = competitive_import
     ) |>
-    io_add_region("output", region = !!rlang::sym(names_output[[1]])) |>
+    io_add_region("output", region = !!rlang::sym(output_names[[1]])) |>
     dibble::dibble_by(
       input = c("input_region", "input_sector"),
       output = c("output_region", "output_sector"),
