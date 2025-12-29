@@ -33,6 +33,8 @@ io_table_regional <- function(
     rlang::enquo(output_cols),
     data
   ))
+  vctrs::vec_check_size(input_names, 2)
+  vctrs::vec_check_size(output_names, 2)
 
   competitive_import <- io_competitive_import(
     data,
@@ -105,6 +107,8 @@ io_table_multiregional <- function(
     rlang::enquo(output_cols),
     data
   ))
+  vctrs::vec_check_size(input_names, 3)
+  vctrs::vec_check_size(output_names, 3)
 
   competitive_import <- io_competitive_import(
     data,
