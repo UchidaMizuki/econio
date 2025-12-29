@@ -349,13 +349,13 @@ io_check_axis <- function(data, check) {
 tbl_format_setup.io_table_multiregional <- function(x, ...) {
   setup <- NextMethod()
 
-  dimnames <- dimnames(x)
-  names_dimnames <- names(dimnames)
+  dim_names <- dimnames(x)
+  names_dim_names <- names(dim_names)
 
-  if ("input" %in% names_dimnames) {
-    count_input_region <- vctrs::vec_unique_count(dimnames$input$region)
-    count_input_industry <- vctrs::vec_unique_count(dimnames$input$sector[
-      io_sector_type(dimnames$input$sector) == "industry"
+  if ("input" %in% names_dim_names) {
+    count_input_region <- vctrs::vec_unique_count(dim_names$input$region)
+    count_input_industry <- vctrs::vec_unique_count(dim_names$input$sector[
+      io_sector_type(dim_names$input$sector) == "industry"
     ])
     tbl_sum_input <- c(
       "Input" = cli::pluralize(
@@ -366,10 +366,10 @@ tbl_format_setup.io_table_multiregional <- function(x, ...) {
     tbl_sum_input <- character()
   }
 
-  if ("output" %in% names_dimnames) {
-    count_output_region <- vctrs::vec_unique_count(dimnames$output$region)
-    count_output_industry <- vctrs::vec_unique_count(dimnames$output$sector[
-      io_sector_type(dimnames$output$sector) == "industry"
+  if ("output" %in% names_dim_names) {
+    count_output_region <- vctrs::vec_unique_count(dim_names$output$region)
+    count_output_industry <- vctrs::vec_unique_count(dim_names$output$sector[
+      io_sector_type(dim_names$output$sector) == "industry"
     ])
     tbl_sum_output <- c(
       "Output" = cli::pluralize(
@@ -393,11 +393,11 @@ tbl_format_setup.io_table_multiregional <- function(x, ...) {
 tbl_format_setup.io_table_regional <- function(x, ...) {
   setup <- NextMethod()
 
-  dimnames <- dimnames(x)
-  names_dimnames <- names(dimnames)
+  dim_names <- dimnames(x)
+  names_dim_names <- names(dim_names)
 
-  if ("input" %in% names_dimnames) {
-    count_input_sector <- vctrs::vec_unique_count(dimnames$input$sector)
+  if ("input" %in% names_dim_names) {
+    count_input_sector <- vctrs::vec_unique_count(dim_names$input$sector)
     tbl_sum_input <- c(
       "Input" = cli::pluralize("{count_input_sector} sector{?s}")
     )
@@ -405,8 +405,8 @@ tbl_format_setup.io_table_regional <- function(x, ...) {
     tbl_sum_input <- character()
   }
 
-  if ("output" %in% names_dimnames) {
-    count_output_sector <- vctrs::vec_unique_count(dimnames$output$sector)
+  if ("output" %in% names_dim_names) {
+    count_output_sector <- vctrs::vec_unique_count(dim_names$output$sector)
     tbl_sum_output <- c(
       "Output" = cli::pluralize("{count_output_sector} sector{?s}")
     )

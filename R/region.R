@@ -1,6 +1,6 @@
 io_region <- function(data) {
-  dimnames <- dimnames(data)
-  union(dimnames$input$region, dimnames$output$region)
+  dim_names <- dimnames(data)
+  union(dim_names$input$region, dim_names$output$region)
 }
 
 io_same_region <- function(data) {
