@@ -29,7 +29,7 @@ to be a competitive import type.}
 default, \code{.Machine$double.eps^0.5}.}
 
 \item{check_axis}{A scalar logical. If \code{TRUE}, the input and output axes are
-checked to be identical. Default is \code{TRUE}.}
+checked to be identical. By default, \code{TRUE}.}
 }
 \value{
 An \code{econ_io_table} object.

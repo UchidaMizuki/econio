@@ -15,7 +15,7 @@ new_io_table <- function(data, ..., class = character()) {
 #' @param total_tolerance A numeric. The tolerance for the total check. By
 #' default, `.Machine$double.eps^0.5`.
 #' @param check_axis A scalar logical. If `TRUE`, the input and output axes are
-#' checked to be identical. Default is `TRUE`.
+#' checked to be identical. By default, `TRUE`.
 #'
 #' @return An `econ_io_table` object.
 #'
@@ -89,7 +89,7 @@ io_table_regional <- function(
 #' @param total_tolerance A numeric. The tolerance for the total check. By
 #' default, `.Machine$double.eps^0.5`.
 #' @param check_axis A scalar logical. If `TRUE`, the input and output axes are
-#' checked to be identical. Default is `TRUE`.
+#' checked to be identical. By default, `TRUE`.
 #'
 #' @return An `econ_io_table` object.
 #'
@@ -143,8 +143,11 @@ io_table_multiregional <- function(
     io_check_axis(check = check_axis) |>
     new_io_table(
       class = c(
-        if (competitive_import) "io_table_competitive_import" else
-          "io_table_noncompetitive_import",
+        if (competitive_import) {
+          "io_table_competitive_import"
+        } else {
+          "io_table_noncompetitive_import"
+        },
         "io_table_multiregional"
       )
     )
