@@ -199,10 +199,15 @@ io_reclass_axis_data <- function(
       ) |>
       tidyr::replace_na(list(weight = 1))
 
-    if (!all(vctrs::vec_in(from_axis_data, axis_data$from))) {
-      cli::cli_abort(
-        "{.arg {axis_data_name}} has {.var from} values not present in the input-output table."
-      )
+    from_axis_data_difference <- vctrs::vec_set_difference(
+      from_axis_data,
+      axis_data$from
+    )
+    if (vctrs::vec_size(from_axis_data_difference) > 0) {
+      cli::cli_abort(c(
+        "{.arg {axis_data_name}} has {.var from} values not present in the input-output table:",
+        "i" = "{.var from} values: {io_sector_name(from_axis_data_difference)}"
+      ))
     }
   }
   axis_data
