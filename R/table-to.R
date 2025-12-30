@@ -1,6 +1,6 @@
 #' Convert an input-output table to a competitive import type table
 #'
-#' @param data An input-output table
+#' @param data An input-output table.
 #' @param import_sector_name A name for the import sector. By default,
 #' `NA_character_`.
 #'
@@ -57,7 +57,7 @@ io_table_to_competitive_import <- function(
 
 #' Convert an input-output table to a noncompetitive import type table
 #'
-#' @param data An input-output table
+#' @param data An input-output table.
 #' @param import_sector_name A name for the import sector. By default,
 #' `NA_character_`.
 #'
@@ -163,7 +163,7 @@ io_table_to_blocks <- function(data) {
 
 #' Convert a multiregional input-output table to a regional input-output table
 #'
-#' @param data A multiregional input-output table
+#' @param data A multiregional input-output table.
 #' @param export_sector_name A name for the export sector. By default,
 #' `NA_character_`.
 #' @param import_sector_name A name for the import sector. By default,

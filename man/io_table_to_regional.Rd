@@ -11,7 +11,7 @@ io_table_to_regional(
 )
 }
 \arguments{
-\item{data}{A multiregional input-output table}
+\item{data}{A multiregional input-output table.}
 
 \item{export_sector_name}{A name for the export sector. By default,
 \code{NA_character_}.}

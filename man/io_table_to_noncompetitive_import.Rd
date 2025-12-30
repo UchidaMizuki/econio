@@ -7,7 +7,7 @@
 io_table_to_noncompetitive_import(data, import_sector_name = NA_character_)
 }
 \arguments{
-\item{data}{An input-output table}
+\item{data}{An input-output table.}
 
 \item{import_sector_name}{A name for the import sector. By default,
 \code{NA_character_}.}
