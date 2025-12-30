@@ -32,7 +32,8 @@ test_that("io_reclass() works", {
       io_reclass(
         iotable_dummy,
         input_sector_data = input_sector_data,
-        output_sector_data = output_sector_data
+        output_sector_data = output_sector_data,
+        check_axis = FALSE
       ) |>
         io_reclass(
           input_sector_data = input_sector_data_inverse,

@@ -13,7 +13,8 @@ io_reclass(
   from_col = "from",
   to_col = "to",
   weight_col = "weight",
-  weight_tolerance = .Machine$double.eps^0.5
+  weight_tolerance = .Machine$double.eps^0.5,
+  check_axis = TRUE
 )
 }
 \arguments{
@@ -28,6 +29,9 @@ reclassification data. Defaults are \code{"from"}, \code{"to"}, and \code{"weigh
 
 \item{weight_tolerance}{Tolerance for checking that weights sum to 1.
 By default, \code{.Machine$double.eps^0.5}.}
+
+\item{check_axis}{A scalar logical. If \code{TRUE}, the input and output axes are
+checked to be identical. By default, \code{TRUE}.}
 }
 \value{
 A reclassified input-output table.
