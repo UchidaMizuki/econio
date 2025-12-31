@@ -10,7 +10,7 @@ io_table_regional(
   output_cols = c("output_sector_type", "output_sector_name"),
   competitive_import = NULL,
   total_tolerance = .Machine$double.eps^0.5,
-  check_axis = TRUE
+  check_axes = TRUE
 )
 }
 \arguments{
@@ -28,7 +28,7 @@ to be a competitive import type.}
 \item{total_tolerance}{A numeric. The tolerance for the total check. By
 default, \code{.Machine$double.eps^0.5}.}
 
-\item{check_axis}{A scalar logical. If \code{TRUE}, the input and output axes are
+\item{check_axes}{A scalar logical. If \code{TRUE}, the input and output axes are
 checked to be identical. By default, \code{TRUE}.}
 }
 \value{

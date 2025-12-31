@@ -14,7 +14,7 @@ new_io_table <- function(data, ..., class = character()) {
 #' to be a competitive import type.
 #' @param total_tolerance A numeric. The tolerance for the total check. By
 #' default, `.Machine$double.eps^0.5`.
-#' @param check_axis A scalar logical. If `TRUE`, the input and output axes are
+#' @param check_axes A scalar logical. If `TRUE`, the input and output axes are
 #' checked to be identical. By default, `TRUE`.
 #'
 #' @return An `econ_io_table` object.
@@ -26,7 +26,7 @@ io_table_regional <- function(
   output_cols = c("output_sector_type", "output_sector_name"),
   competitive_import = NULL,
   total_tolerance = .Machine$double.eps^0.5,
-  check_axis = TRUE
+  check_axes = TRUE
 ) {
   input_names <- names(tidyselect::eval_select(rlang::enquo(input_cols), data))
   output_names <- names(tidyselect::eval_select(
@@ -65,8 +65,8 @@ io_table_regional <- function(
       total_tolerance = total_tolerance
     )
 
-  if (check_axis) {
-    io_check_axis(data)
+  if (check_axes) {
+    io_check_axes(data)
   }
   new_io_table(
     data,
@@ -92,7 +92,7 @@ io_table_regional <- function(
 #' to be a competitive import type.
 #' @param total_tolerance A numeric. The tolerance for the total check. By
 #' default, `.Machine$double.eps^0.5`.
-#' @param check_axis A scalar logical. If `TRUE`, the input and output axes are
+#' @param check_axes A scalar logical. If `TRUE`, the input and output axes are
 #' checked to be identical. By default, `TRUE`.
 #'
 #' @return An `econ_io_table` object.
@@ -104,7 +104,7 @@ io_table_multiregional <- function(
   output_cols = c("output_region", "output_sector_type", "output_sector_name"),
   competitive_import = NULL,
   total_tolerance = .Machine$double.eps^0.5,
-  check_axis = TRUE
+  check_axes = TRUE
 ) {
   input_names <- names(tidyselect::eval_select(rlang::enquo(input_cols), data))
   output_names <- names(tidyselect::eval_select(
@@ -145,8 +145,8 @@ io_table_multiregional <- function(
       total_tolerance = total_tolerance
     )
 
-  if (check_axis) {
-    io_check_axis(data)
+  if (check_axes) {
+    io_check_axes(data)
   }
   new_io_table(
     data,
@@ -328,7 +328,7 @@ io_check_total <- function(data, total_tolerance = .Machine$double.eps^0.5) {
 #' @return An `econ_io_table` object.
 #'
 #' @export
-io_check_axis <- function(data) {
+io_check_axes <- function(data) {
   dim_names <- dimnames(data)
 
   data_input <- dim_names$input |>

@@ -9,7 +9,7 @@
 #' reclassification data. Defaults are `"from"`, `"to"`, and `"weight"`.
 #' @param weight_tolerance Tolerance for checking that weights sum to 1.
 #' By default, `.Machine$double.eps^0.5`.
-#' @param check_axis A scalar logical. If `TRUE`, the input and output axes are
+#' @param check_axes A scalar logical. If `TRUE`, the input and output axes are
 #' checked to be identical. By default, `TRUE`.
 #'
 #' @return A reclassified input-output table.
@@ -25,7 +25,7 @@ io_reclass <- function(
   to_col = "to",
   weight_col = "weight",
   weight_tolerance = .Machine$double.eps^0.5,
-  check_axis = TRUE
+  check_axes = TRUE
 ) {
   dim_names <- dimnames(data)
   dim_name_input <- dim_names$input
@@ -137,8 +137,8 @@ io_reclass <- function(
     dplyr::rename(input = "to_input", output = "to_output")
   class(data) <- class_data
 
-  if (check_axis) {
-    io_check_axis(data)
+  if (check_axes) {
+    io_check_axes(data)
   }
   data
 }
