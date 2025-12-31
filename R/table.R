@@ -61,7 +61,7 @@ io_table_regional <- function(
       output = "output_sector",
       .names_sep = "_"
     ) |>
-    io_check_total(
+    io_check_totals(
       total_tolerance = total_tolerance
     )
 
@@ -141,7 +141,7 @@ io_table_multiregional <- function(
       output = c("output_region", "output_sector"),
       .names_sep = "_"
     ) |>
-    io_check_total(
+    io_check_totals(
       total_tolerance = total_tolerance
     )
 
@@ -251,7 +251,7 @@ io_add_region <- function(data, axis, region) {
 #' @return An `econ_io_table` object.
 #'
 #' @export
-io_check_total <- function(data, total_tolerance = .Machine$double.eps^0.5) {
+io_check_totals <- function(data, total_tolerance = .Machine$double.eps^0.5) {
   if (dibble::ncol(data) != 1) {
     cli::cli_abort(
       "An input-output table must have only one column of amounts."
