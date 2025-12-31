@@ -326,6 +326,8 @@ io_check_total <- function(data, total_tolerance = .Machine$double.eps^0.5) {
 #' @param data An input-output table.
 #'
 #' @return An `econ_io_table` object.
+#'
+#' @export
 io_check_axis <- function(data) {
   dim_names <- dimnames(data)
 
