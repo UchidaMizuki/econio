@@ -136,7 +136,11 @@ io_reclass <- function(
   data <- data |>
     dplyr::rename(input = "to_input", output = "to_output")
   class(data) <- class_data
-  io_check_axis(data, check = check_axis)
+
+  if (check_axis) {
+    io_check_axis(data)
+  }
+  data
 }
 
 io_reclass_axis_data <- function(

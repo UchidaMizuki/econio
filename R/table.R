@@ -43,7 +43,7 @@ io_table_regional <- function(
     competitive_import = competitive_import
   )
 
-  data |>
+  data <- data |>
     io_add_sector(
       "input",
       sector_type = !!rlang::sym(input_names[[1]]),
@@ -63,18 +63,22 @@ io_table_regional <- function(
     ) |>
     io_check_total(
       total_tolerance = total_tolerance
-    ) |>
-    io_check_axis(check = check_axis) |>
-    new_io_table(
-      class = c(
-        if (competitive_import) {
-          "io_table_competitive_import"
-        } else {
-          "io_table_noncompetitive_import"
-        },
-        "io_table_regional"
-      )
     )
+
+  if (check_axis) {
+    io_check_axis(data)
+  }
+  new_io_table(
+    data,
+    class = c(
+      if (competitive_import) {
+        "io_table_competitive_import"
+      } else {
+        "io_table_noncompetitive_import"
+      },
+      "io_table_regional"
+    )
+  )
 }
 
 #' Create a multi-regional input-output table
@@ -117,7 +121,7 @@ io_table_multiregional <- function(
     competitive_import = competitive_import
   )
 
-  data |>
+  data <- data |>
     io_add_sector(
       "input",
       sector_type = !!rlang::sym(input_names[[2]]),
@@ -139,18 +143,22 @@ io_table_multiregional <- function(
     ) |>
     io_check_total(
       total_tolerance = total_tolerance
-    ) |>
-    io_check_axis(check = check_axis) |>
-    new_io_table(
-      class = c(
-        if (competitive_import) {
-          "io_table_competitive_import"
-        } else {
-          "io_table_noncompetitive_import"
-        },
-        "io_table_multiregional"
-      )
     )
+
+  if (check_axis) {
+    io_check_axis(data)
+  }
+  new_io_table(
+    data,
+    class = c(
+      if (competitive_import) {
+        "io_table_competitive_import"
+      } else {
+        "io_table_noncompetitive_import"
+      },
+      "io_table_multiregional"
+    )
+  )
 }
 
 io_competitive_import <- function(
@@ -234,7 +242,16 @@ io_add_region <- function(data, axis, region) {
     dplyr::relocate(!!region_column, .before = !!sector_column)
 }
 
-io_check_total <- function(data, total_tolerance) {
+#' Check input-output table totals
+#'
+#' @param data An input-output table.
+#' @param total_tolerance A numeric. The tolerance for the total check. By
+#' default, `.Machine$double.eps^0.5`.
+#'
+#' @return An `econ_io_table` object.
+#'
+#' @export
+io_check_total <- function(data, total_tolerance = .Machine$double.eps^0.5) {
   if (dibble::ncol(data) != 1) {
     cli::cli_abort(
       "An input-output table must have only one column of amounts."
@@ -304,11 +321,12 @@ io_check_total <- function(data, total_tolerance) {
     tidyr::replace_na(0)
 }
 
-io_check_axis <- function(data, check) {
-  if (!check) {
-    return(data)
-  }
-
+#' Check input-output table axes
+#'
+#' @param data An input-output table.
+#'
+#' @return An `econ_io_table` object.
+io_check_axis <- function(data) {
   dim_names <- dimnames(data)
 
   data_input <- dim_names$input |>
