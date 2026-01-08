@@ -1,15 +1,20 @@
 #' Convert an input-output table to a competitive import type table
 #'
 #' @param data An input-output table.
+#' @param data_import An optional import table. By default, `NULL`.
 #' @param import_sector_name A name for the import sector. By default,
 #' `NA_character_`.
+#' @param import_total_tolerance A numeric tolerance for checking import totals.
+#' By default, `.Machine$double.eps^0.5`.
 #'
 #' @return A competitive import type input-output table.
 #'
 #' @export
 io_table_to_competitive_import <- function(
   data,
-  import_sector_name = NA_character_
+  data_import = NULL,
+  import_sector_name = NA_character_,
+  import_total_tolerance = .Machine$double.eps^0.5
 ) {
   if (inherits(data, "io_table_competitive_import")) {
     return(data)
@@ -20,12 +25,25 @@ io_table_to_competitive_import <- function(
       io_sector_type(.data$input) == "industry",
       io_sector_type(.data$output) %in% c("industry", "final_demand")
     )
-  import <- dibble::broadcast(
-    regional_demand *
-      io_same_region(regional_demand) *
-      io_import_coef(data, axis = "output"),
-    dim_names = c("input", "output")
-  )
+
+  if (!is.null(data_import)) {
+    import <- data_import |>
+      dplyr::filter(
+        io_sector_type(.data$input) == "industry",
+        io_sector_type(.data$output) %in% c("industry", "final_demand")
+      ) |>
+      io_check_import_totals(
+        data,
+        import_total_tolerance = import_total_tolerance
+      )
+  } else {
+    import <- dibble::broadcast(
+      regional_demand *
+        io_same_region(regional_demand) *
+        io_import_coef(data, axis = "output"),
+      dim_names = c("input", "output")
+    )
+  }
 
   regional_demand <- regional_demand + import
 
@@ -58,15 +76,20 @@ io_table_to_competitive_import <- function(
 #' Convert an input-output table to a noncompetitive import type table
 #'
 #' @param data An input-output table.
+#' @param data_import An optional import table. By default, `NULL`.
 #' @param import_sector_name A name for the import sector. By default,
 #' `NA_character_`.
+#' @param import_total_tolerance A numeric tolerance for checking import totals.
+#' By default, `.Machine$double.eps^0.5`.
 #'
 #' @return A noncompetitive import type input-output table.
 #'
 #' @export
 io_table_to_noncompetitive_import <- function(
   data,
-  import_sector_name = NA_character_
+  data_import = NULL,
+  import_sector_name = NA_character_,
+  import_total_tolerance = .Machine$double.eps^0.5
 ) {
   if (inherits(data, "io_table_noncompetitive_import")) {
     return(data)
@@ -77,10 +100,23 @@ io_table_to_noncompetitive_import <- function(
       io_sector_type(.data$input) == "industry",
       io_sector_type(.data$output) %in% c("industry", "final_demand")
     )
-  import <- dibble::broadcast(
-    regional_demand * io_same_region(regional_demand) * io_import_coef(data),
-    dim_names = c("input", "output")
-  )
+
+  if (!is.null(data_import)) {
+    import <- data_import |>
+      dplyr::filter(
+        io_sector_type(.data$input) == "industry",
+        io_sector_type(.data$output) %in% c("industry", "final_demand")
+      ) |>
+      io_check_import_totals(
+        data,
+        import_total_tolerance = import_total_tolerance
+      )
+  } else {
+    import <- dibble::broadcast(
+      regional_demand * io_same_region(regional_demand) * io_import_coef(data),
+      dim_names = c("input", "output")
+    )
+  }
 
   regional_demand <- regional_demand - import
 
@@ -98,11 +134,21 @@ io_table_to_noncompetitive_import <- function(
     dibble::broadcast(dim_names = c("input", "output"))
   import <- import * io_same_region(import)
 
+  dim_names <- dimnames(data)
+  dim_names$input <- vctrs::vec_rbind(
+    dim_names$input |>
+      dplyr::filter(io_sector_type(.data$sector) == "industry"),
+    dimnames(import)$input,
+    dim_names$input |>
+      dplyr::filter(io_sector_type(.data$sector) == "value_added")
+  )
+
   out <- data |>
     dplyr::filter(io_sector_type(.data$output) != "import") |>
-    dplyr::rows_update(regional_demand) |>
-    dplyr::rows_insert(import) |>
+    dibble::broadcast(dim_names = dim_names) |>
     dibble::broadcast(dim_names = c("input", "output")) |>
+    dplyr::rows_update(regional_demand) |>
+    dplyr::rows_update(import) |>
     tidyr::replace_na(0)
   class(out)[
     class(out) == "io_table_competitive_import"
@@ -292,4 +338,59 @@ io_table_to_regional <- function(
         dibble::broadcast(dim_names = c("input", "output")) |>
         tidyr::replace_na(0)
     })
+}
+
+io_check_import_totals <- function(
+  data_import,
+  data,
+  import_total_tolerance = .Machine$double.eps^0.5
+) {
+  if (inherits(data, "io_table_noncompetitive_import")) {
+    axis <- "input"
+    sign_data_import_total_expected <- 1
+  } else if (inherits(data, "io_table_competitive_import")) {
+    axis <- "output"
+    sign_data_import_total_expected <- -1
+  }
+  axis_other <- switch(
+    axis,
+    input = "output",
+    output = "input"
+  )
+
+  data_import_total_actual <- data_import |>
+    dibble::apply(axis_other, sum)
+  data_import_total_expected <- data |>
+    dplyr::filter(
+      io_sector_type(.data[[axis]]) == "import",
+      io_sector_type(.data[[axis_other]]) %in% c("industry", "final_demand")
+    ) |>
+    dibble::apply(axis_other, sum)
+
+  data_import_total <- dibble::dibble(
+    import_total_actual = data_import_total_actual,
+    import_total_expected = data_import_total_expected *
+      sign_data_import_total_expected,
+  ) |>
+    tibble::as_tibble() |>
+    dplyr::filter(
+      !dplyr::near(
+        .data$import_total_actual,
+        .data$import_total_expected,
+        tol = .env$import_total_tolerance
+      )
+    )
+
+  if (!vctrs::vec_is_empty(data_import_total)) {
+    cli::cli_abort(
+      c(
+        "The total import values do not match.",
+        glue::glue(
+          "{io_sector_name(data_import_total[[axis_other]])}: {data_import_total$import_total_actual} (`actual`) not nearly equal to {data_import_total$import_total_expected} (`expected`)."
+        ) |>
+          rlang::set_names("x")
+      )
+    )
+  }
+  data_import
 }

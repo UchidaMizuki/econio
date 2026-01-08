@@ -4,13 +4,23 @@
 \alias{io_table_to_competitive_import}
 \title{Convert an input-output table to a competitive import type table}
 \usage{
-io_table_to_competitive_import(data, import_sector_name = NA_character_)
+io_table_to_competitive_import(
+  data,
+  data_import = NULL,
+  import_sector_name = NA_character_,
+  import_total_tolerance = .Machine$double.eps^0.5
+)
 }
 \arguments{
 \item{data}{An input-output table.}
 
+\item{data_import}{An optional import table. By default, \code{NULL}.}
+
 \item{import_sector_name}{A name for the import sector. By default,
 \code{NA_character_}.}
+
+\item{import_total_tolerance}{A numeric tolerance for checking import totals.
+By default, \code{.Machine$double.eps^0.5}.}
 }
 \value{
 A competitive import type input-output table.
