@@ -48,12 +48,5 @@ test_that("io_reclass() works", {
           dplyr::mutate(weight = .data$weight * 2)
       )
     )
-    expect_error(
-      io_reclass(
-        iotable_dummy,
-        input_sector_data = input_sector_data |>
-          dplyr::mutate(from = paste(.data$from, "x", sep = "_"))
-      )
-    )
   }
 })

@@ -11,5 +11,10 @@ Provides a set of functions for input-output analysis.
 \author{
 \strong{Maintainer}: Mizuki Uchida \email{uchidamizuki@vivaldi.net}
 
+Authors:
+\itemize{
+  \item Mizuki Uchida \email{uchidamizuki@vivaldi.net}
+}
+
 }
 \keyword{internal}
