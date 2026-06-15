@@ -76,7 +76,7 @@ test_that("io_table_regional() and io_table_multiregional() work", {
       )
     expect_error(
       io_table(
-        iotable_wrong_total,
+        iotable_wrong_total_input,
         competitive_import = competitive_import
       )
     )
@@ -91,7 +91,7 @@ test_that("io_table_regional() and io_table_multiregional() work", {
       )
     expect_error(
       io_table(
-        iotable_wrong_total,
+        iotable_wrong_total_output,
         competitive_import = competitive_import
       )
     )
