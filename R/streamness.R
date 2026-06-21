@@ -45,7 +45,8 @@ NULL
 #' @export
 io_upstreamness <- function(data, open_economy = NULL, normalize = FALSE) {
   ghosh_inverse <- io_ghosh_inverse(data, open_economy = open_economy)
-  upstreamness <- dibble::apply(ghosh_inverse, "output", sum)
+  upstreamness <- dibble::apply(ghosh_inverse, "output", sum) |>
+    dplyr::rename(industry = "output")
   io_normalize(upstreamness, normalize = normalize)
 }
 
@@ -53,7 +54,8 @@ io_upstreamness <- function(data, open_economy = NULL, normalize = FALSE) {
 #' @export
 io_downstreamness <- function(data, open_economy = NULL, normalize = FALSE) {
   leontief_inverse <- io_leontief_inverse(data, open_economy = open_economy)
-  downstreamness <- dibble::apply(leontief_inverse, "input", sum)
+  downstreamness <- dibble::apply(leontief_inverse, "input", sum) |>
+    dplyr::rename(industry = "input")
   io_normalize(downstreamness, normalize = normalize)
 }
 
