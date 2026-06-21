@@ -15,30 +15,13 @@ io_total_input <- function(
   output_sector_type = "industry",
   same_region = FALSE
 ) {
-  input_sector_type <- rlang::arg_match(
-    input_sector_type,
-    c("industry", "import", "value_added"),
-    multiple = TRUE
+  io_total(
+    data,
+    keep_axis = "output",
+    input_sector_type = input_sector_type,
+    output_sector_type = output_sector_type,
+    same_region = same_region
   )
-  output_sector_type <- rlang::arg_match(
-    output_sector_type,
-    c("industry", "final_demand", "export", "import"),
-    multiple = TRUE
-  )
-
-  input <- data |>
-    dplyr::filter(
-      io_sector_type(.data$input) %in% input_sector_type,
-      io_sector_type(.data$output) %in% output_sector_type
-    )
-  if (same_region) {
-    input <- dibble::broadcast(
-      input * io_same_region(data),
-      dim_names = dimnames(input)
-    )
-  }
-  input |>
-    dibble::apply("output", sum)
 }
 
 #' Get total output
@@ -58,6 +41,22 @@ io_total_output <- function(
   output_sector_type = c("industry", "final_demand", "export", "import"),
   same_region = FALSE
 ) {
+  io_total(
+    data,
+    keep_axis = "input",
+    input_sector_type = input_sector_type,
+    output_sector_type = output_sector_type,
+    same_region = same_region
+  )
+}
+
+io_total <- function(
+  data,
+  keep_axis,
+  input_sector_type,
+  output_sector_type,
+  same_region
+) {
   input_sector_type <- rlang::arg_match(
     input_sector_type,
     c("industry", "import", "value_added"),
@@ -69,17 +68,17 @@ io_total_output <- function(
     multiple = TRUE
   )
 
-  output <- data |>
+  total <- data |>
     dplyr::filter(
       io_sector_type(.data$input) %in% input_sector_type,
       io_sector_type(.data$output) %in% output_sector_type
     )
   if (same_region) {
-    output <- dibble::broadcast(
-      output * io_same_region(data),
-      dim_names = dimnames(output)
+    total <- dibble::broadcast(
+      total * io_same_region(data),
+      dim_names = dimnames(total)
     )
   }
-  output |>
-    dibble::apply("input", sum)
+  total |>
+    dibble::apply(keep_axis, sum)
 }

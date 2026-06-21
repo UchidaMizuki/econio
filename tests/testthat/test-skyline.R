@@ -1,12 +1,24 @@
 test_that("skyline tidy data has the expected structure", {
-  for (name in c("regional_competitive_import", "multiregional_competitive_import")) {
+  for (name in c(
+    "regional_competitive_import",
+    "multiregional_competitive_import"
+  )) {
     iotable <- read_iotable_dummy(name)
 
     sky <- broom::tidy(iotable, type = "skyline")
 
     expect_s3_class(sky, "tbl_df")
     expect_true(all(
-      c("sector", "total", "xmin", "xmax", "rate_type", "rate", "ymin", "ymax") %in%
+      c(
+        "sector",
+        "total",
+        "xmin",
+        "xmax",
+        "rate_type",
+        "rate",
+        "ymin",
+        "ymax"
+      ) %in%
         names(sky)
     ))
     expect_setequal(
@@ -44,13 +56,20 @@ test_that("skyline autoplot and autolayer return ggplot objects", {
   layer_rect <- ggplot2::autolayer(iotable, type = "skyline", geom = "rect")
   expect_s3_class(layer_rect, "Layer")
 
-  layer_segment <- ggplot2::autolayer(iotable, type = "skyline", geom = "segment")
+  layer_segment <- ggplot2::autolayer(
+    iotable,
+    type = "skyline",
+    geom = "segment"
+  )
   expect_type(layer_segment, "list")
   expect_true(all(purrr::map_lgl(layer_segment, \(x) inherits(x, "Layer"))))
 })
 
 test_that("skyline is not defined for noncompetitive import tables", {
-  for (name in c("regional_noncompetitive_import", "multiregional_noncompetitive_import")) {
+  for (name in c(
+    "regional_noncompetitive_import",
+    "multiregional_noncompetitive_import"
+  )) {
     iotable <- read_iotable_dummy(name)
 
     expect_error(broom::tidy(iotable, type = "skyline"))
