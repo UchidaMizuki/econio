@@ -53,7 +53,7 @@ NULL
 #' @export
 io_trophic_level <- function(data) {
   trophic <- io_trophic(data)
-  io_industry_dibble(trophic$inter, trophic$level)
+  dibble::dibble(trophic$level, .dim_names = list(industry = trophic$dim_name))
 }
 
 #' @rdname io_trophic
@@ -67,17 +67,19 @@ io_trophic_incoherence <- function(data) {
 }
 
 io_trophic <- function(data) {
-  data <- io_table_to_noncompetitive_import(data)
+  data <- io_table_to_noncompetitive_import(data) |>
+    io_check_axes()
 
   inter <- data |>
     dplyr::filter(
       io_sector_type(.data$input) == "industry",
       io_sector_type(.data$output) == "industry"
     )
+  dim_name <- dimnames(inter)$input
 
   # In- and out-weight of each industry node, via dibble reductions.
-  in_weight <- as.numeric(as.matrix(dibble::apply(inter, "output", sum)))
-  out_weight <- as.numeric(as.matrix(dibble::apply(inter, "input", sum)))
+  in_weight <- as.vector(dibble::apply(inter, "output", sum))
+  out_weight <- as.vector(dibble::apply(inter, "input", sum))
 
   # The symmetric adjacency `weight + t(weight)` and the Laplacian solve act on
   # a single node set, which dibble's distinct input/output axes cannot
@@ -90,13 +92,5 @@ io_trophic <- function(data) {
   level <- as.numeric(MASS::ginv(laplacian) %*% imbalance)
   level <- level - min(level)
 
-  list(inter = inter, weight = weight, level = level)
-}
-
-io_industry_dibble <- function(inter, values) {
-  nodes <- dimnames(inter)$input
-  dim_cols <- names(nodes)
-  nodes <- dplyr::mutate(nodes, trophic_level = values)
-  dibble::dibble_by(nodes, industry = tidyselect::all_of(dim_cols)) |>
-    purrr::chuck("trophic_level")
+  list(dim_name = dim_name, weight = weight, level = level)
 }
