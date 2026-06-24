@@ -32,7 +32,10 @@ test_that("io_self_sufficiency_rate is only defined for competitive import table
     "regional_noncompetitive_import",
     "multiregional_noncompetitive_import"
   )) {
-    expect_error(io_self_sufficiency_rate(read_iotable_dummy(name)))
+    expect_snapshot(
+      io_self_sufficiency_rate(read_iotable_dummy(name)),
+      error = TRUE
+    )
   }
 
   for (name in c(

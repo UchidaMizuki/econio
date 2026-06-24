@@ -40,5 +40,5 @@ test_that("normalize rescales the measure to a mean of 1", {
 
 test_that("normalize must be a scalar logical", {
   iotable <- read_iotable_dummy("regional_competitive_import")
-  expect_error(io_downstreamness(iotable, normalize = "yes"))
+  expect_snapshot(io_downstreamness(iotable, normalize = "yes"), error = TRUE)
 })
