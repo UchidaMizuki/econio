@@ -70,22 +70,18 @@ io_trophic <- function(data) {
   data <- io_table_to_noncompetitive_import(data) |>
     io_check_axes()
 
-  inter <- data |>
-    dplyr::filter(
-      io_sector_type(.data$input) == "industry",
-      io_sector_type(.data$output) == "industry"
-    )
-  dim_name <- dimnames(inter)$input
+  inter_industry <- io_inter_industry(data)
+  dim_name <- dimnames(inter_industry)$input
 
   # In- and out-weight of each industry node, via dibble reductions.
-  in_weight <- as.vector(dibble::apply(inter, "output", sum))
-  out_weight <- as.vector(dibble::apply(inter, "input", sum))
+  in_weight <- as.vector(dibble::apply(inter_industry, "output", sum))
+  out_weight <- as.vector(dibble::apply(inter_industry, "input", sum))
 
   # The symmetric adjacency `weight + t(weight)` and the Laplacian solve act on
   # a single node set, which dibble's distinct input/output axes cannot
   # represent, so this core uses a plain matrix. The input and output industry
   # axes are identical, so the matrix and the weight vectors share one ordering.
-  weight <- as.matrix(inter)
+  weight <- as.matrix(inter_industry)
   laplacian <- diag(in_weight + out_weight) - (weight + t(weight))
   imbalance <- in_weight - out_weight
 

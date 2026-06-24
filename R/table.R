@@ -368,6 +368,14 @@ io_check_axes <- function(data) {
   data
 }
 
+io_inter_industry <- function(data) {
+  data |>
+    dplyr::filter(
+      io_sector_type(.data$input) == "industry",
+      io_sector_type(.data$output) == "industry"
+    )
+}
+
 #' @export
 tbl_format_setup.io_table_multiregional <- function(x, ...) {
   setup <- NextMethod()

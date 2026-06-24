@@ -10,11 +10,7 @@
 io_input_coef <- function(data, open_economy = NULL) {
   open_economy <- io_open_economy(data, open_economy)
 
-  input <- data |>
-    dplyr::filter(
-      io_sector_type(.data$input) == "industry",
-      io_sector_type(.data$output) == "industry"
-    )
+  input <- io_inter_industry(data)
   total_input <- io_total_input(data)
   input_coef <- dibble::broadcast(
     safe_divide(input, total_input),
@@ -48,11 +44,7 @@ io_input_coef <- function(data, open_economy = NULL) {
 io_output_coef <- function(data, open_economy = NULL) {
   open_economy <- io_open_economy(data, open_economy)
 
-  output <- data |>
-    dplyr::filter(
-      io_sector_type(.data$input) == "industry",
-      io_sector_type(.data$output) == "industry"
-    )
+  output <- io_inter_industry(data)
 
   total_output <- io_total_output(data)
 

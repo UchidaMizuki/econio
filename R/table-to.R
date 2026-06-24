@@ -157,11 +157,7 @@ io_table_to_noncompetitive_import <- function(
 }
 
 io_table_to_blocks <- function(data) {
-  inter_industry <- data |>
-    dplyr::filter(
-      io_sector_type(.data$input) == "industry",
-      io_sector_type(.data$output) == "industry"
-    )
+  inter_industry <- io_inter_industry(data)
   value_added <- data |>
     dplyr::filter(
       io_sector_type(.data$input) == "value_added",
