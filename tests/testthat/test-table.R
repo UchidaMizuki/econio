@@ -122,3 +122,12 @@ test_that("io_industry_network() informs only when converting implicitly", {
   iotable_competitive <- read_iotable_dummy("regional_competitive_import")
   expect_snapshot(network <- io_industry_network(iotable_competitive))
 })
+
+test_that("io_industry_network() zeros and informs about negative transactions", {
+  iotable <- read_iotable_dummy("regional_noncompetitive_import")
+  iotable_negative <- iotable
+  iotable_negative[1, 1] <- -99
+
+  expect_snapshot(network <- io_industry_network(iotable_negative))
+  expect_equal(network$weight[1, 1], 0)
+})
