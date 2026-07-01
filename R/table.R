@@ -368,6 +368,32 @@ io_check_axes <- function(data) {
   data
 }
 
+io_inter_industry <- function(data) {
+  data |>
+    dplyr::filter(
+      io_sector_type(.data$input) == "industry",
+      io_sector_type(.data$output) == "industry"
+    )
+}
+
+io_industry_network <- function(data) {
+  data <- io_table_to_noncompetitive_import(data) |>
+    io_check_axes()
+  inter_industry <- io_inter_industry(data)
+  dim_name <- dimnames(inter_industry)$input
+  weight <- as.matrix(inter_industry)
+  in_weight <- as.vector(dibble::apply(inter_industry, "output", sum))
+  out_weight <- as.vector(dibble::apply(inter_industry, "input", sum))
+  laplacian <- diag(in_weight + out_weight) - (weight + t(weight))
+  list(
+    dim_name = dim_name,
+    weight = weight,
+    in_weight = in_weight,
+    out_weight = out_weight,
+    laplacian = laplacian
+  )
+}
+
 #' @export
 tbl_format_setup.io_table_multiregional <- function(x, ...) {
   setup <- NextMethod()

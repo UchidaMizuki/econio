@@ -9,6 +9,7 @@
 #' @export
 io_leontief_inverse <- function(data, open_economy = NULL) {
   open_economy <- io_open_economy(data, open_economy)
+  data <- io_check_axes(data)
 
   input_coef <- io_input_coef(data, open_economy = open_economy)
   dibble::broadcast(
@@ -28,6 +29,7 @@ io_leontief_inverse <- function(data, open_economy = NULL) {
 #' @export
 io_ghosh_inverse <- function(data, open_economy = NULL) {
   open_economy <- io_open_economy(data, open_economy)
+  data <- io_check_axes(data)
 
   output_coef <- io_output_coef(data, open_economy = open_economy)
   dibble::broadcast(

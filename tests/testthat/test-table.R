@@ -24,10 +24,13 @@ test_that("io_table_regional() and io_table_multiregional() work", {
       multiregional_competitive_import = TRUE
     )
 
-    expect_error(io_table(
-      iotable_dummy[[name]],
-      competitive_import = !competitive_import
-    ))
+    expect_snapshot(
+      io_table(
+        iotable_dummy[[name]],
+        competitive_import = !competitive_import
+      ),
+      error = TRUE
+    )
     iotable <- io_table(
       iotable_dummy[[name]],
       competitive_import = competitive_import
@@ -74,11 +77,12 @@ test_that("io_table_regional() and io_table_multiregional() work", {
           value
         )
       )
-    expect_error(
+    expect_snapshot(
       io_table(
         iotable_wrong_total_input,
         competitive_import = competitive_import
-      )
+      ),
+      error = TRUE
     )
 
     iotable_wrong_total_output <- iotable_dummy[[name]] |>
@@ -89,11 +93,24 @@ test_that("io_table_regional() and io_table_multiregional() work", {
           value
         )
       )
-    expect_error(
+    expect_snapshot(
       io_table(
         iotable_wrong_total_output,
         competitive_import = competitive_import
-      )
+      ),
+      error = TRUE
     )
   }
+})
+
+test_that("io_check_axes() detects axis mismatches", {
+  iotable <- read_iotable_dummy("regional_noncompetitive_import")
+  dim_names <- dimnames(iotable)
+  output_industry_sector <- dim_names$output |>
+    dplyr::filter(io_sector_type(.data$sector) == "industry") |>
+    dplyr::slice(1)
+  dim_names$output <- dim_names$output |>
+    dplyr::anti_join(output_industry_sector, by = "sector")
+  iotable_mismatch <- dibble::broadcast(iotable, dim_names = dim_names)
+  expect_snapshot(io_check_axes(iotable_mismatch), error = TRUE)
 })

@@ -1,20 +1,46 @@
 #' Input coefficients
 #'
-#' @param data An `econ_io_table` object.
-#' @param open_economy A scalar logical. If `TRUE`, open economy assumptions are
-#' used.
+#' Calculate the industry-by-industry input coefficient matrix, also known as
+#' the technical coefficient matrix or A matrix.
 #'
-#' @return An `econ_io_table` object of input coefficients.
+#' Each element `a[i, j]` represents the amount of input from industry `i`
+#' required to produce one unit of output from industry `j`. The coefficient
+#' is calculated as the ratio of intermediate input to total input (gross
+#' output).
+#'
+#' For competitive import type tables, `open_economy` controls whether to
+#' adjust the coefficients for import competition. When `open_economy = TRUE`,
+#' the coefficients are adjusted to exclude imports: `a[i, j] - m[i] * a[i, j]`
+#' where `m[i]` is the import coefficient for industry `i` in the same region.
+#' This gives the domestic (non-import) input coefficient used in open economy
+#' Leontief models. For noncompetitive import tables, `open_economy` must be
+#' `NULL` as imports are already separated.
+#'
+#' @param data An `econ_io_table` object.
+#' @param open_economy A scalar logical. If `TRUE`, open economy assumptions
+#' are used (competitive import tables only). Must be `NULL` for noncompetitive
+#' import tables.
+#'
+#' @return An `econ_io_table` object of input coefficients with dimensions
+#' `c("input", "output")`.
+#'
+#' @examples
+#' \dontrun{
+#' # Noncompetitive import table
+#' io_input_coef(iotable_noncomp)
+#'
+#' # Competitive import table, closed economy
+#' io_input_coef(iotable_comp, open_economy = FALSE)
+#'
+#' # Competitive import table, open economy (domestic coefficients)
+#' io_input_coef(iotable_comp, open_economy = TRUE)
+#' }
 #'
 #' @export
 io_input_coef <- function(data, open_economy = NULL) {
   open_economy <- io_open_economy(data, open_economy)
 
-  input <- data |>
-    dplyr::filter(
-      io_sector_type(.data$input) == "industry",
-      io_sector_type(.data$output) == "industry"
-    )
+  input <- io_inter_industry(data)
   total_input <- io_total_input(data)
   input_coef <- dibble::broadcast(
     safe_divide(input, total_input),
@@ -38,21 +64,45 @@ io_input_coef <- function(data, open_economy = NULL) {
 
 #' Output coefficients
 #'
-#' @param data An `econ_io_table` object.
-#' @param open_economy A scalar logical. If `TRUE`, open economy assumptions are
-#' used.
+#' Calculate the industry-by-industry output coefficient matrix, also known as
+#' the allocation coefficient matrix or B matrix, used in the Ghosh model.
 #'
-#' @return An `econ_io_table` object of output coefficients.
+#' Each element `b[i, j]` represents the proportion of industry `i`'s output
+#' that is sold to industry `j`. The coefficient is calculated as the ratio
+#' of intermediate output to total output (gross output).
+#'
+#' For competitive import type tables, `open_economy` controls the denominator
+#' calculation. When `open_economy = TRUE`, the denominator is adjusted to
+#' `total_output - (total_export - total_import)` to represent domestic
+#' production sold domestically. When `open_economy = FALSE`, the denominator
+#' is simply total output. For noncompetitive import tables, `open_economy`
+#' must be `NULL`.
+#'
+#' @param data An `econ_io_table` object.
+#' @param open_economy A scalar logical. If `TRUE`, open economy assumptions
+#' are used (competitive import tables only). Must be `NULL` for noncompetitive
+#' import tables.
+#'
+#' @return An `econ_io_table` object of output coefficients with dimensions
+#' `c("input", "output")`.
+#'
+#' @examples
+#' \dontrun{
+#' # Noncompetitive import table
+#' io_output_coef(iotable_noncomp)
+#'
+#' # Competitive import table, closed economy
+#' io_output_coef(iotable_comp, open_economy = FALSE)
+#'
+#' # Competitive import table, open economy
+#' io_output_coef(iotable_comp, open_economy = TRUE)
+#' }
 #'
 #' @export
 io_output_coef <- function(data, open_economy = NULL) {
   open_economy <- io_open_economy(data, open_economy)
 
-  output <- data |>
-    dplyr::filter(
-      io_sector_type(.data$input) == "industry",
-      io_sector_type(.data$output) == "industry"
-    )
+  output <- io_inter_industry(data)
 
   total_output <- io_total_output(data)
 
@@ -105,10 +155,42 @@ io_open_economy <- function(data, open_economy) {
 
 #' Import coefficients
 #'
-#' @param data An `econ_io_table` object.
-#' @param axis A scalar character. By default, `"input"`.
+#' Calculate import coefficients for input-output tables. The calculation and
+#' interpretation differ based on the import type (competitive vs
+#' noncompetitive) and the specified axis.
 #'
-#' @return An `econ_io_table` object of import coefficients.
+#' For **noncompetitive import** tables, imports are recorded as a separate
+#' input row. When `axis = "input"`, all coefficients are zero (imports are
+#' not allocated to industries as inputs). When `axis = "output"`, coefficients
+#' represent the import share of regional demand: `import / regional_demand`
+#' for same-region demand, zero for cross-region flows.
+#'
+#' For **competitive import** tables, imports are recorded as a separate output
+#' column. When `axis = "input"`, coefficients represent the import share of
+#' regional demand (negative values): `-import / regional_demand` for
+#' same-region demand. When `axis = "output"`, all coefficients are zero.
+#'
+#' The axis parameter determines whether the coefficient varies by input
+#' industry (axis = "input") or output industry/final demand (axis = "output").
+#'
+#' @param data An `econ_io_table` object.
+#' @param axis A scalar character. Either `"input"` (default) or `"output"`,
+#' specifying whether to calculate import coefficients by input industry or by
+#' output category.
+#'
+#' @return An `econ_io_table` object of import coefficients. The dimensions
+#' depend on `axis` and the table type.
+#'
+#' @examples
+#' \dontrun{
+#' # Noncompetitive import table
+#' io_import_coef(iotable_noncomp, axis = "input")  # all zeros
+#' io_import_coef(iotable_noncomp, axis = "output") # import shares by output
+#'
+#' # Competitive import table
+#' io_import_coef(iotable_comp, axis = "input")  # import shares by input
+#' io_import_coef(iotable_comp, axis = "output") # all zeros
+#' }
 #'
 #' @export
 io_import_coef <- function(data, axis = c("input", "output")) {
