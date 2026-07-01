@@ -160,3 +160,15 @@
       x Input axis mismatch: industry_1
       x Output axis mismatch: character(0)
 
+# io_industry_network() informs only when converting implicitly
+
+    Code
+      network <- io_industry_network(iotable_noncompetitive)
+
+---
+
+    Code
+      network <- io_industry_network(iotable_competitive)
+    Message
+      Converting to a noncompetitive import type table with `io_table_to_noncompetitive_import()`.
+

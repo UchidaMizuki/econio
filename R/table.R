@@ -377,6 +377,11 @@ io_inter_industry <- function(data) {
 }
 
 io_industry_network <- function(data) {
+  if (!inherits(data, "io_table_noncompetitive_import")) {
+    cli::cli_inform(
+      "Converting to a noncompetitive import type table with {.fn io_table_to_noncompetitive_import}."
+    )
+  }
   data <- io_table_to_noncompetitive_import(data) |>
     io_check_axes()
   inter_industry <- io_inter_industry(data)
