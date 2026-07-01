@@ -9,11 +9,43 @@ io_import_coef(data, axis = c("input", "output"))
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
 
-\item{axis}{A scalar character. By default, \code{"input"}.}
+\item{axis}{A scalar character. Either \code{"input"} (default) or \code{"output"},
+specifying whether to calculate import coefficients by input industry or by
+output category.}
 }
 \value{
-An \code{econ_io_table} object of import coefficients.
+An \code{econ_io_table} object of import coefficients. The dimensions
+depend on \code{axis} and the table type.
 }
 \description{
-Import coefficients
+Calculate import coefficients for input-output tables. The calculation and
+interpretation differ based on the import type (competitive vs
+noncompetitive) and the specified axis.
+}
+\details{
+For \strong{noncompetitive import} tables, imports are recorded as a separate
+input row. When \code{axis = "input"}, all coefficients are zero (imports are
+not allocated to industries as inputs). When \code{axis = "output"}, coefficients
+represent the import share of regional demand: \code{import / regional_demand}
+for same-region demand, zero for cross-region flows.
+
+For \strong{competitive import} tables, imports are recorded as a separate output
+column. When \code{axis = "input"}, coefficients represent the import share of
+regional demand (negative values): \code{-import / regional_demand} for
+same-region demand. When \code{axis = "output"}, all coefficients are zero.
+
+The axis parameter determines whether the coefficient varies by input
+industry (axis = "input") or output industry/final demand (axis = "output").
+}
+\examples{
+\dontrun{
+# Noncompetitive import table
+io_import_coef(iotable_noncomp, axis = "input")  # all zeros
+io_import_coef(iotable_noncomp, axis = "output") # import shares by output
+
+# Competitive import table
+io_import_coef(iotable_comp, axis = "input")  # import shares by input
+io_import_coef(iotable_comp, axis = "output") # all zeros
+}
+
 }

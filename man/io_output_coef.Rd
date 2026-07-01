@@ -9,12 +9,40 @@ io_output_coef(data, open_economy = NULL)
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
 
-\item{open_economy}{A scalar logical. If \code{TRUE}, open economy assumptions are
-used.}
+\item{open_economy}{A scalar logical. If \code{TRUE}, open economy assumptions
+are used (competitive import tables only). Must be \code{NULL} for noncompetitive
+import tables.}
 }
 \value{
-An \code{econ_io_table} object of output coefficients.
+An \code{econ_io_table} object of output coefficients with dimensions
+\code{c("input", "output")}.
 }
 \description{
-Output coefficients
+Calculate the industry-by-industry output coefficient matrix, also known as
+the allocation coefficient matrix or B matrix, used in the Ghosh model.
+}
+\details{
+Each element \code{b[i, j]} represents the proportion of industry \code{i}'s output
+that is sold to industry \code{j}. The coefficient is calculated as the ratio
+of intermediate output to total output (gross output).
+
+For competitive import type tables, \code{open_economy} controls the denominator
+calculation. When \code{open_economy = TRUE}, the denominator is adjusted to
+\code{total_output - (total_export - total_import)} to represent domestic
+production sold domestically. When \code{open_economy = FALSE}, the denominator
+is simply total output. For noncompetitive import tables, \code{open_economy}
+must be \code{NULL}.
+}
+\examples{
+\dontrun{
+# Noncompetitive import table
+io_output_coef(iotable_noncomp)
+
+# Competitive import table, closed economy
+io_output_coef(iotable_comp, open_economy = FALSE)
+
+# Competitive import table, open economy
+io_output_coef(iotable_comp, open_economy = TRUE)
+}
+
 }

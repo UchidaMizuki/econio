@@ -9,12 +9,42 @@ io_input_coef(data, open_economy = NULL)
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
 
-\item{open_economy}{A scalar logical. If \code{TRUE}, open economy assumptions are
-used.}
+\item{open_economy}{A scalar logical. If \code{TRUE}, open economy assumptions
+are used (competitive import tables only). Must be \code{NULL} for noncompetitive
+import tables.}
 }
 \value{
-An \code{econ_io_table} object of input coefficients.
+An \code{econ_io_table} object of input coefficients with dimensions
+\code{c("input", "output")}.
 }
 \description{
-Input coefficients
+Calculate the industry-by-industry input coefficient matrix, also known as
+the technical coefficient matrix or A matrix.
+}
+\details{
+Each element \code{a[i, j]} represents the amount of input from industry \code{i}
+required to produce one unit of output from industry \code{j}. The coefficient
+is calculated as the ratio of intermediate input to total input (gross
+output).
+
+For competitive import type tables, \code{open_economy} controls whether to
+adjust the coefficients for import competition. When \code{open_economy = TRUE},
+the coefficients are adjusted to exclude imports: \code{a[i, j] - m[i] * a[i, j]}
+where \code{m[i]} is the import coefficient for industry \code{i} in the same region.
+This gives the domestic (non-import) input coefficient used in open economy
+Leontief models. For noncompetitive import tables, \code{open_economy} must be
+\code{NULL} as imports are already separated.
+}
+\examples{
+\dontrun{
+# Noncompetitive import table
+io_input_coef(iotable_noncomp)
+
+# Competitive import table, closed economy
+io_input_coef(iotable_comp, open_economy = FALSE)
+
+# Competitive import table, open economy (domestic coefficients)
+io_input_coef(iotable_comp, open_economy = TRUE)
+}
+
 }
