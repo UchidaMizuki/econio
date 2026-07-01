@@ -106,8 +106,11 @@ test_that("io_table_regional() and io_table_multiregional() work", {
 test_that("io_check_axes() detects axis mismatches", {
   iotable <- read_iotable_dummy("regional_noncompetitive_import")
   dim_names <- dimnames(iotable)
+  output_industry_sector <- dim_names$output |>
+    dplyr::filter(io_sector_type(.data$sector) == "industry") |>
+    dplyr::slice(1)
   dim_names$output <- dim_names$output |>
-    dplyr::filter(dplyr::row_number() <= dplyr::n() - 1)
+    dplyr::anti_join(output_industry_sector, by = "sector")
   iotable_mismatch <- dibble::broadcast(iotable, dim_names = dim_names)
   expect_snapshot(io_check_axes(iotable_mismatch), error = TRUE)
 })
