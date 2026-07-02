@@ -15,6 +15,8 @@ io_total_input <- function(
   output_sector_type = "industry",
   same_region = FALSE
 ) {
+  rlang::check_bool(same_region)
+
   io_total(
     data,
     keep_axis = "output",
@@ -41,6 +43,8 @@ io_total_output <- function(
   output_sector_type = c("industry", "final_demand", "export", "import"),
   same_region = FALSE
 ) {
+  rlang::check_bool(same_region)
+
   io_total(
     data,
     keep_axis = "input",

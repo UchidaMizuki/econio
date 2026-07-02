@@ -95,3 +95,15 @@ test_that("io_table_to_regional() works", {
     expect_equal(total_input_regional, total_input)
   }
 })
+
+test_that("io_table_to_*() validate their scalar arguments", {
+  iotable <- read_iotable_dummy("regional_noncompetitive_import")
+  expect_snapshot(
+    io_table_to_competitive_import(iotable, import_sector_name = 5),
+    error = TRUE
+  )
+  expect_snapshot(
+    io_table_to_noncompetitive_import(iotable, import_total_tolerance = "x"),
+    error = TRUE
+  )
+})

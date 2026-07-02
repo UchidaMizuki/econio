@@ -150,6 +150,38 @@
       x industry_2: 174 (`actual`) not nearly equal to 174.142857142857 (`expected`).
       x industry_3: 165 (`actual`) not nearly equal to 165.142857142857 (`expected`).
 
+# io_table_regional() validates its scalar arguments
+
+    Code
+      io_table_regional(data, competitive_import = TRUE, check_axes = "yes")
+    Condition
+      Error in `io_table_regional()`:
+      ! `check_axes` must be `TRUE` or `FALSE`, not the string "yes".
+
+---
+
+    Code
+      io_table_regional(data, competitive_import = TRUE, total_tolerance = -1)
+    Condition
+      Error in `io_table_regional()`:
+      ! `total_tolerance` must be a number larger than or equal to 0, not the number -1.
+
+---
+
+    Code
+      io_table_regional(data, competitive_import = "yes")
+    Condition
+      Error in `io_table_regional()`:
+      ! `competitive_import` must be `TRUE` or `FALSE`, not the string "yes".
+
+# io_check_totals() validates total_tolerance
+
+    Code
+      io_check_totals(iotable, total_tolerance = "x")
+    Condition
+      Error in `io_check_totals()`:
+      ! `total_tolerance` must be a number, not the string "x".
+
 # io_check_axes() detects axis mismatches
 
     Code

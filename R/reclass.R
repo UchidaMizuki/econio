@@ -27,6 +27,12 @@ io_reclass <- function(
   weight_tolerance = .Machine$double.eps^0.5,
   check_axes = TRUE
 ) {
+  rlang::check_string(from_col)
+  rlang::check_string(to_col)
+  rlang::check_string(weight_col)
+  rlang::check_number_decimal(weight_tolerance, min = 0)
+  rlang::check_bool(check_axes)
+
   dim_names <- dimnames(data)
   dim_name_input <- dim_names$input
   dim_name_output <- dim_names$output

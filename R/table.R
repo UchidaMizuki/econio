@@ -28,6 +28,9 @@ io_table_regional <- function(
   total_tolerance = .Machine$double.eps^0.5,
   check_axes = TRUE
 ) {
+  rlang::check_number_decimal(total_tolerance, min = 0)
+  rlang::check_bool(check_axes)
+
   input_names <- names(tidyselect::eval_select(rlang::enquo(input_cols), data))
   output_names <- names(tidyselect::eval_select(
     rlang::enquo(output_cols),
@@ -106,6 +109,9 @@ io_table_multiregional <- function(
   total_tolerance = .Machine$double.eps^0.5,
   check_axes = TRUE
 ) {
+  rlang::check_number_decimal(total_tolerance, min = 0)
+  rlang::check_bool(check_axes)
+
   input_names <- names(tidyselect::eval_select(rlang::enquo(input_cols), data))
   output_names <- names(tidyselect::eval_select(
     rlang::enquo(output_cols),
@@ -165,7 +171,9 @@ io_competitive_import <- function(
   data,
   input_sector_type,
   output_sector_type,
-  competitive_import
+  competitive_import,
+  arg = rlang::caller_arg(competitive_import),
+  call = rlang::caller_env()
 ) {
   if (is.null(competitive_import)) {
     input_sector_type <- data |>
@@ -191,9 +199,7 @@ io_competitive_import <- function(
     )
   }
 
-  if (!rlang::is_scalar_logical(competitive_import)) {
-    cli::cli_abort('{.code competitive_import} must be a scalar logical.')
-  }
+  rlang::check_bool(competitive_import, arg = arg, call = call)
   competitive_import
 }
 
@@ -252,6 +258,8 @@ io_add_region <- function(data, axis, region) {
 #'
 #' @export
 io_check_totals <- function(data, total_tolerance = .Machine$double.eps^0.5) {
+  rlang::check_number_decimal(total_tolerance, min = 0)
+
   if (dibble::ncol(data) != 1) {
     cli::cli_abort(
       "An input-output table must have only one column of amounts."

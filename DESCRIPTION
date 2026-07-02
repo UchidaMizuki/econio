@@ -18,7 +18,7 @@ Imports:
     MASS,
     pillar,
     purrr,
-    rlang,
+    rlang (>= 1.1.0),
     scales,
     tibble,
     tidyr,

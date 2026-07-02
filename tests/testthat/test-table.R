@@ -103,6 +103,28 @@ test_that("io_table_regional() and io_table_multiregional() work", {
   }
 })
 
+test_that("io_table_regional() validates its scalar arguments", {
+  iotable_dummy <- readRDS(test_path("data", "iotable_dummy.rds"))
+  data <- iotable_dummy$regional_competitive_import
+  expect_snapshot(
+    io_table_regional(data, competitive_import = TRUE, check_axes = "yes"),
+    error = TRUE
+  )
+  expect_snapshot(
+    io_table_regional(data, competitive_import = TRUE, total_tolerance = -1),
+    error = TRUE
+  )
+  expect_snapshot(
+    io_table_regional(data, competitive_import = "yes"),
+    error = TRUE
+  )
+})
+
+test_that("io_check_totals() validates total_tolerance", {
+  iotable <- read_iotable_dummy("regional_competitive_import")
+  expect_snapshot(io_check_totals(iotable, total_tolerance = "x"), error = TRUE)
+})
+
 test_that("io_check_axes() detects axis mismatches", {
   iotable <- read_iotable_dummy("regional_noncompetitive_import")
   dim_names <- dimnames(iotable)
