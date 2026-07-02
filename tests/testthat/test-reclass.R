@@ -50,3 +50,10 @@ test_that("io_reclass() works", {
     )
   }
 })
+
+test_that("io_reclass() validates its scalar arguments", {
+  iotable <- read_iotable_dummy("regional_competitive_import")
+  expect_snapshot(io_reclass(iotable, weight_tolerance = "x"), error = TRUE)
+  expect_snapshot(io_reclass(iotable, check_axes = "yes"), error = TRUE)
+  expect_snapshot(io_reclass(iotable, from_col = 1), error = TRUE)
+})

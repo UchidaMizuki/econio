@@ -16,6 +16,9 @@ io_table_to_competitive_import <- function(
   import_sector_name = NA_character_,
   import_total_tolerance = .Machine$double.eps^0.5
 ) {
+  rlang::check_string(import_sector_name, allow_na = TRUE)
+  rlang::check_number_decimal(import_total_tolerance, min = 0)
+
   if (inherits(data, "io_table_competitive_import")) {
     return(data)
   }
@@ -91,6 +94,9 @@ io_table_to_noncompetitive_import <- function(
   import_sector_name = NA_character_,
   import_total_tolerance = .Machine$double.eps^0.5
 ) {
+  rlang::check_string(import_sector_name, allow_na = TRUE)
+  rlang::check_number_decimal(import_total_tolerance, min = 0)
+
   if (inherits(data, "io_table_noncompetitive_import")) {
     return(data)
   }
@@ -219,6 +225,9 @@ io_table_to_regional <- function(
   export_sector_name = NA_character_,
   import_sector_name = NA_character_
 ) {
+  rlang::check_string(export_sector_name, allow_na = TRUE)
+  rlang::check_string(import_sector_name, allow_na = TRUE)
+
   region <- io_region(data)
 
   blocks <- io_table_to_blocks(data)

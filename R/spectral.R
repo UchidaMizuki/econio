@@ -46,11 +46,7 @@ io_spectral_embedding <- function(data, dims = 1) {
   network <- io_industry_network(data)
   n_industry <- ncol(network$laplacian)
 
-  if (!rlang::is_scalar_integerish(dims) || dims < 1 || dims > n_industry - 1) {
-    cli::cli_abort(
-      "{.arg dims} must be a scalar integer between 1 and {n_industry - 1}."
-    )
-  }
+  rlang::check_number_whole(dims, min = 1, max = n_industry - 1)
 
   decomposition <- eigen(network$laplacian, symmetric = TRUE)
   # Eigenvalues are returned in decreasing order, so the trivial constant mode

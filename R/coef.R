@@ -133,11 +133,17 @@ io_output_coef <- function(data, open_economy = NULL) {
 
 # import ------------------------------------------------------------------
 
-io_open_economy <- function(data, open_economy) {
+io_open_economy <- function(
+  data,
+  open_economy,
+  arg = rlang::caller_arg(open_economy),
+  call = rlang::caller_env()
+) {
   if (inherits(data, "io_table_noncompetitive_import")) {
     if (!is.null(open_economy)) {
       cli::cli_abort(
-        "{.code open_economy = NULL} is required for {.cls {class(data)}}."
+        "{.code open_economy = NULL} is required for {.cls {class(data)}}.",
+        call = call
       )
     }
   } else if (inherits(data, "io_table_competitive_import")) {
@@ -146,8 +152,8 @@ io_open_economy <- function(data, open_economy) {
       cli::cli_inform(
         "Assuming {.code open_economy = {open_economy}}."
       )
-    } else if (!rlang::is_scalar_logical(open_economy)) {
-      cli::cli_abort('{.code open_economy} must be a scalar logical.')
+    } else {
+      rlang::check_bool(open_economy, arg = arg, call = call)
     }
   }
   open_economy

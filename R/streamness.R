@@ -44,6 +44,8 @@ NULL
 #' @rdname io_streamness
 #' @export
 io_upstreamness <- function(data, open_economy = NULL, normalize = FALSE) {
+  rlang::check_bool(normalize)
+
   ghosh_inverse <- io_ghosh_inverse(data, open_economy = open_economy)
   upstreamness <- dibble::apply(ghosh_inverse, "output", sum) |>
     dplyr::rename(industry = "output")
@@ -53,6 +55,8 @@ io_upstreamness <- function(data, open_economy = NULL, normalize = FALSE) {
 #' @rdname io_streamness
 #' @export
 io_downstreamness <- function(data, open_economy = NULL, normalize = FALSE) {
+  rlang::check_bool(normalize)
+
   leontief_inverse <- io_leontief_inverse(data, open_economy = open_economy)
   downstreamness <- dibble::apply(leontief_inverse, "input", sum) |>
     dplyr::rename(industry = "input")
@@ -60,9 +64,6 @@ io_downstreamness <- function(data, open_economy = NULL, normalize = FALSE) {
 }
 
 io_normalize <- function(x, normalize) {
-  if (!rlang::is_scalar_logical(normalize)) {
-    cli::cli_abort("{.arg normalize} must be a scalar logical.")
-  }
   if (normalize) {
     n <- vctrs::vec_size(dimnames(x)[[1]])
     x <- x * (n / sum(x))
