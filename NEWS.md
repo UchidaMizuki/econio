@@ -11,6 +11,8 @@
 * `io_spectral_embedding()`, `io_trophic_incoherence()` and `io_trophic_level()` now inform when they implicitly convert a competitive import type table to noncompetitive import type before building the industry network.
 * `io_spectral_embedding()`, `io_trophic_incoherence()` and `io_trophic_level()` now inform and zero out negative domestic intermediate transactions (e.g. from byproduct treatment such as the Stone method) before building the industry network, instead of producing an ill-defined result.
 * `io_spectral_embedding()` now reports an invalid `dims` argument with a clearer error message.
+* `io_streamness_length()` is a new function that returns the total length of the supply chain passing through each industry, computed as the sum of `io_upstreamness()` and `io_downstreamness()`, following Antràs and Chor (2018).
+* `io_streamness_position()` is a new experimental function that returns the net position of each industry within the supply chain, derived from `io_upstreamness()` and `io_downstreamness()`, with a `type` argument to choose between their difference, a `[-1, 1]`-bounded relative difference, or a log ratio.
 * `io_table_regional()` and `io_table_multiregional()` now validate `check_axes`, `competitive_import`, and `total_tolerance`.
 * `io_table_to_competitive_import()`, `io_table_to_noncompetitive_import()`, and `io_table_to_regional()` now validate their sector-name and tolerance arguments.
 * `io_total_input()` and `io_total_output()` now validate `same_region`.

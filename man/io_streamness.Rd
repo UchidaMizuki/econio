@@ -4,11 +4,14 @@
 \alias{io_streamness}
 \alias{io_upstreamness}
 \alias{io_downstreamness}
-\title{Upstreamness and downstreamness}
+\alias{io_streamness_length}
+\title{Upstreamness, downstreamness, and supply chain length}
 \usage{
 io_upstreamness(data, open_economy = NULL, normalize = FALSE)
 
 io_downstreamness(data, open_economy = NULL, normalize = FALSE)
+
+io_streamness_length(data, open_economy = NULL, normalize = FALSE)
 }
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
@@ -39,12 +42,19 @@ and to the \strong{backward linkage} (also called \emph{input downstreamness}). 
 larger value means a unit of final demand for the industry pulls more total
 output, directly and indirectly, from the rest of the economy.
 
+\code{io_streamness_length()} returns the sum of \code{io_upstreamness()} and
+\code{io_downstreamness()}. Following Antràs and Chor (2018), this sum measures
+the full length of the supply chain passing through the industry, i.e. the
+total number of production stages from pure value added to final
+consumption.
+
 When \code{normalize = TRUE} the measure is rescaled so that its mean across
 sectors equals 1. The normalized \code{io_downstreamness()} is the \strong{power of
 dispersion} (a backward-linkage index). The normalized \code{io_upstreamness()}
 is the Ghosh-based forward-linkage index; note that this is \strong{not} the same
 as the classical \emph{sensitivity of dispersion}, which is based on the row sums
-of the Leontief (not Ghosh) inverse.
+of the Leontief (not Ghosh) inverse. When \code{normalize = TRUE},
+\code{io_streamness_length()} has a mean of 2 across sectors.
 }
 \examples{
 \dontrun{
@@ -52,6 +62,14 @@ of the Leontief (not Ghosh) inverse.
 io_upstreamness(iotable)
 io_downstreamness(iotable) # equals the output multiplier
 io_downstreamness(iotable, normalize = TRUE) # power of dispersion
+io_streamness_length(iotable) # total number of production stages
 }
 
+}
+\references{
+Antràs, P. and Chor, D. (2018). On the measurement of upstreamness and
+downstreamness in global value chains. NBER Working Paper No. 24185.
+}
+\seealso{
+\code{\link[=io_streamness_position]{io_streamness_position()}}
 }
