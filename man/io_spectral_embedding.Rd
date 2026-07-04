@@ -18,10 +18,12 @@ A \code{dibble}. With \code{dims = 1}, one value per industry. With
 \code{dims > 1}, an \code{industry} by \code{component} array.
 }
 \description{
-Embeds the industries of the domestic production network into a
-low-dimensional space by minimizing the graph Dirichlet energy
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
 }
 \details{
+Embeds the industries of the domestic production network into a
+low-dimensional space by minimizing the graph Dirichlet energy
+
 \deqn{\sum_{ij} w_{ij} (h_i - h_j)^2 = h^\top \Lambda h,}
 
 subject to \code{h} being orthonormal and orthogonal to the constant vector. The

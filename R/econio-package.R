@@ -5,6 +5,7 @@
 #' @importFrom broom tidy
 #' @importFrom ggplot2 autolayer
 #' @importFrom ggplot2 autoplot
+#' @importFrom lifecycle badge
 #' @importFrom pillar pillar_shaft
 #' @importFrom pillar tbl_format_setup
 #' @importFrom rlang .data

@@ -1,5 +1,7 @@
 #' Laplacian spectral embedding
 #'
+#' `r lifecycle::badge("experimental")`
+#'
 #' Embeds the industries of the domestic production network into a
 #' low-dimensional space by minimizing the graph Dirichlet energy
 #'
