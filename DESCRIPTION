@@ -25,13 +25,14 @@ Imports:
     tidyr,
     tidyselect,
     vctrs
-Suggests: 
-    iotables,
+Suggests:
+    econiodatajp,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-Depends: 
+Depends:
     R (>= 4.1)
 Roxygen: list(markdown = TRUE)
-Remotes: 
-    uchidamizuki/dibble
+Remotes:
+    uchidamizuki/dibble,
+    uchidamizuki/econiodatajp
 Config/roxygen2/version: 8.0.0

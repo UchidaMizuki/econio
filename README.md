@@ -28,140 +28,95 @@ pak::pak("UchidaMizuki/econio")
 ``` r
 library(econio)
 
-library(tidyverse)
-library(iotables)
+library(econiodatajp)
+library(ggplot2)
 ```
 
 ### Create an input-output table object
 
-First, You need to prepare an input-output table in a tidy format. Then,
-you can create an input-output table object by using
-`io_table_regional()` function.
+[econiodatajp](https://github.com/UchidaMizuki/econiodatajp) provides
+Japan’s input-output tables as ready-to-use `econ_io_table` objects, so
+you don’t need to build one from a tidy data frame yourself. Use
+`io_table_get()` to fetch a specific table:
 
 ``` r
-table_germany_1995 <- iotable_get(source = "germany_1995") |>
-  rename(input_sector_name = iotables_row) |>
-  pivot_longer(
-    !input_sector_name,
-    names_to = "output_sector_name",
-    values_to = "value"
-  ) |>
-  mutate(
-    input_sector_type = case_when(
-      input_sector_name == "total" ~ "industry",
-      input_sector_name == "imports" ~ "import",
-      input_sector_name == "net_tax_products" ~ "value_added"
-    ),
-    output_sector_type = case_when(
-      output_sector_name == "total" ~ "industry",
-      output_sector_name == "gross_capital_formation" ~ "final_demand",
-      output_sector_name == "exports" ~ "export"
-    )
-  ) |>
-  relocate(
-    input_sector_type,
-    input_sector_name,
-    output_sector_type,
-    output_sector_name
-  ) |>
-  fill(input_sector_type, output_sector_type, .direction = "up") |>
-  drop_na(input_sector_type, output_sector_type) |>
-  filter(
-    !input_sector_name %in%
-      c("total", "intermediate_consumption", "gva", "output"),
-    !output_sector_name %in% c("total", "total_final_use")
-  )
-table_germany_1995
-#> # A tibble: 132 × 5
-#>    input_sector_type input_sector_name output_sector_type output_sector_name    
-#>    <chr>             <fct>             <chr>              <chr>                 
-#>  1 industry          agriculture_group industry           agriculture_group     
-#>  2 industry          agriculture_group industry           industry_group        
-#>  3 industry          agriculture_group industry           construction          
-#>  4 industry          agriculture_group industry           trade_group           
-#>  5 industry          agriculture_group industry           business_services_gro…
-#>  6 industry          agriculture_group industry           other_services_group  
-#>  7 industry          agriculture_group final_demand       final_consumption_hou…
-#>  8 industry          agriculture_group final_demand       final_consumption_gov…
-#>  9 industry          agriculture_group final_demand       inventory_change      
-#> 10 industry          agriculture_group final_demand       gross_capital_formati…
-#> # ℹ 122 more rows
-#> # ℹ 1 more variable: value <int>
-
-# You can suppress the message by setting `competitive_import = FALSE`
-iotable_germany_1995 <- io_table_regional(table_germany_1995)
-#> Assuming `competitive_import = FALSE`.
-iotable_germany_1995
+iotable <- io_table_get(
+  2020,
+  region_type = "regional",
+  area = "nation",
+  sector_class = "large",
+  language = "en"
+)
+iotable
 #> # Input-output table: regional
-#> # Dimensions:         input [12], output [11]
-#> # Input:              12 sectors
-#> # Output:             11 sectors
-#> # Import type:        noncompetitive
-#>    input$sector                 output$sector                              
-#>    <sector>                     <sector>                                   
-#>  1 <industry> agriculture_group <industry> agriculture_group               
-#>  2 <industry> agriculture_group <industry> industry_group                  
-#>  3 <industry> agriculture_group <industry> construction                    
-#>  4 <industry> agriculture_group <industry> trade_group                     
-#>  5 <industry> agriculture_group <industry> business_services_group         
-#>  6 <industry> agriculture_group <industry> other_services_group            
-#>  7 <industry> agriculture_group <final_demand> final_consumption_households
-#>  8 <industry> agriculture_group <final_demand> final_consumption_government
-#>  9 <industry> agriculture_group <final_demand> inventory_change            
-#> 10 <industry> agriculture_group <final_demand> gross_capital_formation     
-#> # ℹ 122 more rows
-#> # ℹ 1 more variable: . <dbl>
+#> # Dimensions:         input [43], output [47]
+#> # Input:              43 sectors
+#> # Output:             47 sectors
+#> # Import type:        competitive
+#>    input$sector                                    output$sector                                               .
+#>    <sector>                                        <sector>                                                <dbl>
+#>  1 <industry> 01_Agriculture, forestry and fishery <industry> 01_Agriculture, forestry and fishery    1602100000
+#>  2 <industry> 01_Agriculture, forestry and fishery <industry> 06_Mining                                        0
+#>  3 <industry> 01_Agriculture, forestry and fishery <industry> 11_Beverages and Foods                  7253300000
+#>  4 <industry> 01_Agriculture, forestry and fishery <industry> 15_Textile products                       16500000
+#>  5 <industry> 01_Agriculture, forestry and fishery <industry> 16_Pulp, paper and wooden products       289700000
+#>  6 <industry> 01_Agriculture, forestry and fishery <industry> 39_Miscellaneous manufacturing products   39900000
+#>  7 <industry> 01_Agriculture, forestry and fishery <industry> 20_Chemical products                      41700000
+#>  8 <industry> 01_Agriculture, forestry and fishery <industry> 21_Petroleum and coal products                   0
+#>  9 <industry> 01_Agriculture, forestry and fishery <industry> 22_Plastic products and rubber products  103500000
+#> 10 <industry> 01_Agriculture, forestry and fishery <industry> 25_Ceramic, stone and clay products         800000
+#> # ℹ 2,011 more rows
 ```
 
 ### Calculate input coefficients and Leontief inverse matrix
 
 ``` r
-io_input_coef(iotable_germany_1995)
+io_input_coef(iotable)
+#> Assuming `open_economy = FALSE`.
 #> # Input-output table: regional
-#> # Dimensions:         input [6], output [6]
-#> # Input:              6 sectors
-#> # Output:             6 sectors
-#> # Import type:        noncompetitive
-#>    input$sector                 output$sector                               .
-#>    <sector>                     <sector>                                <dbl>
-#>  1 <industry> agriculture_group <industry> agriculture_group       0.0258    
-#>  2 <industry> agriculture_group <industry> industry_group          0.0236    
-#>  3 <industry> agriculture_group <industry> construction            0.00000407
-#>  4 <industry> agriculture_group <industry> trade_group             0.00112   
-#>  5 <industry> agriculture_group <industry> business_services_group 0.00103   
-#>  6 <industry> agriculture_group <industry> other_services_group    0.00150   
-#>  7 <industry> industry_group    <industry> agriculture_group       0.181     
-#>  8 <industry> industry_group    <industry> industry_group          0.282     
-#>  9 <industry> industry_group    <industry> construction            0.261     
-#> 10 <industry> industry_group    <industry> trade_group             0.0761    
-#> # ℹ 26 more rows
-io_leontief_inverse(iotable_germany_1995)
+#> # Dimensions:         input [37], output [37]
+#> # Input:              37 sectors
+#> # Output:             37 sectors
+#> # Import type:        competitive
+#>    input$sector                                    output$sector                                             .
+#>    <sector>                                        <sector>                                              <dbl>
+#>  1 <industry> 01_Agriculture, forestry and fishery <industry> 01_Agriculture, forestry and fishery    0.130   
+#>  2 <industry> 01_Agriculture, forestry and fishery <industry> 06_Mining                               0       
+#>  3 <industry> 01_Agriculture, forestry and fishery <industry> 11_Beverages and Foods                  0.191   
+#>  4 <industry> 01_Agriculture, forestry and fishery <industry> 15_Textile products                     0.00568 
+#>  5 <industry> 01_Agriculture, forestry and fishery <industry> 16_Pulp, paper and wooden products      0.0253  
+#>  6 <industry> 01_Agriculture, forestry and fishery <industry> 39_Miscellaneous manufacturing products 0.00455 
+#>  7 <industry> 01_Agriculture, forestry and fishery <industry> 20_Chemical products                    0.00147 
+#>  8 <industry> 01_Agriculture, forestry and fishery <industry> 21_Petroleum and coal products          0       
+#>  9 <industry> 01_Agriculture, forestry and fishery <industry> 22_Plastic products and rubber products 0.00756 
+#> 10 <industry> 01_Agriculture, forestry and fishery <industry> 25_Ceramic, stone and clay products     0.000122
+#> # ℹ 1,359 more rows
+io_leontief_inverse(iotable)
+#> Assuming `open_economy = FALSE`.
 #> # Input-output table: regional
-#> # Dimensions:         output [6], input [6]
-#> # Input:              6 sectors
-#> # Output:             6 sectors
-#> # Import type:        noncompetitive
-#>    output$sector                input$sector                             .
-#>    <sector>                     <sector>                             <dbl>
-#>  1 <industry> agriculture_group <industry> agriculture_group       1.03   
-#>  2 <industry> agriculture_group <industry> industry_group          0.0350 
-#>  3 <industry> agriculture_group <industry> construction            0.0100 
-#>  4 <industry> agriculture_group <industry> trade_group             0.00509
-#>  5 <industry> agriculture_group <industry> business_services_group 0.00303
-#>  6 <industry> agriculture_group <industry> other_services_group    0.00442
-#>  7 <industry> industry_group    <industry> agriculture_group       0.290  
-#>  8 <industry> industry_group    <industry> industry_group          1.43   
-#>  9 <industry> industry_group    <industry> construction            0.396  
-#> 10 <industry> industry_group    <industry> trade_group             0.142  
-#> # ℹ 26 more rows
+#> # Dimensions:         output [37], input [37]
+#> # Input:              37 sectors
+#> # Output:             37 sectors
+#> # Import type:        competitive
+#>    output$sector                                   input$sector                                              .
+#>    <sector>                                        <sector>                                              <dbl>
+#>  1 <industry> 01_Agriculture, forestry and fishery <industry> 01_Agriculture, forestry and fishery    1.19    
+#>  2 <industry> 01_Agriculture, forestry and fishery <industry> 06_Mining                               0.000704
+#>  3 <industry> 01_Agriculture, forestry and fishery <industry> 11_Beverages and Foods                  0.286   
+#>  4 <industry> 01_Agriculture, forestry and fishery <industry> 15_Textile products                     0.0116  
+#>  5 <industry> 01_Agriculture, forestry and fishery <industry> 16_Pulp, paper and wooden products      0.0436  
+#>  6 <industry> 01_Agriculture, forestry and fishery <industry> 39_Miscellaneous manufacturing products 0.0108  
+#>  7 <industry> 01_Agriculture, forestry and fishery <industry> 20_Chemical products                    0.00860 
+#>  8 <industry> 01_Agriculture, forestry and fishery <industry> 21_Petroleum and coal products          0.000467
+#>  9 <industry> 01_Agriculture, forestry and fishery <industry> 22_Plastic products and rubber products 0.0136  
+#> 10 <industry> 01_Agriculture, forestry and fishery <industry> 25_Ceramic, stone and clay products     0.00202 
+#> # ℹ 1,359 more rows
 ```
 
 ### Draw a skyline chart
 
 ``` r
-iotable_germany_1995 |>
-  io_table_to_competitive_import() |>
-  autoplot(type = "skyline")
+autoplot(iotable, type = "skyline")
 ```
 
 <img src="man/figures/README-draw-skyline-chart-1.png"
