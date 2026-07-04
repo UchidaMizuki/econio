@@ -140,6 +140,9 @@ io_table_to_noncompetitive_import <- function(
     dibble::broadcast(dim_names = c("input", "output"))
   import <- import * io_same_region(import)
 
+  data <- data |>
+    dplyr::filter(io_sector_type(.data$output) != "import")
+
   dim_names <- dimnames(data)
   dim_names$input <- vctrs::vec_rbind(
     dim_names$input |>
@@ -150,7 +153,6 @@ io_table_to_noncompetitive_import <- function(
   )
 
   out <- data |>
-    dplyr::filter(io_sector_type(.data$output) != "import") |>
     dibble::broadcast(dim_names = dim_names) |>
     dibble::broadcast(dim_names = c("input", "output")) |>
     dplyr::rows_update(regional_demand) |>
