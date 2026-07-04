@@ -3,7 +3,7 @@
 ^data-raw$
 ^LICENSE\.md$
 ^\.github$
-^README\.Rmd$
 ^[.]?air[.]toml$
 ^\.vscode$
 ^\.claude$
+^README\.qmd$

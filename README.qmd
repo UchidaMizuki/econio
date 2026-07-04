@@ -1,10 +1,13 @@
 ---
-output: github_document
+format:
+  gfm:
+    default-image-extension: ""
 ---
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+<!-- README.md is generated from README.qmd. Please edit that file -->
 
-```{r, include = FALSE}
+```{r}
+#| include: false
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>",
@@ -20,7 +23,7 @@ knitr::opts_chunk$set(
 [![Codecov test coverage](https://codecov.io/gh/UchidaMizuki/econio/graph/badge.svg)](https://app.codecov.io/gh/UchidaMizuki/econio)
 <!-- badges: end -->
 
-econio provides a set of functions for input-output analysis. 
+econio provides a set of functions for input-output analysis.
 
 ## Installation
 
@@ -33,7 +36,10 @@ pak::pak("UchidaMizuki/econio")
 
 ## Example
 
-```{r example, message=FALSE, warning=FALSE}
+```{r}
+#| label: example
+#| message: false
+#| warning: false
 library(econio)
 
 library(tidyverse)
@@ -42,10 +48,11 @@ library(iotables)
 
 ### Create an input-output table object
 
-First, You need to prepare an input-output table in a tidy format. 
+First, You need to prepare an input-output table in a tidy format.
 Then, you can create an input-output table object by using `io_table_regional()` function.
 
-```{r create-input-output-table-object}
+```{r}
+#| label: create-input-output-table-object
 table_germany_1995 <- iotable_get(source = "germany_1995") |>
   rename(input_sector_name = iotables_row) |>
   pivot_longer(
@@ -54,17 +61,15 @@ table_germany_1995 <- iotable_get(source = "germany_1995") |>
     values_to = "value"
   ) |>
   mutate(
-    input_sector_type = case_match(
-      input_sector_name,
-      "total" ~ "industry",
-      "imports" ~ "import",
-      "net_tax_products" ~ "value_added"
+    input_sector_type = case_when(
+      input_sector_name == "total" ~ "industry",
+      input_sector_name == "imports" ~ "import",
+      input_sector_name == "net_tax_products" ~ "value_added"
     ),
-    output_sector_type = case_match(
-      output_sector_name,
-      "total" ~ "industry",
-      "gross_capital_formation" ~ "final_demand",
-      "exports" ~ "export"
+    output_sector_type = case_when(
+      output_sector_name == "total" ~ "industry",
+      output_sector_name == "gross_capital_formation" ~ "final_demand",
+      output_sector_name == "exports" ~ "export"
     )
   ) |>
   relocate(
@@ -89,15 +94,17 @@ iotable_germany_1995
 
 ### Calculate input coefficients and Leontief inverse matrix
 
-```{r calculate-input-coef-and-leontief-inverse}
+```{r}
+#| label: calculate-input-coef-and-leontief-inverse
 io_input_coef(iotable_germany_1995)
 io_leontief_inverse(iotable_germany_1995)
 ```
 
 ### Draw a skyline chart
 
-```{r draw-skyline-chart}
-iotable_germany_1995 |> 
-  io_table_to_competitive_import() |> 
+```{r}
+#| label: draw-skyline-chart
+iotable_germany_1995 |>
+  io_table_to_competitive_import() |>
   autoplot(type = "skyline")
 ```

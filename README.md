@@ -1,5 +1,6 @@
 
-<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+<!-- README.md is generated from README.qmd. Please edit that file -->
 
 # econio
 
@@ -46,17 +47,15 @@ table_germany_1995 <- iotable_get(source = "germany_1995") |>
     values_to = "value"
   ) |>
   mutate(
-    input_sector_type = case_match(
-      input_sector_name,
-      "total" ~ "industry",
-      "imports" ~ "import",
-      "net_tax_products" ~ "value_added"
+    input_sector_type = case_when(
+      input_sector_name == "total" ~ "industry",
+      input_sector_name == "imports" ~ "import",
+      input_sector_name == "net_tax_products" ~ "value_added"
     ),
-    output_sector_type = case_match(
-      output_sector_name,
-      "total" ~ "industry",
-      "gross_capital_formation" ~ "final_demand",
-      "exports" ~ "export"
+    output_sector_type = case_when(
+      output_sector_name == "total" ~ "industry",
+      output_sector_name == "gross_capital_formation" ~ "final_demand",
+      output_sector_name == "exports" ~ "export"
     )
   ) |>
   relocate(
@@ -160,9 +159,10 @@ io_leontief_inverse(iotable_germany_1995)
 ### Draw a skyline chart
 
 ``` r
-iotable_germany_1995 |> 
-  io_table_to_competitive_import() |> 
+iotable_germany_1995 |>
+  io_table_to_competitive_import() |>
   autoplot(type = "skyline")
 ```
 
-<img src="man/figures/README-draw-skyline-chart-1.png" width="100%" />
+<img src="man/figures/README-draw-skyline-chart-1.png"
+style="width:100.0%" />
