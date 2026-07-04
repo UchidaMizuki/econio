@@ -6,6 +6,7 @@
 * `io_downstreamness()` returns the column sums of the Leontief inverse, i.e. the output multiplier (backward linkage), with a `normalize` option to obtain the power of dispersion.
 * `io_input_coef()`, `io_output_coef()`, `io_leontief_inverse()`, and `io_ghosh_inverse()` now report invalid `open_economy` values against the calling function with a clearer error message.
 * `io_reclass()` now validates `from_col`, `to_col`, `weight_col`, `weight_tolerance`, and `check_axes`.
+* `io_spectral_embedding()` is now marked as experimental.
 * `io_spectral_embedding()` returns the Laplacian spectral embedding (Fiedler vector) of the domestic production network, minimizing the graph Dirichlet energy; pair it with `io_trophic_level()` for a directed supply-chain map.
 * `io_spectral_embedding()`, `io_trophic_incoherence()` and `io_trophic_level()` now inform when they implicitly convert a competitive import type table to noncompetitive import type before building the industry network.
 * `io_spectral_embedding()`, `io_trophic_incoherence()` and `io_trophic_level()` now inform and zero out negative domestic intermediate transactions (e.g. from byproduct treatment such as the Stone method) before building the industry network, instead of producing an ill-defined result.
