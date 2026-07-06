@@ -53,6 +53,15 @@ test_that("io_table_to_noncompetitive_import() works", {
       io_total_input(iotable_dummy_noncompetitive_import),
       io_total_input(iotable_dummy)
     )))
+    expect_length(
+      which(
+        io_sector_type(
+          dimnames(iotable_dummy_noncompetitive_import)$output$sector
+        ) ==
+          "import"
+      ),
+      0
+    )
   }
 })
 

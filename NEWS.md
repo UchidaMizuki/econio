@@ -15,6 +15,7 @@
 * `io_streamness_position()` is a new experimental function that returns the net position of each industry within the supply chain, derived from `io_upstreamness()` and `io_downstreamness()`, with a `type` argument to choose between their difference, a `[-1, 1]`-bounded relative difference, or a log ratio.
 * `io_table_regional()` and `io_table_multiregional()` now validate `check_axes`, `competitive_import`, and `total_tolerance`.
 * `io_table_to_competitive_import()`, `io_table_to_noncompetitive_import()`, and `io_table_to_regional()` now validate their sector-name and tolerance arguments.
+* `io_table_to_noncompetitive_import()` no longer leaves a leftover zero-valued `import` sector on the output axis when converting from a competitive import type table.
 * `io_total_input()` and `io_total_output()` now validate `same_region`.
 * `io_trophic_incoherence()` returns the trophic incoherence of the domestic production network.
 * `io_trophic_level()` returns the directed-network trophic level of each industry, following MacKay, Johnson and Sansom (2020).
