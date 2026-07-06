@@ -12,7 +12,7 @@ test_that("io_spectral_embedding returns the Fiedler vector", {
     # The Fiedler vector is orthogonal to the constant vector.
     expect_equal(sum(h), 0)
 
-    laplacian <- io_industry_network(iotable)$laplacian
+    laplacian <- io_laplacian(iotable)$laplacian
     eigenvalues <- sort(eigen(laplacian, symmetric = TRUE)$values)
     # A unit eigenvector's Dirichlet energy equals its eigenvalue; the Fiedler
     # vector attains the smallest non-zero one.

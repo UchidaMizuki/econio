@@ -45,12 +45,12 @@
 #'
 #' @export
 io_spectral_embedding <- function(data, dims = 1) {
-  network <- io_industry_network(data)
-  n_industry <- ncol(network$laplacian)
+  laplacian <- io_laplacian(data)
+  n_industry <- ncol(laplacian$laplacian)
 
   rlang::check_number_whole(dims, min = 1, max = n_industry - 1)
 
-  decomposition <- eigen(network$laplacian, symmetric = TRUE)
+  decomposition <- eigen(laplacian$laplacian, symmetric = TRUE)
   # Eigenvalues are returned in decreasing order, so the trivial constant mode
   # (eigenvalue ~ 0) is last. Take the `dims` smallest non-zero eigenvectors,
   # i.e. columns (n_industry - 1), (n_industry - 2), ..., the Fiedler vector
@@ -70,12 +70,12 @@ io_spectral_embedding <- function(data, dims = 1) {
   if (dims == 1) {
     dibble::dibble(
       as.vector(eigenvectors),
-      .dim_names = list(industry = network$dim_name)
+      .dim_names = list(industry = laplacian$dim_name)
     )
   } else {
     dibble::dibble(
       as.vector(eigenvectors),
-      .dim_names = list(industry = network$dim_name, component = seq_len(dims))
+      .dim_names = list(industry = laplacian$dim_name, component = seq_len(dims))
     )
   }
 }

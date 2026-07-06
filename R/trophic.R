@@ -67,11 +67,11 @@ io_trophic_incoherence <- function(data) {
 }
 
 io_trophic <- function(data) {
-  network <- io_industry_network(data)
-  imbalance <- network$in_weight - network$out_weight
+  laplacian <- io_laplacian(data)
+  imbalance <- laplacian$in_weight - laplacian$out_weight
 
-  level <- as.numeric(MASS::ginv(network$laplacian) %*% imbalance)
+  level <- as.numeric(MASS::ginv(laplacian$laplacian) %*% imbalance)
   level <- level - min(level)
 
-  list(dim_name = network$dim_name, weight = network$weight, level = level)
+  list(dim_name = laplacian$dim_name, weight = laplacian$weight, level = level)
 }
