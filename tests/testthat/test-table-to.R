@@ -65,6 +65,40 @@ test_that("io_table_to_noncompetitive_import() works", {
   }
 })
 
+test_that("io_table_to_byproduct_transfer() returns data unchanged when there are no negative transactions", {
+  iotable <- read_iotable_dummy("regional_noncompetitive_import")
+  expect_identical(io_table_to_byproduct_transfer(iotable), iotable)
+})
+
+test_that("io_table_to_byproduct_transfer() transfers a negative transaction to the reverse cell", {
+  iotable <- read_iotable_dummy("regional_noncompetitive_import")
+  iotable_negative <- iotable
+  iotable_negative[1, 3] <- -10
+
+  weight <- io_table_to_byproduct_transfer(iotable_negative) |>
+    io_inter_industry() |>
+    as.matrix()
+
+  expect_equal(sum(weight < 0), 0)
+  expect_equal(weight[1, 3], 0)
+  expect_equal(weight[3, 1], 13)
+})
+
+test_that("io_table_to_byproduct_transfer() handles negative transactions in both directions", {
+  iotable <- read_iotable_dummy("regional_noncompetitive_import")
+  iotable_negative <- iotable
+  iotable_negative[1, 3] <- -10
+  iotable_negative[3, 1] <- -4
+
+  weight <- io_table_to_byproduct_transfer(iotable_negative) |>
+    io_inter_industry() |>
+    as.matrix()
+
+  expect_equal(sum(weight < 0), 0)
+  expect_equal(weight[1, 3], 4)
+  expect_equal(weight[3, 1], 10)
+})
+
 test_that("io_table_to_regional() works", {
   names <- c(
     "multiregional_noncompetitive_import",

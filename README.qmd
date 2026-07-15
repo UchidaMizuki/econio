@@ -57,9 +57,9 @@ specific table:
 ```{r}
 #| label: create-input-output-table-object
 iotable <- io_table_get(
-  2020,
   region_type = "regional",
-  area = "nation",
+  region_class = "nation",
+  year = 2020,
   sector_class = "large",
   language = "en"
 )

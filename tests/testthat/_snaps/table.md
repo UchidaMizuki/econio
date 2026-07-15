@@ -123,7 +123,7 @@
     Condition
       Error in `io_check_totals()`:
       ! The total output values do not match.
-      x industry_1: 87 (`actual`) not nearly equal to 87.3333333333333 (`expected`).
+      x industry_1: 107 (`actual`) not nearly equal to 107.333333333333 (`expected`).
       x industry_2: 114 (`actual`) not nearly equal to 114.333333333333 (`expected`).
       x industry_3: 105 (`actual`) not nearly equal to 105.333333333333 (`expected`).
       x industry_1: 117 (`actual`) not nearly equal to 117.333333333333 (`expected`).
@@ -140,7 +140,7 @@
     Condition
       Error in `io_check_totals()`:
       ! The total output values do not match.
-      x industry_1: 87 (`actual`) not nearly equal to 87.1428571428571 (`expected`).
+      x industry_1: 107 (`actual`) not nearly equal to 107.142857142857 (`expected`).
       x industry_2: 114 (`actual`) not nearly equal to 114.142857142857 (`expected`).
       x industry_3: 105 (`actual`) not nearly equal to 105.142857142857 (`expected`).
       x industry_1: 117 (`actual`) not nearly equal to 117.142857142857 (`expected`).

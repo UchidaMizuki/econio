@@ -164,6 +164,37 @@ io_table_to_noncompetitive_import <- function(
   out
 }
 
+#' Convert byproduct transactions from the Stone method to the transfer method
+#'
+#' Apply this after {\link{io_table_to_noncompetitive_import}} if `data` is a
+#' competitive import type table, since that conversion can itself introduce
+#' negative domestic intermediate transactions that this function would not
+#' yet see.
+#'
+#' @param data An input-output table.
+#'
+#' @return An input-output table with negative domestic intermediate
+#' transactions transferred to the corresponding reverse-direction cell.
+#'
+#' @export
+io_table_to_byproduct_transfer <- function(data) {
+  data <- io_check_axes(data)
+
+  inter_industry <- io_inter_industry(data)
+  dim_names <- dimnames(inter_industry)
+  weight <- as.matrix(inter_industry)
+
+  if (sum(weight < 0) == 0) {
+    return(data)
+  }
+
+  weight <- pmax(weight, 0) + t(pmax(-weight, 0))
+  inter_industry <- dibble::dibble(as.vector(weight), .dim_names = dim_names)
+
+  data |>
+    dplyr::rows_update(inter_industry)
+}
+
 io_table_to_blocks <- function(data) {
   inter_industry <- io_inter_industry(data)
   value_added <- data |>

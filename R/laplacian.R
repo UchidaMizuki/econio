@@ -12,10 +12,12 @@ io_laplacian <- function(data) {
 
   n_negative <- sum(weight < 0)
   if (n_negative > 0) {
-    cli::cli_inform(
-      "Zeroing {n_negative} negative domestic intermediate transaction{?s} (e.g. from byproduct treatment such as the Stone method)."
+    cli::cli_abort(
+      c(
+        "Found {n_negative} negative domestic intermediate transaction{?s} (e.g. from byproduct treatment such as the Stone method).",
+        "i" = "Use {.fn io_table_to_noncompetitive_import} and then {.fn io_table_to_byproduct_transfer} to convert negative entries to the transfer method before building the industry network."
+      )
     )
-    weight[weight < 0] <- 0
   }
 
   in_weight <- colSums(weight)

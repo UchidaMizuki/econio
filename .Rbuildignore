@@ -7,3 +7,4 @@
 ^\.vscode$
 ^\.claude$
 ^README\.qmd$
+^AGENTS\.md$
