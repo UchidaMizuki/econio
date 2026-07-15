@@ -75,7 +75,10 @@ io_spectral_embedding <- function(data, dims = 1) {
   } else {
     dibble::dibble(
       as.vector(eigenvectors),
-      .dim_names = list(industry = laplacian$dim_name, component = seq_len(dims))
+      .dim_names = list(
+        industry = laplacian$dim_name,
+        component = seq_len(dims)
+      )
     )
   }
 }
