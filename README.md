@@ -47,15 +47,6 @@ iotable <- io_table_get(
   sector_class = "large",
   language = "en"
 )
-#> trying URL 'https://www.e-stat.go.jp/stat-search/file-download?statInfId=000040187024&fileKind=0'
-#> downloaded 734 KB
-#> 
-#> trying URL 'https://www.e-stat.go.jp/stat-search/file-download?statInfId=000040186856&fileKind=0'
-#> downloaded 68 KB
-#> 
-#> trying URL 'https://www.e-stat.go.jp/en/stat-search/file-download?statInfId=000040186856&fileKind=0'
-#> downloaded 59 KB
-#> 
 iotable
 #> # Input-output table: regional
 #> # Dimensions:         input [43], output [47]
