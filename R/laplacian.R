@@ -15,7 +15,7 @@ io_laplacian <- function(data) {
     cli::cli_abort(
       c(
         "Found {n_negative} negative domestic intermediate transaction{?s} (e.g. from byproduct treatment such as the Stone method).",
-        "i" = "Use {.fn io_table_to_noncompetitive_import} and then {.fn io_table_to_byproduct_transfer} to convert negative entries to the transfer method before building the industry network."
+        "i" = "Use {.fn io_table_to_byproduct_transfer} to convert negative entries to the transfer method before building the industry network."
       )
     )
   }

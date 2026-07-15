@@ -166,10 +166,14 @@ io_table_to_noncompetitive_import <- function(
 
 #' Convert byproduct transactions from the Stone method to the transfer method
 #'
-#' Apply this after {\link{io_table_to_noncompetitive_import}} if `data` is a
-#' competitive import type table, since that conversion can itself introduce
-#' negative domestic intermediate transactions that this function would not
-#' yet see.
+#' Functions that build the domestic production network (such as
+#' `io_laplacian()`, and therefore `io_trophic_level()`,
+#' `io_trophic_incoherence()`, and `io_spectral_embedding()`) convert to
+#' noncompetitive import type internally as needed, so there is usually no
+#' need to call {\link{io_table_to_noncompetitive_import}} yourself first.
+#' In fact, converting first is best avoided: a leftover negative domestic
+#' intermediate transaction can leak into the import allocation during that
+#' conversion and produce a negative import value.
 #'
 #' @param data An input-output table.
 #'

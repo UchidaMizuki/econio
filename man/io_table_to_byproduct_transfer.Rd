@@ -14,8 +14,12 @@ An input-output table with negative domestic intermediate
 transactions transferred to the corresponding reverse-direction cell.
 }
 \description{
-Apply this after {\link{io_table_to_noncompetitive_import}} if \code{data} is a
-competitive import type table, since that conversion can itself introduce
-negative domestic intermediate transactions that this function would not
-yet see.
+Functions that build the domestic production network (such as
+\code{io_laplacian()}, and therefore \code{io_trophic_level()},
+\code{io_trophic_incoherence()}, and \code{io_spectral_embedding()}) convert to
+noncompetitive import type internally as needed, so there is usually no
+need to call {\link{io_table_to_noncompetitive_import}} yourself first.
+In fact, converting first is best avoided: a leftover negative domestic
+intermediate transaction can leak into the import allocation during that
+conversion and produce a negative import value.
 }

@@ -17,5 +17,5 @@
     Condition
       Error in `io_laplacian()`:
       ! Found 1 negative domestic intermediate transaction (e.g. from byproduct treatment such as the Stone method).
-      i Use `io_table_to_noncompetitive_import()` and then `io_table_to_byproduct_transfer()` to convert negative entries to the transfer method before building the industry network.
+      i Use `io_table_to_byproduct_transfer()` to convert negative entries to the transfer method before building the industry network.
 
