@@ -16,24 +16,29 @@ test_that("io_table_regional() and io_table_multiregional() work", {
       multiregional_noncompetitive_import = io_table_multiregional,
       multiregional_competitive_import = io_table_multiregional
     )
-    competitive_import <- switch(
+    import_type <- switch(
       name,
-      regional_noncompetitive_import = FALSE,
-      regional_competitive_import = TRUE,
-      multiregional_noncompetitive_import = FALSE,
-      multiregional_competitive_import = TRUE
+      regional_noncompetitive_import = "noncompetitive_import",
+      regional_competitive_import = "competitive_import",
+      multiregional_noncompetitive_import = "noncompetitive_import",
+      multiregional_competitive_import = "competitive_import"
+    )
+    import_type_flipped <- switch(
+      import_type,
+      competitive_import = "noncompetitive_import",
+      noncompetitive_import = "competitive_import"
     )
 
     expect_snapshot(
       io_table(
         iotable_dummy[[name]],
-        competitive_import = !competitive_import
+        import_type = import_type_flipped
       ),
       error = TRUE
     )
     iotable <- io_table(
       iotable_dummy[[name]],
-      competitive_import = competitive_import
+      import_type = import_type
     )
 
     data_total_output <- get_data_total_output(iotable)
@@ -42,7 +47,7 @@ test_that("io_table_regional() and io_table_multiregional() work", {
       data_total_output$expected
     )))
 
-    if (competitive_import) {
+    if (import_type == "competitive_import") {
       data_total_input <- get_data_total_input(
         iotable,
         open_economy = TRUE
@@ -80,7 +85,7 @@ test_that("io_table_regional() and io_table_multiregional() work", {
     expect_snapshot(
       io_table(
         iotable_wrong_total_input,
-        competitive_import = competitive_import
+        import_type = import_type
       ),
       error = TRUE
     )
@@ -96,7 +101,7 @@ test_that("io_table_regional() and io_table_multiregional() work", {
     expect_snapshot(
       io_table(
         iotable_wrong_total_output,
-        competitive_import = competitive_import
+        import_type = import_type
       ),
       error = TRUE
     )
@@ -107,15 +112,23 @@ test_that("io_table_regional() validates its scalar arguments", {
   iotable_dummy <- readRDS(test_path("data", "iotable_dummy.rds"))
   data <- iotable_dummy$regional_competitive_import
   expect_snapshot(
-    io_table_regional(data, competitive_import = TRUE, check_axes = "yes"),
+    io_table_regional(
+      data,
+      import_type = "competitive_import",
+      check_axes = "yes"
+    ),
     error = TRUE
   )
   expect_snapshot(
-    io_table_regional(data, competitive_import = TRUE, total_tolerance = -1),
+    io_table_regional(
+      data,
+      import_type = "competitive_import",
+      total_tolerance = -1
+    ),
     error = TRUE
   )
   expect_snapshot(
-    io_table_regional(data, competitive_import = "yes"),
+    io_table_regional(data, import_type = "yes"),
     error = TRUE
   )
 })

@@ -67,22 +67,22 @@ read_iotable_dummy <- function(name) {
   if (name == "regional_noncompetitive_import") {
     io_table_regional(
       iotable_dummy$regional_noncompetitive_import,
-      competitive_import = FALSE
+      import_type = "noncompetitive_import"
     )
   } else if (name == "regional_competitive_import") {
     io_table_regional(
       iotable_dummy$regional_competitive_import,
-      competitive_import = TRUE
+      import_type = "competitive_import"
     )
   } else if (name == "multiregional_noncompetitive_import") {
     io_table_multiregional(
       iotable_dummy$multiregional_noncompetitive_import,
-      competitive_import = FALSE
+      import_type = "noncompetitive_import"
     )
   } else if (name == "multiregional_competitive_import") {
     io_table_multiregional(
       iotable_dummy$multiregional_competitive_import,
-      competitive_import = TRUE
+      import_type = "competitive_import"
     )
   }
 }

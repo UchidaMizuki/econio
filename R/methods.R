@@ -14,7 +14,7 @@
 #' The skyline chart is only defined for competitive import type tables
 #' (created with [io_table_to_competitive_import()] or
 #' [io_table_regional()]/[io_table_multiregional()] with
-#' `competitive_import = TRUE`).
+#' `import_type = "competitive_import"`).
 #'
 #' * `tidy()` returns the underlying data in a tidy [tibble::tibble()] (one row
 #'   per industry and rate type), suitable for custom plots.

@@ -54,7 +54,7 @@ io_table_to_competitive_import <- function(
   dim_names$output$sector <- io_output_sector(
     "import",
     import_sector_name,
-    competitive_import = TRUE
+    import_type = "competitive_import"
   )
   dim_names$output <- vctrs::vec_unique(dim_names$output)
 
@@ -130,7 +130,7 @@ io_table_to_noncompetitive_import <- function(
   dim_names$input$sector <- io_input_sector(
     "import",
     import_sector_name,
-    competitive_import = FALSE
+    import_type = "noncompetitive_import"
   )
   dim_names$input <- vctrs::vec_unique(dim_names$input)
 
@@ -278,7 +278,7 @@ io_table_to_regional <- function(
     import_sector <- io_output_sector(
       "import",
       import_sector_name,
-      competitive_import = TRUE
+      import_type = "competitive_import"
     )
     regional_demand_inflow <- io_sum_region(
       regional_demand * !same_region_regional_demand,
@@ -302,7 +302,7 @@ io_table_to_regional <- function(
     import_sector <- io_input_sector(
       "import",
       import_sector_name,
-      competitive_import = FALSE
+      import_type = "noncompetitive_import"
     )
     regional_demand_inflow <- io_sum_region(
       regional_demand * !same_region_regional_demand,
@@ -323,7 +323,11 @@ io_table_to_regional <- function(
   export_sector <- io_output_sector(
     "export",
     export_sector_name,
-    competitive_import = inherits(data, "io_table_competitive_import")
+    import_type = if (inherits(data, "io_table_competitive_import")) {
+      "competitive_import"
+    } else {
+      "noncompetitive_import"
+    }
   )
   regional_demand_outflow <- io_sum_region(
     regional_demand * !same_region_regional_demand,

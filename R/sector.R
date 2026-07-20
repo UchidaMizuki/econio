@@ -5,17 +5,17 @@ io_sector <- function(sector_type, sector_name) {
   )
 }
 
-io_input_sector <- function(sector_type, sector_name, competitive_import) {
-  values <- if (competitive_import) {
-    c(
+io_input_sector <- function(sector_type, sector_name, import_type) {
+  values <- switch(
+    import_type,
+    competitive_import = c(
       "industry",
       "value_added",
       "industry_total",
       "value_added_total",
       "total"
-    )
-  } else {
-    c(
+    ),
+    noncompetitive_import = c(
       "industry",
       "import",
       "value_added",
@@ -24,10 +24,10 @@ io_input_sector <- function(sector_type, sector_name, competitive_import) {
       "value_added_total",
       "total"
     )
-  }
-  if (competitive_import && "import" %in% sector_type) {
+  )
+  if (import_type == "competitive_import" && "import" %in% sector_type) {
     cli::cli_abort(
-      '{.code "import"} is not allowed in input sector types when {.code competitive_import = TRUE}.'
+      '{.code "import"} is not allowed in input sector types when {.code import_type = "competitive_import"}.'
     )
   }
   sector_type <- rlang::arg_match(sector_type, values, multiple = TRUE)
@@ -36,9 +36,10 @@ io_input_sector <- function(sector_type, sector_name, competitive_import) {
   io_sector(sector_type, sector_name)
 }
 
-io_output_sector <- function(sector_type, sector_name, competitive_import) {
-  values <- if (competitive_import) {
-    c(
+io_output_sector <- function(sector_type, sector_name, import_type) {
+  values <- switch(
+    import_type,
+    competitive_import = c(
       "industry",
       "final_demand",
       "export",
@@ -48,9 +49,8 @@ io_output_sector <- function(sector_type, sector_name, competitive_import) {
       "export_total",
       "import_total",
       "total"
-    )
-  } else {
-    c(
+    ),
+    noncompetitive_import = c(
       "industry",
       "final_demand",
       "export",
@@ -59,10 +59,10 @@ io_output_sector <- function(sector_type, sector_name, competitive_import) {
       "export_total",
       "total"
     )
-  }
-  if (!competitive_import && "import" %in% sector_type) {
+  )
+  if (import_type == "noncompetitive_import" && "import" %in% sector_type) {
     cli::cli_abort(
-      '{.code "import"} is not allowed in output sector types when {.code competitive_import = FALSE}.'
+      '{.code "import"} is not allowed in output sector types when {.code import_type = "noncompetitive_import"}.'
     )
   }
   sector_type <- rlang::arg_match(sector_type, values, multiple = TRUE)

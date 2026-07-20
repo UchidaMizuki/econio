@@ -10,8 +10,10 @@ new_io_table <- function(data, ..., class = character()) {
 #' columns.
 #' @param output_cols <[`tidy-select`][dplyr_tidy_select]> Output sector type and
 #' name columns.
-#' @param competitive_import A scalar logical. If `TRUE`, the table is assumed
-#' to be a competitive import type.
+#' @param import_type A scalar character, either `"competitive_import"` or
+#' `"noncompetitive_import"`. By default, `NULL`, which infers the type from
+#' whether `"import"` appears in the input or output sector type column of
+#' `data`.
 #' @param total_tolerance A numeric. The tolerance for the total check. By
 #' default, `.Machine$double.eps^0.5`.
 #' @param check_axes A scalar logical. If `TRUE`, the input and output axes are
@@ -24,7 +26,7 @@ io_table_regional <- function(
   data,
   input_cols = c("input_sector_type", "input_sector_name"),
   output_cols = c("output_sector_type", "output_sector_name"),
-  competitive_import = NULL,
+  import_type = NULL,
   total_tolerance = .Machine$double.eps^0.5,
   check_axes = TRUE
 ) {
@@ -39,11 +41,11 @@ io_table_regional <- function(
   vctrs::vec_check_size(input_names, 2)
   vctrs::vec_check_size(output_names, 2)
 
-  competitive_import <- io_competitive_import(
+  import_type <- io_import_type(
     data,
     input_sector_type = input_names[[1]],
     output_sector_type = output_names[[1]],
-    competitive_import = competitive_import
+    import_type = import_type
   )
 
   data <- data |>
@@ -51,13 +53,13 @@ io_table_regional <- function(
       "input",
       sector_type = !!rlang::sym(input_names[[1]]),
       sector_name = !!rlang::sym(input_names[[2]]),
-      competitive_import = competitive_import
+      import_type = import_type
     ) |>
     io_add_sector(
       "output",
       sector_type = !!rlang::sym(output_names[[1]]),
       sector_name = !!rlang::sym(output_names[[2]]),
-      competitive_import = competitive_import
+      import_type = import_type
     ) |>
     dibble::dibble_by(
       input = "input_sector",
@@ -74,11 +76,7 @@ io_table_regional <- function(
   new_io_table(
     data,
     class = c(
-      if (competitive_import) {
-        "io_table_competitive_import"
-      } else {
-        "io_table_noncompetitive_import"
-      },
+      paste0("io_table_", import_type),
       "io_table_regional"
     )
   )
@@ -91,8 +89,10 @@ io_table_regional <- function(
 #' and name columns.
 #' @param output_cols <[`tidy-select`][dplyr_tidy_select]> Output region, sector type
 #' and name columns.
-#' @param competitive_import A scalar logical. If `TRUE`, the table is assumed
-#' to be a competitive import type.
+#' @param import_type A scalar character, either `"competitive_import"` or
+#' `"noncompetitive_import"`. By default, `NULL`, which infers the type from
+#' whether `"import"` appears in the input or output sector type column of
+#' `data`.
 #' @param total_tolerance A numeric. The tolerance for the total check. By
 #' default, `.Machine$double.eps^0.5`.
 #' @param check_axes A scalar logical. If `TRUE`, the input and output axes are
@@ -105,7 +105,7 @@ io_table_multiregional <- function(
   data,
   input_cols = c("input_region", "input_sector_type", "input_sector_name"),
   output_cols = c("output_region", "output_sector_type", "output_sector_name"),
-  competitive_import = NULL,
+  import_type = NULL,
   total_tolerance = .Machine$double.eps^0.5,
   check_axes = TRUE
 ) {
@@ -120,11 +120,11 @@ io_table_multiregional <- function(
   vctrs::vec_check_size(input_names, 3)
   vctrs::vec_check_size(output_names, 3)
 
-  competitive_import <- io_competitive_import(
+  import_type <- io_import_type(
     data,
     input_sector_type = input_names[[2]],
     output_sector_type = output_names[[2]],
-    competitive_import = competitive_import
+    import_type = import_type
   )
 
   data <- data |>
@@ -132,14 +132,14 @@ io_table_multiregional <- function(
       "input",
       sector_type = !!rlang::sym(input_names[[2]]),
       sector_name = !!rlang::sym(input_names[[3]]),
-      competitive_import = competitive_import
+      import_type = import_type
     ) |>
     io_add_region("input", region = !!rlang::sym(input_names[[1]])) |>
     io_add_sector(
       "output",
       sector_type = !!rlang::sym(output_names[[2]]),
       sector_name = !!rlang::sym(output_names[[3]]),
-      competitive_import = competitive_import
+      import_type = import_type
     ) |>
     io_add_region("output", region = !!rlang::sym(output_names[[1]])) |>
     dibble::dibble_by(
@@ -157,25 +157,21 @@ io_table_multiregional <- function(
   new_io_table(
     data,
     class = c(
-      if (competitive_import) {
-        "io_table_competitive_import"
-      } else {
-        "io_table_noncompetitive_import"
-      },
+      paste0("io_table_", import_type),
       "io_table_multiregional"
     )
   )
 }
 
-io_competitive_import <- function(
+io_import_type <- function(
   data,
   input_sector_type,
   output_sector_type,
-  competitive_import,
-  arg = rlang::caller_arg(competitive_import),
+  import_type,
+  arg = rlang::caller_arg(import_type),
   call = rlang::caller_env()
 ) {
-  if (is.null(competitive_import)) {
+  if (is.null(import_type)) {
     input_sector_type <- data |>
       dplyr::pull({{ input_sector_type }})
     output_sector_type <- data |>
@@ -186,21 +182,25 @@ io_competitive_import <- function(
         '{.code "import"} must not be in both input and output sector types.'
       )
     } else if ("import" %in% input_sector_type) {
-      competitive_import <- FALSE
+      import_type <- "noncompetitive_import"
     } else if ("import" %in% output_sector_type) {
-      competitive_import <- TRUE
+      import_type <- "competitive_import"
     } else {
       cli::cli_abort(
         '{.code "import"} must be in either input or output sector types.'
       )
     }
     cli::cli_inform(
-      'Assuming {.code competitive_import = {competitive_import}}.'
+      'Assuming {.code import_type = "{import_type}"}.'
     )
   }
 
-  rlang::check_bool(competitive_import, arg = arg, call = call)
-  competitive_import
+  rlang::arg_match(
+    import_type,
+    c("competitive_import", "noncompetitive_import"),
+    error_arg = arg,
+    error_call = call
+  )
 }
 
 io_add_sector <- function(
@@ -208,7 +208,7 @@ io_add_sector <- function(
   axis,
   sector_type,
   sector_name,
-  competitive_import
+  import_type
 ) {
   sector_column <- switch(
     axis,
@@ -225,7 +225,7 @@ io_add_sector <- function(
       !!sector_column := sector_function(
         {{ sector_type }},
         {{ sector_name }},
-        competitive_import = competitive_import
+        import_type = import_type
       ),
       .keep = "unused",
       .before = {{ sector_type }}

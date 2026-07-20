@@ -13,7 +13,7 @@
 * `io_spectral_embedding()` now reports an invalid `dims` argument with a clearer error message.
 * `io_streamness_length()` is a new function that returns the total length of the supply chain passing through each industry, computed as the sum of `io_upstreamness()` and `io_downstreamness()`, following Antràs and Chor (2018).
 * `io_streamness_position()` is a new experimental function that returns the net position of each industry within the supply chain, derived from `io_upstreamness()` and `io_downstreamness()`, with a `type` argument to choose between their difference, a `[-1, 1]`-bounded relative difference, or a log ratio.
-* `io_table_regional()` and `io_table_multiregional()` now validate `check_axes`, `competitive_import`, and `total_tolerance`.
+* `io_table_regional()` and `io_table_multiregional()` now validate `check_axes`, `import_type`, and `total_tolerance`; the former `competitive_import` logical argument is replaced by `import_type`, taking `"competitive_import"` or `"noncompetitive_import"`.
 * `io_table_to_byproduct_transfer()` is a new function that converts negative domestic intermediate transactions (e.g. from byproduct treatment such as the Stone method) to the transfer method, adding the absolute value of a negative transaction to its reverse-direction cell.
 * `io_table_to_competitive_import()`, `io_table_to_noncompetitive_import()`, and `io_table_to_regional()` now validate their sector-name and tolerance arguments.
 * `io_table_to_noncompetitive_import()` no longer leaves a leftover zero-valued `import` sector on the output axis when converting from a competitive import type table.

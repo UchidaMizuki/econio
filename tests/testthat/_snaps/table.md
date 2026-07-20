@@ -1,17 +1,17 @@
 # io_table_regional() and io_table_multiregional() work
 
     Code
-      io_table(iotable_dummy[[name]], competitive_import = !competitive_import)
+      io_table(iotable_dummy[[name]], import_type = import_type_flipped)
     Condition
       Error in `dplyr::mutate()`:
-      i In argument: `input_sector = sector_function(input_sector_type, input_sector_name, competitive_import = competitive_import)`.
+      i In argument: `input_sector = sector_function(input_sector_type, input_sector_name, import_type = import_type)`.
       Caused by error in `sector_function()`:
-      ! `"import"` is not allowed in input sector types when `competitive_import = TRUE`.
+      ! `"import"` is not allowed in input sector types when `import_type = "competitive_import"`.
 
 ---
 
     Code
-      io_table(iotable_wrong_total_input, competitive_import = competitive_import)
+      io_table(iotable_wrong_total_input, import_type = import_type)
     Condition
       Error in `io_check_totals()`:
       ! The total output values do not match.
@@ -22,7 +22,7 @@
 ---
 
     Code
-      io_table(iotable_wrong_total_output, competitive_import = competitive_import)
+      io_table(iotable_wrong_total_output, import_type = import_type)
     Condition
       Error in `io_check_totals()`:
       ! The total output values do not match.
@@ -33,17 +33,17 @@
 ---
 
     Code
-      io_table(iotable_dummy[[name]], competitive_import = !competitive_import)
+      io_table(iotable_dummy[[name]], import_type = import_type_flipped)
     Condition
       Error in `dplyr::mutate()`:
-      i In argument: `output_sector = sector_function(output_sector_type, output_sector_name, competitive_import = competitive_import)`.
+      i In argument: `output_sector = sector_function(output_sector_type, output_sector_name, import_type = import_type)`.
       Caused by error in `sector_function()`:
-      ! `"import"` is not allowed in output sector types when `competitive_import = FALSE`.
+      ! `"import"` is not allowed in output sector types when `import_type = "noncompetitive_import"`.
 
 ---
 
     Code
-      io_table(iotable_wrong_total_input, competitive_import = competitive_import)
+      io_table(iotable_wrong_total_input, import_type = import_type)
     Condition
       Error in `io_check_totals()`:
       ! The total output values do not match.
@@ -54,7 +54,7 @@
 ---
 
     Code
-      io_table(iotable_wrong_total_output, competitive_import = competitive_import)
+      io_table(iotable_wrong_total_output, import_type = import_type)
     Condition
       Error in `io_check_totals()`:
       ! The total output values do not match.
@@ -65,17 +65,17 @@
 ---
 
     Code
-      io_table(iotable_dummy[[name]], competitive_import = !competitive_import)
+      io_table(iotable_dummy[[name]], import_type = import_type_flipped)
     Condition
       Error in `dplyr::mutate()`:
-      i In argument: `input_sector = sector_function(input_sector_type, input_sector_name, competitive_import = competitive_import)`.
+      i In argument: `input_sector = sector_function(input_sector_type, input_sector_name, import_type = import_type)`.
       Caused by error in `sector_function()`:
-      ! `"import"` is not allowed in input sector types when `competitive_import = TRUE`.
+      ! `"import"` is not allowed in input sector types when `import_type = "competitive_import"`.
 
 ---
 
     Code
-      io_table(iotable_wrong_total_input, competitive_import = competitive_import)
+      io_table(iotable_wrong_total_input, import_type = import_type)
     Condition
       Error in `io_check_totals()`:
       ! The total output values do not match.
@@ -92,7 +92,7 @@
 ---
 
     Code
-      io_table(iotable_wrong_total_output, competitive_import = competitive_import)
+      io_table(iotable_wrong_total_output, import_type = import_type)
     Condition
       Error in `io_check_totals()`:
       ! The total output values do not match.
@@ -109,17 +109,17 @@
 ---
 
     Code
-      io_table(iotable_dummy[[name]], competitive_import = !competitive_import)
+      io_table(iotable_dummy[[name]], import_type = import_type_flipped)
     Condition
       Error in `dplyr::mutate()`:
-      i In argument: `output_sector = sector_function(output_sector_type, output_sector_name, competitive_import = competitive_import)`.
+      i In argument: `output_sector = sector_function(output_sector_type, output_sector_name, import_type = import_type)`.
       Caused by error in `sector_function()`:
-      ! `"import"` is not allowed in output sector types when `competitive_import = FALSE`.
+      ! `"import"` is not allowed in output sector types when `import_type = "noncompetitive_import"`.
 
 ---
 
     Code
-      io_table(iotable_wrong_total_input, competitive_import = competitive_import)
+      io_table(iotable_wrong_total_input, import_type = import_type)
     Condition
       Error in `io_check_totals()`:
       ! The total output values do not match.
@@ -136,7 +136,7 @@
 ---
 
     Code
-      io_table(iotable_wrong_total_output, competitive_import = competitive_import)
+      io_table(iotable_wrong_total_output, import_type = import_type)
     Condition
       Error in `io_check_totals()`:
       ! The total output values do not match.
@@ -153,7 +153,7 @@
 # io_table_regional() validates its scalar arguments
 
     Code
-      io_table_regional(data, competitive_import = TRUE, check_axes = "yes")
+      io_table_regional(data, import_type = "competitive_import", check_axes = "yes")
     Condition
       Error in `io_table_regional()`:
       ! `check_axes` must be `TRUE` or `FALSE`, not the string "yes".
@@ -161,7 +161,8 @@
 ---
 
     Code
-      io_table_regional(data, competitive_import = TRUE, total_tolerance = -1)
+      io_table_regional(data, import_type = "competitive_import", total_tolerance = -
+        1)
     Condition
       Error in `io_table_regional()`:
       ! `total_tolerance` must be a number larger than or equal to 0, not the number -1.
@@ -169,10 +170,10 @@
 ---
 
     Code
-      io_table_regional(data, competitive_import = "yes")
+      io_table_regional(data, import_type = "yes")
     Condition
       Error in `io_table_regional()`:
-      ! `competitive_import` must be `TRUE` or `FALSE`, not the string "yes".
+      ! `import_type` must be one of "competitive_import" or "noncompetitive_import", not "yes".
 
 # io_check_totals() validates total_tolerance
 

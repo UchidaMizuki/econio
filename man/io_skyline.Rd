@@ -47,7 +47,7 @@ share of domestic final demand.
 The skyline chart is only defined for competitive import type tables
 (created with \code{\link[=io_table_to_competitive_import]{io_table_to_competitive_import()}} or
 \code{\link[=io_table_regional]{io_table_regional()}}/\code{\link[=io_table_multiregional]{io_table_multiregional()}} with
-\code{competitive_import = TRUE}).
+\code{import_type = "competitive_import"}).
 \itemize{
 \item \code{tidy()} returns the underlying data in a tidy \code{\link[tibble:tibble]{tibble::tibble()}} (one row
 per industry and rate type), suitable for custom plots.

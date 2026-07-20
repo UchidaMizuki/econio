@@ -8,7 +8,7 @@ io_table_regional(
   data,
   input_cols = c("input_sector_type", "input_sector_name"),
   output_cols = c("output_sector_type", "output_sector_name"),
-  competitive_import = NULL,
+  import_type = NULL,
   total_tolerance = .Machine$double.eps^0.5,
   check_axes = TRUE
 )
@@ -22,8 +22,10 @@ columns.}
 \item{output_cols}{<\code{\link[dplyr:dplyr_tidy_select]{tidy-select}}> Output sector type and
 name columns.}
 
-\item{competitive_import}{A scalar logical. If \code{TRUE}, the table is assumed
-to be a competitive import type.}
+\item{import_type}{A scalar character, either \code{"competitive_import"} or
+\code{"noncompetitive_import"}. By default, \code{NULL}, which infers the type from
+whether \code{"import"} appears in the input or output sector type column of
+\code{data}.}
 
 \item{total_tolerance}{A numeric. The tolerance for the total check. By
 default, \code{.Machine$double.eps^0.5}.}
