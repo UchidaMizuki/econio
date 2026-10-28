@@ -19,9 +19,9 @@
 #' industry sits upstream of the weighted average, and a positive level means
 #' it sits downstream. Because `u` includes transactions within an industry,
 #' merging industries with equal levels leaves `u`'s total and therefore the
-#' levels of the other industries unchanged. The system is solved by fixing the
-#' level of one industry and dropping its (redundant) equation, which leaves a
-#' positive definite system when the network is connected. Trophic levels in separate parts of a disconnected
+#' levels of the other industries unchanged. The levels are obtained by solving
+#' the system together with this constraint, which has a unique solution when
+#' the network is connected. Trophic levels in separate parts of a disconnected
 #' network are not comparable, so both functions abort if the network
 #' (treating each transaction as an undirected link) is not connected, e.g.
 #' when an industry has no transactions with any other industry.
@@ -79,36 +79,35 @@ io_trophic_incoherence <- function(data) {
 
 io_trophic <- function(laplacian, call = rlang::caller_env()) {
   imbalance <- laplacian$in_weight - laplacian$out_weight
-  level <- numeric(length(imbalance))
+  total_weight <- laplacian$in_weight + laplacian$out_weight
+  n_industry <- length(imbalance)
 
   # The Laplacian is singular (its rows sum to 0), so the levels are only
-  # defined up to an additive constant. Fixing the level of one industry to 0
-  # and dropping its equation, which is redundant because the equations sum to
-  # 0, leaves a positive definite system for a connected network. Fixing the
-  # industry with the largest total weight keeps the system well conditioned.
-  # For a disconnected network the remaining system is singular. The levels
-  # are then centered to a weighted mean of 0.
-  if (length(level) > 1L) {
-    total_weight <- laplacian$in_weight + laplacian$out_weight
-    fixed <- which.max(total_weight)
-    level[-fixed] <- rlang::try_fetch(
-      solve(
-        laplacian$laplacian[-fixed, -fixed, drop = FALSE],
-        imbalance[-fixed]
-      ),
-      error = function(cnd) {
-        cli::cli_abort(
-          c(
-            "Can't compute trophic levels because the domestic production network is not connected.",
-            "i" = "Trophic levels in separate components are not comparable.",
-            "i" = "Remove or merge industries that have no transactions with the others."
-          ),
-          call = call
-        )
-      }
-    )
-    level <- level - sum(total_weight * level) / sum(total_weight)
-  }
+  # defined up to an additive constant, which is fixed by `sum(u * h) = 0`.
+  # Solve `Λ h = v` subject to this constraint as one bordered (KKT) system.
+  # Its multiplier is 0 because the imbalance sums to 0, and the system is
+  # singular exactly when the network is disconnected.
+  system <- rbind(
+    cbind(laplacian$laplacian, total_weight),
+    c(total_weight, 0)
+  )
+  solution <- rlang::try_fetch(
+    solve(system, c(imbalance, 0)),
+    error = function(cnd) {
+      cli::cli_abort(
+        c(
+          "Can't compute trophic levels because the domestic production network is not connected.",
+          "i" = "Trophic levels in separate components are not comparable.",
+          "i" = "Remove or merge industries that have no transactions with the others."
+        ),
+        call = call
+      )
+    }
+  )
 
-  list(dim_name = laplacian$dim_name, weight = laplacian$weight, level = level)
+  list(
+    dim_name = laplacian$dim_name,
+    weight = laplacian$weight,
+    level = unname(solution[seq_len(n_industry)])
+  )
 }
