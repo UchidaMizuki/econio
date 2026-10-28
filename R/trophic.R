@@ -13,7 +13,18 @@
 #' \deqn{(\mathrm{diag}(u) - (W + W^\top))\,h = v,}
 #'
 #' where `u` is the total weight (in plus out) of each node and `v` is its
-#' imbalance (in minus out). The levels are shifted so that the minimum is 0.
+#' imbalance (in minus out). The Laplacian is singular, so the levels are only
+#' determined up to an additive constant; they are centered so that their
+#' weighted mean is 0, \eqn{\sum_i u_i h_i = 0}. A negative level means an
+#' industry sits upstream of the weighted average, and a positive level means
+#' it sits downstream. Because `u` includes transactions within an industry,
+#' merging industries with equal levels leaves `u`'s total and therefore the
+#' levels of the other industries unchanged. The levels are obtained by solving
+#' the system together with this constraint, which has a unique solution when
+#' the network is connected. Trophic levels in separate parts of a disconnected
+#' network are not comparable, so both functions abort if the network
+#' (treating each transaction as an undirected link) is not connected, e.g.
+#' when an industry has no transactions with any other industry.
 #'
 #' Value-added and final-demand sectors are not nodes and do not receive a
 #' trophic level, but they are **not** ignored: because the table balances, an
@@ -52,26 +63,42 @@ NULL
 #' @rdname io_trophic
 #' @export
 io_trophic_level <- function(data) {
-  trophic <- io_trophic(data)
+  trophic <- io_trophic(io_laplacian(data))
   dibble::dibble(trophic$level, .dim_names = list(industry = trophic$dim_name))
 }
 
 #' @rdname io_trophic
 #' @export
 io_trophic_incoherence <- function(data) {
-  trophic <- io_trophic(data)
+  trophic <- io_trophic(io_laplacian(data))
   weight <- trophic$weight
   level <- trophic$level
   level_diff <- outer(level, level, \(from, to) to - from)
   sum(weight * (level_diff - 1)^2) / sum(weight)
 }
 
-io_trophic <- function(data) {
-  laplacian <- io_laplacian(data)
+io_trophic <- function(laplacian, call = rlang::caller_env()) {
   imbalance <- laplacian$in_weight - laplacian$out_weight
+  total_weight <- laplacian$in_weight + laplacian$out_weight
+  n_industry <- length(imbalance)
 
-  level <- as.numeric(MASS::ginv(laplacian$laplacian) %*% imbalance)
-  level <- level - min(level)
+  # The Laplacian is singular (its rows sum to 0), so the levels are only
+  # defined up to an additive constant, which is fixed by `sum(u * h) = 0`.
+  # Solve `Λ h = v` subject to this constraint as one bordered (KKT) system.
+  # Its multiplier is 0 because the imbalance sums to 0, and the system is
+  # singular exactly when the network is disconnected.
+  system <- rbind(
+    cbind(laplacian$laplacian, total_weight),
+    c(total_weight, 0)
+  )
+  solution <- rlang::try_fetch(
+    solve(system, c(imbalance, 0)),
+    error = function(cnd) io_abort_disconnected(laplacian, call = call)
+  )
 
-  list(dim_name = laplacian$dim_name, weight = laplacian$weight, level = level)
+  list(
+    dim_name = laplacian$dim_name,
+    weight = laplacian$weight,
+    level = unname(solution[seq_len(n_industry)])
+  )
 }

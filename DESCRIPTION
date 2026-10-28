@@ -16,7 +16,6 @@ Imports:
     ggplot2,
     glue,
     lifecycle,
-    MASS,
     pillar,
     purrr,
     rlang (>= 1.1.0),

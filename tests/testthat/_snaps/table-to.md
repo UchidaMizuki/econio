@@ -3,7 +3,7 @@
     Code
       io_table_to(iotable, data_import = data_import * 2)
     Condition
-      Error in `io_check_import_totals()`:
+      Error in `io_table_to()`:
       ! The total import values do not match.
       x region_1/industry_1: 60 (`actual`) not nearly equal to 30 (`expected`).
       x region_1/industry_2: 18 (`actual`) not nearly equal to 9 (`expected`).
@@ -26,7 +26,7 @@
     Code
       io_table_to(iotable, data_import = data_import * 2)
     Condition
-      Error in `io_check_import_totals()`:
+      Error in `io_table_to()`:
       ! The total import values do not match.
       x region_1/industry_1: 20 (`actual`) not nearly equal to 10 (`expected`).
       x region_1/industry_2: 18 (`actual`) not nearly equal to 9 (`expected`).

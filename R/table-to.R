@@ -395,7 +395,8 @@ io_table_to_regional <- function(
 io_check_import_totals <- function(
   data_import,
   data,
-  import_total_tolerance = .Machine$double.eps^0.5
+  import_total_tolerance = .Machine$double.eps^0.5,
+  call = rlang::caller_env()
 ) {
   if (inherits(data, "io_table_noncompetitive_import")) {
     axis <- "input"
@@ -441,7 +442,8 @@ io_check_import_totals <- function(
           "{io_axis_label(data_import_total[[axis_other]])}: {data_import_total$import_total_actual} (`actual`) not nearly equal to {data_import_total$import_total_expected} (`expected`)."
         ) |>
           rlang::set_names("x")
-      )
+      ),
+      call = call
     )
   }
   data_import
