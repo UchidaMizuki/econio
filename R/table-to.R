@@ -389,7 +389,8 @@ io_table_to_regional <- function(
 io_check_import_totals <- function(
   data_import,
   data,
-  import_total_tolerance = .Machine$double.eps^0.5
+  import_total_tolerance = .Machine$double.eps^0.5,
+  call = rlang::caller_env()
 ) {
   if (inherits(data, "io_table_noncompetitive_import")) {
     axis <- "input"
@@ -428,14 +429,20 @@ io_check_import_totals <- function(
     )
 
   if (!vctrs::vec_is_empty(data_import_total)) {
+    dim_name <- data_import_total[[axis_other]]
+    sector <- io_sector_name(dim_name)
+    if ("region" %in% names(dim_name)) {
+      sector <- paste(dim_name$region, sector, sep = "/")
+    }
     cli::cli_abort(
       c(
         "The total import values do not match.",
         glue::glue(
-          "{io_sector_name(data_import_total[[axis_other]])}: {data_import_total$import_total_actual} (`actual`) not nearly equal to {data_import_total$import_total_expected} (`expected`)."
+          "{sector}: {data_import_total$import_total_actual} (`actual`) not nearly equal to {data_import_total$import_total_expected} (`expected`)."
         ) |>
           rlang::set_names("x")
-      )
+      ),
+      call = call
     )
   }
   data_import

@@ -16,6 +16,7 @@
 * `io_table_regional()` and `io_table_multiregional()` now validate `check_axes`, `import_type`, and `total_tolerance`; the former `competitive_import` logical argument is replaced by `import_type`, taking `"competitive_import"` or `"noncompetitive_import"`.
 * `io_table_to_byproduct_transfer()` is a new function that converts negative domestic intermediate transactions (e.g. from byproduct treatment such as the Stone method) to the transfer method, adding the absolute value of a negative transaction to its reverse-direction cell.
 * `io_table_to_competitive_import()`, `io_table_to_noncompetitive_import()`, and `io_table_to_regional()` now validate their sector-name and tolerance arguments.
+* `io_table_to_competitive_import()` and `io_table_to_noncompetitive_import()` now report mismatched `data_import` totals against the calling function and include the region of each mismatched sector in multiregional tables (#10).
 * `io_table_to_noncompetitive_import()` no longer leaves a leftover zero-valued `import` sector on the output axis when converting from a competitive import type table.
 * `io_total_input()` and `io_total_output()` now validate `same_region`.
 * `io_trophic_incoherence()` returns the trophic incoherence of the domestic production network.

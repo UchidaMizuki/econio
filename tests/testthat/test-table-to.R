@@ -65,6 +65,67 @@ test_that("io_table_to_noncompetitive_import() works", {
   }
 })
 
+test_that("io_table_to_noncompetitive_import() uses data_import", {
+  for (name in c(
+    "regional_competitive_import",
+    "multiregional_competitive_import"
+  )) {
+    iotable <- read_iotable_dummy(name)
+    iotable_noncompetitive_import <- io_table_to_noncompetitive_import(iotable)
+    import <- get_data_regional_demand(iotable) -
+      get_data_regional_demand(iotable_noncompetitive_import)
+    expect_equal(
+      io_table_to_noncompetitive_import(iotable, data_import = import),
+      iotable_noncompetitive_import
+    )
+
+    import_uniform <- get_data_import_uniform(import)
+    actual <- io_table_to_noncompetitive_import(
+      iotable,
+      data_import = import_uniform
+    )
+    expect_equal(
+      get_data_regional_demand(actual),
+      get_data_regional_demand(iotable) - import_uniform
+    )
+  }
+})
+
+test_that("io_table_to_competitive_import() with data_import inverts io_table_to_noncompetitive_import()", {
+  for (name in c(
+    "regional_competitive_import",
+    "multiregional_competitive_import"
+  )) {
+    iotable <- read_iotable_dummy(name)
+    import <- get_data_regional_demand(iotable) -
+      get_data_regional_demand(io_table_to_noncompetitive_import(iotable))
+    import <- get_data_import_uniform(import)
+
+    actual <- iotable |>
+      io_table_to_noncompetitive_import(data_import = import) |>
+      io_table_to_competitive_import(data_import = import)
+    expect_equal(
+      as.vector(as.matrix(get_data_regional_demand(actual))),
+      as.vector(as.matrix(get_data_regional_demand(iotable)))
+    )
+    expect_equal(
+      as.vector(io_total_output(actual, output_sector_type = "import")),
+      as.vector(io_total_output(iotable, output_sector_type = "import"))
+    )
+  }
+})
+
+test_that("io_table_to_*_import() abort when data_import totals do not match", {
+  iotable <- read_iotable_dummy("multiregional_competitive_import")
+  import <- get_data_regional_demand(iotable) -
+    get_data_regional_demand(io_table_to_noncompetitive_import(iotable))
+
+  expect_snapshot(
+    io_table_to_noncompetitive_import(iotable, data_import = import * 2),
+    error = TRUE
+  )
+})
+
 test_that("io_table_to_byproduct_transfer() returns data unchanged when there are no negative transactions", {
   iotable <- read_iotable_dummy("regional_noncompetitive_import")
   expect_identical(io_table_to_byproduct_transfer(iotable), iotable)
