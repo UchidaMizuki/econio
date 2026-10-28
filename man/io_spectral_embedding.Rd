@@ -4,7 +4,7 @@
 \alias{io_spectral_embedding}
 \title{Laplacian spectral embedding}
 \usage{
-io_spectral_embedding(data, dims = 1)
+io_spectral_embedding(data, dims = 1, normalized = TRUE)
 }
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
@@ -12,6 +12,10 @@ io_spectral_embedding(data, dims = 1)
 \item{dims}{A scalar positive integer giving the number of embedding
 dimensions (the number of smallest non-zero Laplacian eigenvectors to
 return). By default, \code{1}, i.e. the Fiedler vector.}
+
+\item{normalized}{A scalar logical. If \code{TRUE} (the default), use the
+normalized Laplacian, weighting the constraints by the total weight of each
+industry. If \code{FALSE}, use the unnormalized Laplacian.}
 }
 \value{
 A \code{dibble}. With \code{dims = 1}, one value per industry. With
@@ -26,11 +30,28 @@ low-dimensional space by minimizing the graph Dirichlet energy
 
 \deqn{\sum_{ij} w_{ij} (h_i - h_j)^2 = h^\top \Lambda h,}
 
-subject to \code{h} being orthonormal and orthogonal to the constant vector. The
-minimizers are the eigenvectors of the symmetric graph Laplacian
-\eqn{\Lambda = \mathrm{diag}(u) - (W + W^\top)} associated with the smallest
-non-zero eigenvalues, where \code{u} is the total weight (in plus out) of each
-node. With \code{dims = 1} this is the \strong{Fiedler vector}.
+where \eqn{\Lambda = \mathrm{diag}(u) - (W + W^\top)} is the symmetric graph
+Laplacian and \code{u} is the total weight (in plus out) of each node.
+
+By default (\code{normalized = TRUE}), the energy is minimized subject to
+\eqn{\sum_i u_i h_i = 0} and \eqn{\sum_i u_i h_i^2 = 1}, i.e. the
+constraints are weighted by \code{u}. The minimizers solve the generalized
+eigenproblem \eqn{\Lambda h = \lambda \, \mathrm{diag}(u) \, h}, whose
+eigenvalues lie in \verb{[0, 2]}. This is the normalized Laplacian used by
+Laplacian eigenmaps (Belkin and Niyogi, 2003) and normalized cuts (Shi and
+Malik, 2000). It prevents the embedding from concentrating on industries
+with little intermediate trade. \code{u} is the same weight that centers
+\code{\link[=io_trophic_level]{io_trophic_level()}}.
+
+With \code{normalized = FALSE}, \code{h} is instead constrained to be orthonormal and
+orthogonal to the constant vector, and the minimizers are the eigenvectors
+of \eqn{\Lambda} itself.
+
+In both cases the eigenvectors associated with the smallest non-zero
+eigenvalues are returned. With \code{dims = 1} this is the \strong{Fiedler vector}.
+A disconnected network has one zero eigenvalue per component, which makes
+the embedding arbitrary, so the function aborts if the network (treating
+each transaction as an undirected link) is not connected.
 
 Like \code{\link[=io_trophic_level]{io_trophic_level()}}, the table is first converted to a noncompetitive
 import type table with \code{\link[=io_table_to_noncompetitive_import]{io_table_to_noncompetitive_import()}} so that the
@@ -50,8 +71,16 @@ by orienting each component to make its largest-magnitude entry positive.
 \dontrun{
 io_spectral_embedding(iotable)
 io_spectral_embedding(iotable, dims = 2)
+io_spectral_embedding(iotable, normalized = FALSE)
 }
 
+}
+\references{
+Belkin, M. and Niyogi, P. (2003). Laplacian eigenmaps for dimensionality
+reduction and data representation. \emph{Neural Computation}, 15(6), 1373-1396.
+
+Shi, J. and Malik, J. (2000). Normalized cuts and image segmentation. \emph{IEEE
+Transactions on Pattern Analysis and Machine Intelligence}, 22(8), 888-905.
 }
 \seealso{
 \code{\link[=io_trophic_level]{io_trophic_level()}}
