@@ -2,6 +2,7 @@
 
 * Added a `NEWS.md` file to track changes to the package.
 * `io_check_axes()` is now called by `io_leontief_inverse()` and `io_ghosh_inverse()` to validate that input and output industry axes match before matrix inversion, preventing errors from mismatched tables.
+* `io_check_axes()`, `io_check_totals()`, `io_table_to_competitive_import()`, and `io_table_to_noncompetitive_import()` now label mismatched sectors of multi-regional tables with their region (e.g. `region_1/industry_1`) in error messages.
 * `io_check_totals()` now validates `total_tolerance` with a clearer error message.
 * `io_downstreamness()` returns the column sums of the Leontief inverse, i.e. the output multiplier (backward linkage), with a `normalize` option to obtain the power of dispersion.
 * `io_input_coef()`, `io_output_coef()`, `io_leontief_inverse()`, and `io_ghosh_inverse()` now report invalid `open_economy` values against the calling function with a clearer error message.
@@ -15,6 +16,7 @@
 * `io_table_to_byproduct_transfer()` is a new function that converts negative domestic intermediate transactions (e.g. from byproduct treatment such as the Stone method) to the transfer method, adding the absolute value of a negative transaction to its reverse-direction cell.
 * `io_table_to_competitive_import()`, `io_table_to_noncompetitive_import()`, and `io_table_to_regional()` now validate their sector-name and tolerance arguments.
 * `io_table_to_noncompetitive_import()` no longer leaves a leftover zero-valued `import` sector on the output axis when converting from a competitive import type table.
+* `io_table_to_regional()` no longer drops imports to final demand when splitting a noncompetitive import type multi-regional table, and now errors clearly when `data` is not a multi-regional table.
 * `io_total_input()` and `io_total_output()` now validate `same_region`.
 * `io_trophic_incoherence()` returns the trophic incoherence of the domestic production network.
 * `io_trophic_level()` returns the directed-network trophic level of each industry, following MacKay, Johnson and Sansom (2020).

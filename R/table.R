@@ -311,7 +311,7 @@ io_check_totals <- function(data, total_tolerance = .Machine$double.eps^0.5) {
           c(
             "The total {axis} values do not match.",
             glue::glue(
-              "{io_sector_name(data_total[[axis_other]])}: {data_total$total_actual} (`actual`) not nearly equal to {data_total$total_expected} (`expected`)."
+              "{io_axis_label(data_total[[axis_other]])}: {data_total$total_actual} (`actual`) not nearly equal to {data_total$total_expected} (`expected`)."
             ) |>
               rlang::set_names("x")
           )
@@ -365,15 +365,32 @@ io_check_axes <- function(data) {
       data_output_mismatch
     ))
   ) {
+    input_mismatch <- io_axis_label(data_input_mismatch)
+    output_mismatch <- io_axis_label(data_output_mismatch)
     cli::cli_abort(
       c(
         "The input and output axes do not match.",
-        "x" = "Input axis mismatch: {data_input_mismatch}",
-        "x" = "Output axis mismatch: {data_output_mismatch}"
+        "x" = if (length(input_mismatch) > 0) {
+          "Input axis mismatch: {input_mismatch}"
+        },
+        "x" = if (length(output_mismatch) > 0) {
+          "Output axis mismatch: {output_mismatch}"
+        }
       )
     )
   }
   data
+}
+
+io_axis_label <- function(x) {
+  label <- x$sector
+  if (inherits(label, "econ_io_sector")) {
+    label <- io_sector_name(label)
+  }
+  if ("region" %in% names(x)) {
+    label <- paste(x$region, label, sep = "/")
+  }
+  label
 }
 
 io_inter_industry <- function(data) {
