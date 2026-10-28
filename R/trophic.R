@@ -41,13 +41,45 @@
 #' coherent (every edge spans exactly one level) and larger when production
 #' contains more cycles and feedback.
 #'
+#' @section Direct and indirect paths:
+#' `r lifecycle::badge("experimental")`
+#'
+#' With `paths = "all"`, indirect transactions are included as well. Let
+#' \eqn{Z_n = A^n \mathrm{diag}(x)} be the transactions along paths of length
+#' `n`, where `A` is the domestic input coefficient matrix and `x` the domestic
+#' output. The edge weights become \eqn{W = \sum_{n \ge 1} Z_n = (L - I)
+#' \mathrm{diag}(x)}, where `L` is the Leontief inverse, and each path targets
+#' a level difference equal to its length, so the level minimizes
+#'
+#' \deqn{\sum_{n \ge 1} \sum_{ij} (Z_n)_{ij} (h_j - h_i - n)^2.}
+#'
+#' This is the problem above with the transactions replaced by `W` and the
+#' target 1 replaced by the average propagation length of each edge
+#' (Dietzenbacher, Romero Luna and Bosma, 2005). The incoherence is the same
+#' objective divided by \eqn{\sum_{ij} W_{ij}}. Unlike \eqn{F_0}, it also counts
+#' the variance of the path lengths within each edge, so it is positive even
+#' for a perfectly hierarchical network with paths of different lengths. With
+#' `paths = "direct"` it reduces to \eqn{F_0}.
+#'
+#' Merging industries with equal levels leaves the other levels unchanged only
+#' if the path weights are computed from the disaggregated table and then
+#' summed: the Leontief inverse of an aggregated table is not the aggregate of
+#' the disaggregated one.
+#'
 #' @param data An `econ_io_table` object.
+#' @param paths A string. `"direct"` (the default) uses the direct domestic
+#' intermediate transactions, each spanning one level. `"all"` uses all direct
+#' and indirect transactions, each spanning its path length (experimental).
 #'
 #' @return
 #' * `io_trophic_level()`: a `dibble` with one trophic level per industry.
 #' * `io_trophic_incoherence()`: a scalar numeric.
 #'
 #' @references
+#' Dietzenbacher, E., Romero Luna, I. and Bosma, N. S. (2005). Using average
+#' propagation lengths to identify production chains in the Andalusian economy.
+#' *Estudios de Economía Aplicada*, 23(2), 405-422.
+#'
 #' MacKay, R. S., Johnson, S. and Sansom, B. (2020). How directed is a directed
 #' network? *Royal Society Open Science*, 7(9), 201138.
 #'
@@ -55,6 +87,7 @@
 #' \dontrun{
 #' io_trophic_level(iotable)
 #' io_trophic_incoherence(iotable)
+#' io_trophic_level(iotable, paths = "all")
 #' }
 #'
 #' @name io_trophic
@@ -62,23 +95,31 @@ NULL
 
 #' @rdname io_trophic
 #' @export
-io_trophic_level <- function(data) {
-  trophic <- io_trophic(io_laplacian(data))
+io_trophic_level <- function(data, paths = c("direct", "all")) {
+  paths <- rlang::arg_match(paths)
+  trophic <- io_trophic(io_laplacian(data, paths))
   dibble::dibble(trophic$level, .dim_names = list(industry = trophic$dim_name))
 }
 
 #' @rdname io_trophic
 #' @export
-io_trophic_incoherence <- function(data) {
-  trophic <- io_trophic(io_laplacian(data))
-  weight <- trophic$weight
-  level <- trophic$level
+io_trophic_incoherence <- function(data, paths = c("direct", "all")) {
+  paths <- rlang::arg_match(paths)
+  laplacian <- io_laplacian(data, paths)
+  level <- io_trophic(laplacian)$level
   level_diff <- outer(level, level, \(from, to) to - from)
-  sum(weight * (level_diff - 1)^2) / sum(weight)
+  # `sum_n Z_n (dh - n)^2`, expanded in the moments of the path length.
+  objective <- sum(laplacian$weight * level_diff^2) -
+    2 * sum(laplacian$length_weight * level_diff) +
+    sum(laplacian$squared_length_weight)
+  objective / sum(laplacian$weight)
 }
 
 io_trophic <- function(laplacian, call = rlang::caller_env()) {
-  imbalance <- laplacian$in_weight - laplacian$out_weight
+  # The imbalance of the target lengths, which is in minus out for direct
+  # transactions.
+  imbalance <- colSums(laplacian$length_weight) -
+    rowSums(laplacian$length_weight)
   total_weight <- laplacian$in_weight + laplacian$out_weight
   n_industry <- length(imbalance)
 
@@ -98,7 +139,6 @@ io_trophic <- function(laplacian, call = rlang::caller_env()) {
 
   list(
     dim_name = laplacian$dim_name,
-    weight = laplacian$weight,
     level = unname(solution[seq_len(n_industry)])
   )
 }

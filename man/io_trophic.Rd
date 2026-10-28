@@ -6,12 +6,16 @@
 \alias{io_trophic_incoherence}
 \title{Trophic levels and trophic incoherence}
 \usage{
-io_trophic_level(data)
+io_trophic_level(data, paths = c("direct", "all"))
 
-io_trophic_incoherence(data)
+io_trophic_incoherence(data, paths = c("direct", "all"))
 }
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
+
+\item{paths}{A string. \code{"direct"} (the default) uses the direct domestic
+intermediate transactions, each spanning one level. \code{"all"} uses all direct
+and indirect transactions, each spanning its path length (experimental).}
 }
 \value{
 \itemize{
@@ -61,14 +65,46 @@ a scalar in \verb{[0, 1]}-ish range that is 0 when the network is perfectly
 coherent (every edge spans exactly one level) and larger when production
 contains more cycles and feedback.
 }
+\section{Direct and indirect paths}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+
+With \code{paths = "all"}, indirect transactions are included as well. Let
+\eqn{Z_n = A^n \mathrm{diag}(x)} be the transactions along paths of length
+\code{n}, where \code{A} is the domestic input coefficient matrix and \code{x} the domestic
+output. The edge weights become \eqn{W = \sum_{n \ge 1} Z_n = (L - I)
+\mathrm{diag}(x)}, where \code{L} is the Leontief inverse, and each path targets
+a level difference equal to its length, so the level minimizes
+
+\deqn{\sum_{n \ge 1} \sum_{ij} (Z_n)_{ij} (h_j - h_i - n)^2.}
+
+This is the problem above with the transactions replaced by \code{W} and the
+target 1 replaced by the average propagation length of each edge
+(Dietzenbacher, Romero Luna and Bosma, 2005). The incoherence is the same
+objective divided by \eqn{\sum_{ij} W_{ij}}. Unlike \eqn{F_0}, it also counts
+the variance of the path lengths within each edge, so it is positive even
+for a perfectly hierarchical network with paths of different lengths. With
+\code{paths = "direct"} it reduces to \eqn{F_0}.
+
+Merging industries with equal levels leaves the other levels unchanged only
+if the path weights are computed from the disaggregated table and then
+summed: the Leontief inverse of an aggregated table is not the aggregate of
+the disaggregated one.
+}
+
 \examples{
 \dontrun{
 io_trophic_level(iotable)
 io_trophic_incoherence(iotable)
+io_trophic_level(iotable, paths = "all")
 }
 
 }
 \references{
+Dietzenbacher, E., Romero Luna, I. and Bosma, N. S. (2005). Using average
+propagation lengths to identify production chains in the Andalusian economy.
+\emph{Estudios de Economía Aplicada}, 23(2), 405-422.
+
 MacKay, R. S., Johnson, S. and Sansom, B. (2020). How directed is a directed
 network? \emph{Royal Society Open Science}, 7(9), 201138.
 }

@@ -148,3 +148,23 @@ test_that("io_spectral_embedding agrees with numerically minimizing the Dirichle
     expect_equal(actual, expected, tolerance = 1e-4)
   }
 })
+
+test_that("io_spectral_embedding with paths = \"all\" uses the all-path Laplacian", {
+  iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
+  laplacian <- io_laplacian(iotable, paths = "all")
+  total_weight <- laplacian$in_weight + laplacian$out_weight
+
+  h <- as.numeric(as.matrix(io_spectral_embedding(iotable, paths = "all")))
+  expect_equal(sum(total_weight * h), 0)
+  expect_equal(sum(total_weight * h^2), 1)
+
+  eigenvalue <- sum(h * (laplacian$laplacian %*% h))
+  expect_equal(
+    as.vector(laplacian$laplacian %*% h),
+    eigenvalue * total_weight * h
+  )
+  eigenvalues <- sort(Re(
+    eigen(laplacian$laplacian / total_weight, only.values = TRUE)$values
+  ))
+  expect_equal(eigenvalue, eigenvalues[[2]])
+})

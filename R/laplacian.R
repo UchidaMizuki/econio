@@ -1,4 +1,4 @@
-io_laplacian <- function(data) {
+io_laplacian <- function(data, paths = "direct") {
   if (!inherits(data, "io_table_noncompetitive_import")) {
     cli::cli_inform(
       "Converting to a noncompetitive import type table with {.fn io_table_to_noncompetitive_import}."
@@ -20,10 +20,46 @@ io_laplacian <- function(data) {
     )
   }
 
-  io_laplacian_weight(weight, dim_name)
+  if (paths == "direct") {
+    io_laplacian_weight(weight, dim_name)
+  } else {
+    output <- as.vector(io_total_input(data))
+    io_laplacian_paths(weight, output, dim_name)
+  }
 }
 
-io_laplacian_weight <- function(weight, dim_name) {
+# Weights over all direct and indirect paths. With `Z_n = A^n diag(x)` the
+# transactions along paths of length `n`, the edge weights are `sum_n Z_n`,
+# and `sum_n n Z_n` and `sum_n n^2 Z_n` give the first two moments of the path
+# length of each edge. The sums over `n >= 1` of `A^n`, `n A^n` and `n^2 A^n`
+# are `L - I`, `L (L - I)` and `(2 L - I) L (L - I)`, where `L` is the Leontief
+# inverse.
+io_laplacian_paths <- function(weight, output, dim_name) {
+  identity <- diag(nrow(weight))
+  input_coef <- sweep(weight, 2, output, "/")
+  input_coef[, output == 0] <- 0
+  leontief <- solve(identity - input_coef)
+
+  path_sum <- leontief - identity
+  path_length_sum <- leontief %*% path_sum
+  path_squared_length_sum <- (2 * leontief - identity) %*% path_length_sum
+  io_laplacian_weight(
+    sweep(path_sum, 2, output, "*"),
+    dim_name,
+    length_weight = sweep(path_length_sum, 2, output, "*"),
+    squared_length_weight = sweep(path_squared_length_sum, 2, output, "*")
+  )
+}
+
+# `length_weight` and `squared_length_weight` are the edge weights multiplied
+# by the (squared) target length of each edge, summed over paths. For direct
+# transactions every edge has length 1, so both equal `weight`.
+io_laplacian_weight <- function(
+  weight,
+  dim_name,
+  length_weight = weight,
+  squared_length_weight = weight
+) {
   in_weight <- colSums(weight)
   out_weight <- rowSums(weight)
   total_weight <- in_weight + out_weight
@@ -32,6 +68,8 @@ io_laplacian_weight <- function(weight, dim_name) {
   list(
     dim_name = dim_name,
     weight = weight,
+    length_weight = length_weight,
+    squared_length_weight = squared_length_weight,
     in_weight = in_weight,
     out_weight = out_weight,
     laplacian = laplacian

@@ -158,3 +158,94 @@ test_that("io_trophic_level agrees with numerically minimizing the trophic objec
   # Allow for rounding: the analytic solution must not be worse than optim().
   expect_lte(objective(actual), optimum$value * (1 + 1e-10))
 })
+
+test_that("io_trophic_incoherence with paths = \"direct\" is F_0", {
+  iotable <- read_iotable_dummy("regional_noncompetitive_import")
+  weight <- io_laplacian(iotable)$weight
+  level <- as.numeric(as.matrix(io_trophic_level(iotable)))
+  level_diff <- outer(level, level, \(from, to) to - from)
+
+  expect_equal(
+    io_trophic_incoherence(iotable, paths = "direct"),
+    sum(weight * (level_diff - 1)^2) / sum(weight)
+  )
+})
+
+test_that("io_trophic matches the two-industry closed form with path lengths", {
+  weight <- rbind(c(4, 3), c(1, 7))
+  length_weight <- rbind(c(5, 6), c(3, 9))
+  laplacian <- io_laplacian_weight(
+    weight,
+    tibble::tibble(sector = 1:2),
+    length_weight = length_weight
+  )
+  # h_2 - h_1 = (6 - 3) / (3 + 1) = 0.75, centered with u = (12, 18).
+  expect_equal(io_trophic(laplacian)$level, c(-0.45, 0.3))
+})
+
+test_that("io_trophic with paths = \"all\" leaves other levels unchanged when merging path weights", {
+  weight <- rbind(
+    c(0, 1, 1, 0),
+    c(0, 0, 1, 1),
+    c(0, 1, 0, 1),
+    c(0, 0, 0, 0)
+  )
+  laplacian <- io_laplacian_paths(
+    weight,
+    c(3, 4, 4, 4),
+    tibble::tibble(sector = 1:4)
+  )
+  level <- io_trophic(laplacian)$level
+  expect_equal(level[[2]], level[[3]])
+
+  merge <- rbind(c(1, 0, 0, 0), c(0, 1, 1, 0), c(0, 0, 0, 1))
+  aggregate <- \(x) merge %*% x %*% t(merge)
+  laplacian_merged <- io_laplacian_weight(
+    aggregate(laplacian$weight),
+    tibble::tibble(sector = 1:3),
+    length_weight = aggregate(laplacian$length_weight),
+    squared_length_weight = aggregate(laplacian$squared_length_weight)
+  )
+  expect_equal(io_trophic(laplacian_merged)$level, level[c(1, 2, 4)])
+})
+
+test_that("io_trophic_level with paths = \"all\" agrees with numerically minimizing the path objective", {
+  iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
+  weight <- io_laplacian(iotable)$weight
+  output <- as.vector(io_total_input(iotable))
+  input_coef <- sweep(weight, 2, output, "/")
+  power <- diag(nrow(input_coef))
+  transactions <- vector("list", 100)
+  for (n in seq_along(transactions)) {
+    power <- power %*% input_coef
+    transactions[[n]] <- sweep(power, 2, output, "*")
+  }
+
+  objective <- function(level) {
+    level_diff <- outer(level, level, \(from, to) to - from)
+    sum(purrr::imap_dbl(transactions, \(z, n) sum(z * (level_diff - n)^2)))
+  }
+  optimum <- optim(
+    rep(0, nrow(weight)),
+    objective,
+    method = "BFGS",
+    control = list(reltol = 1e-14)
+  )
+  total_weight <- rowSums(Reduce(`+`, transactions)) +
+    colSums(Reduce(`+`, transactions))
+  expected <- optimum$par -
+    sum(total_weight * optimum$par) / sum(total_weight)
+
+  actual <- as.numeric(as.matrix(io_trophic_level(iotable, paths = "all")))
+  expect_equal(actual, expected, tolerance = 1e-4)
+  expect_lte(objective(actual), optimum$value * (1 + 1e-10))
+  expect_equal(
+    io_trophic_incoherence(iotable, paths = "all"),
+    objective(actual) / sum(Reduce(`+`, transactions))
+  )
+})
+
+test_that("io_trophic_level validates paths", {
+  iotable <- read_iotable_dummy("regional_noncompetitive_import")
+  expect_snapshot(io_trophic_level(iotable, paths = "indirect"), error = TRUE)
+})

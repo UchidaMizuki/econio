@@ -51,6 +51,10 @@
 #' @param normalized A scalar logical. If `TRUE` (the default), use the
 #' normalized Laplacian, weighting the constraints by the total weight of each
 #' industry. If `FALSE`, use the unnormalized Laplacian.
+#' @param paths A string. `"direct"` (the default) weights the network by the
+#' direct domestic intermediate transactions. `"all"` (experimental) weights it
+#' by all direct and indirect transactions, \eqn{(L - I) \mathrm{diag}(x)};
+#' see the "Direct and indirect paths" section of [io_trophic_level()].
 #'
 #' @return A `dibble`. With `dims = 1`, one value per industry. With
 #' `dims > 1`, an `industry` by `component` array.
@@ -72,10 +76,16 @@
 #' }
 #'
 #' @export
-io_spectral_embedding <- function(data, dims = 1, normalized = TRUE) {
+io_spectral_embedding <- function(
+  data,
+  dims = 1,
+  normalized = TRUE,
+  paths = c("direct", "all")
+) {
   rlang::check_bool(normalized)
+  paths <- rlang::arg_match(paths)
 
-  laplacian <- io_laplacian(data)
+  laplacian <- io_laplacian(data, paths)
   n_industry <- ncol(laplacian$laplacian)
 
   rlang::check_number_whole(dims, min = 1, max = n_industry - 1)
