@@ -118,3 +118,23 @@ test_that("io_check_connected aborts on separate components", {
   expect_equal(io_network_component(weight), c(1L, 1L, 2L, 2L))
   expect_snapshot(io_check_connected(laplacian), error = TRUE)
 })
+
+test_that("io_trophic_level agrees with numerically minimizing the trophic objective", {
+  iotable <- read_iotable_dummy("multiregional_competitive_import")
+  weight <- suppressMessages(io_laplacian(iotable))$weight
+
+  objective <- function(level) {
+    sum(weight * (outer(level, level, \(from, to) to - from) - 1)^2)
+  }
+  optimum <- optim(
+    rep(0, nrow(weight)),
+    objective,
+    method = "BFGS",
+    control = list(reltol = 1e-14)
+  )
+  expected <- optimum$par - min(optimum$par)
+
+  actual <- suppressMessages(as.numeric(as.matrix(io_trophic_level(iotable))))
+  expect_equal(actual, expected, tolerance = 1e-4)
+  expect_lte(objective(actual), optimum$value)
+})
