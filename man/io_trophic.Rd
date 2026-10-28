@@ -34,7 +34,18 @@ to industry \code{j}), and the trophic level \code{h} solves the Laplacian syste
 \deqn{(\mathrm{diag}(u) - (W + W^\top))\,h = v,}
 
 where \code{u} is the total weight (in plus out) of each node and \code{v} is its
-imbalance (in minus out). The levels are shifted so that the minimum is 0.
+imbalance (in minus out). The Laplacian is singular, so the levels are only
+determined up to an additive constant; they are centered so that their
+weighted mean is 0, \eqn{\sum_i u_i h_i = 0}. A negative level means an
+industry sits upstream of the weighted average, and a positive level means
+it sits downstream. Because \code{u} includes transactions within an industry,
+merging industries with equal levels leaves \code{u}'s total and therefore the
+levels of the other industries unchanged. The levels are obtained by solving
+the system together with this constraint, which has a unique solution when
+the network is connected. Trophic levels in separate parts of a disconnected
+network are not comparable, so both functions abort if the network
+(treating each transaction as an undirected link) is not connected, e.g.
+when an industry has no transactions with any other industry.
 
 Value-added and final-demand sectors are not nodes and do not receive a
 trophic level, but they are \strong{not} ignored: because the table balances, an

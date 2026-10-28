@@ -20,9 +20,15 @@ io_laplacian <- function(data) {
     )
   }
 
+  io_laplacian_weight(weight, dim_name)
+}
+
+io_laplacian_weight <- function(weight, dim_name) {
   in_weight <- colSums(weight)
   out_weight <- rowSums(weight)
-  laplacian <- diag(in_weight + out_weight) - (weight + t(weight))
+  total_weight <- in_weight + out_weight
+  laplacian <- diag(total_weight, nrow = length(total_weight)) -
+    (weight + t(weight))
   list(
     dim_name = dim_name,
     weight = weight,
