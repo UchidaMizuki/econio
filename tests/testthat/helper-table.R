@@ -86,3 +86,23 @@ read_iotable_dummy <- function(name) {
     )
   }
 }
+
+get_data_regional_demand <- function(iotable) {
+  iotable |>
+    dplyr::filter(
+      io_sector_type(.data$input) == "industry",
+      io_sector_type(.data$output) %in% c("industry", "final_demand")
+    )
+}
+
+# An import table with the same totals by input as `import`, allocated
+# uniformly over the outputs within the same region.
+get_data_import_uniform <- function(import) {
+  same_region <- io_same_region(import)
+  total <- dibble::apply(import, "input", sum)
+  n_output <- dibble::apply(same_region, "input", sum)
+  dibble::broadcast(
+    same_region * (total / n_output),
+    dim_names = c("input", "output")
+  )
+}
