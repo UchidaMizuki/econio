@@ -39,10 +39,14 @@ io_laplacian_weight <- function(weight, dim_name) {
 }
 
 io_industry_label <- function(dim_name) {
-  label <- purrr::map(dim_name, function(x) {
-    if (inherits(x, "econ_io_sector")) io_sector_name(x) else as.character(x)
-  })
-  do.call(paste, c(unname(label), sep = "/"))
+  label <- dim_name$sector
+  if (inherits(label, "econ_io_sector")) {
+    label <- io_sector_name(label)
+  }
+  if ("region" %in% names(dim_name)) {
+    label <- paste(dim_name$region, label, sep = "/")
+  }
+  label
 }
 
 io_abort_disconnected <- function(laplacian, call = rlang::caller_env()) {
