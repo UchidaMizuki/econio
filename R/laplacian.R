@@ -37,3 +37,10 @@ io_laplacian_weight <- function(weight, dim_name) {
     laplacian = laplacian
   )
 }
+
+io_industry_label <- function(dim_name) {
+  label <- purrr::map(dim_name, function(x) {
+    if (inherits(x, "econ_io_sector")) io_sector_name(x) else as.character(x)
+  })
+  do.call(paste, c(unname(label), sep = "/"))
+}

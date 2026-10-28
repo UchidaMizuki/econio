@@ -18,3 +18,6 @@ An \code{econ_io_table} object of the Ghosh inverse matrix.
 \description{
 Ghosh inverse matrix
 }
+\seealso{
+\code{\link[=io_upstreamness]{io_upstreamness()}} for its row sums (forward linkage).
+}
