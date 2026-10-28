@@ -1,12 +1,33 @@
-# io_spectral_embedding aborts when normalizing an industry with no transactions
+# io_spectral_embedding aborts on a disconnected network
 
     Code
-      io_spectral_embedding(iotable)
+      io_spectral_embedding(iotable_isolated)
     Condition
       Error in `io_spectral_embedding()`:
-      ! The normalized embedding requires every industry to have domestic intermediate transactions.
-      x 1 industry has none: "industry_1".
-      i Remove these industries or use `normalized = FALSE`.
+      ! The domestic production network must be connected.
+      x 1 industry has no domestic intermediate transactions: "industry_1".
+      i Results for separate parts of the network are not comparable.
+      i Remove or merge industries that are not linked to the others.
+
+---
+
+    Code
+      io_spectral_embedding(iotable_self_loop)
+    Condition
+      Error in `io_spectral_embedding()`:
+      ! The domestic production network must be connected.
+      i Results for separate parts of the network are not comparable.
+      i Remove or merge industries that are not linked to the others.
+
+---
+
+    Code
+      io_spectral_embedding(iotable_self_loop, normalized = FALSE)
+    Condition
+      Error in `io_spectral_embedding()`:
+      ! The domestic production network must be connected.
+      i Results for separate parts of the network are not comparable.
+      i Remove or merge industries that are not linked to the others.
 
 # io_spectral_embedding validates normalized
 

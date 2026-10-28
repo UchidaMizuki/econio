@@ -17,8 +17,8 @@
 #' eigenvalues lie in `[0, 2]`. This is the normalized Laplacian used by
 #' Laplacian eigenmaps (Belkin and Niyogi, 2003) and normalized cuts (Shi and
 #' Malik, 2000). It prevents the embedding from concentrating on industries
-#' with little intermediate trade, and requires every industry to have some
-#' domestic intermediate transactions.
+#' with little intermediate trade. `u` is the same weight that centers
+#' [io_trophic_level()].
 #'
 #' With `normalized = FALSE`, `h` is instead constrained to be orthonormal and
 #' orthogonal to the constant vector, and the minimizers are the eigenvectors
@@ -26,6 +26,9 @@
 #'
 #' In both cases the eigenvectors associated with the smallest non-zero
 #' eigenvalues are returned. With `dims = 1` this is the **Fiedler vector**.
+#' A disconnected network has one zero eigenvalue per component, which makes
+#' the embedding arbitrary, so the function aborts if the network (treating
+#' each transaction as an undirected link) is not connected.
 #'
 #' Like [io_trophic_level()], the table is first converted to a noncompetitive
 #' import type table with [io_table_to_noncompetitive_import()] so that the
@@ -77,33 +80,35 @@ io_spectral_embedding <- function(data, dims = 1, normalized = TRUE) {
 
   rlang::check_number_whole(dims, min = 1, max = n_industry - 1)
 
-  if (normalized) {
-    total_weight <- laplacian$in_weight + laplacian$out_weight
-    is_zero <- total_weight == 0
-    if (any(is_zero)) {
-      industry <- io_industry_label(laplacian$dim_name)
-      cli::cli_abort(
-        c(
-          "The normalized embedding requires every industry to have domestic intermediate transactions.",
-          "x" = "{sum(is_zero)} industr{?y has/ies have} none: {.val {industry[is_zero]}}.",
-          "i" = "Remove these industries or use {.code normalized = FALSE}."
-        )
-      )
-    }
-    # Solve the generalized problem `Λ h = λ diag(u) h` via the symmetric
-    # matrix `diag(u)^(-1/2) Λ diag(u)^(-1/2)`, then back-transform.
-    scale <- sqrt(total_weight)
-    matrix <- laplacian$laplacian / (scale %o% scale)
-  } else {
+  total_weight <- laplacian$in_weight + laplacian$out_weight
+  if (!normalized) {
     scale <- rep(1, n_industry)
-    matrix <- laplacian$laplacian
+  } else if (any(total_weight == 0)) {
+    io_abort_disconnected(laplacian, call = rlang::current_env())
+  } else {
+    scale <- sqrt(total_weight)
+  }
+  # With `normalized = TRUE`, solve the generalized problem
+  # `Λ h = λ diag(u) h` via the symmetric matrix
+  # `diag(u)^(-1/2) Λ diag(u)^(-1/2)`, then back-transform.
+  decomposition <- eigen(
+    laplacian$laplacian / (scale %o% scale),
+    symmetric = TRUE
+  )
+
+  # Eigenvalues are returned in decreasing order, so the trivial mode
+  # (eigenvalue ~ 0) is last. A disconnected network has one zero eigenvalue
+  # per component, so the second smallest must be numerically non-zero.
+  eigenvalues <- decomposition$values
+  if (
+    eigenvalues[[n_industry - 1L]] <=
+      n_industry * .Machine$double.eps * eigenvalues[[1]]
+  ) {
+    io_abort_disconnected(laplacian, call = rlang::current_env())
   }
 
-  decomposition <- eigen(matrix, symmetric = TRUE)
-  # Eigenvalues are returned in decreasing order, so the trivial mode
-  # (eigenvalue ~ 0) is last. Take the `dims` smallest non-zero eigenvectors,
-  # i.e. columns (n_industry - 1), (n_industry - 2), ..., the Fiedler vector
-  # first.
+  # Take the `dims` smallest non-zero eigenvectors, i.e. columns
+  # (n_industry - 1), (n_industry - 2), ..., the Fiedler vector first.
   columns <- seq.int(n_industry - 1L, n_industry - dims)
   eigenvectors <- decomposition$vectors[, columns, drop = FALSE] / scale
 

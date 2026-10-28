@@ -93,16 +93,7 @@ io_trophic <- function(laplacian, call = rlang::caller_env()) {
   )
   solution <- rlang::try_fetch(
     solve(system, c(imbalance, 0)),
-    error = function(cnd) {
-      cli::cli_abort(
-        c(
-          "Can't compute trophic levels because the domestic production network is not connected.",
-          "i" = "Trophic levels in separate components are not comparable.",
-          "i" = "Remove or merge industries that have no transactions with the others."
-        ),
-        call = call
-      )
-    }
+    error = function(cnd) io_abort_disconnected(laplacian, call = call)
   )
 
   list(

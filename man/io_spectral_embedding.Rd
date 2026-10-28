@@ -40,8 +40,8 @@ eigenproblem \eqn{\Lambda h = \lambda \, \mathrm{diag}(u) \, h}, whose
 eigenvalues lie in \verb{[0, 2]}. This is the normalized Laplacian used by
 Laplacian eigenmaps (Belkin and Niyogi, 2003) and normalized cuts (Shi and
 Malik, 2000). It prevents the embedding from concentrating on industries
-with little intermediate trade, and requires every industry to have some
-domestic intermediate transactions.
+with little intermediate trade. \code{u} is the same weight that centers
+\code{\link[=io_trophic_level]{io_trophic_level()}}.
 
 With \code{normalized = FALSE}, \code{h} is instead constrained to be orthonormal and
 orthogonal to the constant vector, and the minimizers are the eigenvectors
@@ -49,6 +49,9 @@ of \eqn{\Lambda} itself.
 
 In both cases the eigenvectors associated with the smallest non-zero
 eigenvalues are returned. With \code{dims = 1} this is the \strong{Fiedler vector}.
+A disconnected network has one zero eigenvalue per component, which makes
+the embedding arbitrary, so the function aborts if the network (treating
+each transaction as an undirected link) is not connected.
 
 Like \code{\link[=io_trophic_level]{io_trophic_level()}}, the table is first converted to a noncompetitive
 import type table with \code{\link[=io_table_to_noncompetitive_import]{io_table_to_noncompetitive_import()}} so that the
