@@ -41,6 +41,9 @@
 #' downstreamness of industries/countries in world production. *International
 #' Regional Science Review*, 40(5), 443-475.
 #'
+#' @seealso [io_leontief_inverse()] and [io_ghosh_inverse()] for the
+#' underlying inverse matrices.
+#'
 #' @examples
 #' \dontrun{
 #' # `iotable` is a competitive import type `econ_io_table`.
