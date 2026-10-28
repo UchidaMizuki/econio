@@ -14,10 +14,14 @@
 #'
 #' where `u` is the total weight (in plus out) of each node and `v` is its
 #' imbalance (in minus out). The Laplacian is singular, so the levels are only
-#' determined up to an additive constant; they are shifted so that the minimum
-#' is 0. The system is solved by fixing the level of one industry and dropping
-#' its (redundant) equation, which leaves a positive definite system when the
-#' network is connected. Trophic levels in separate parts of a disconnected
+#' determined up to an additive constant; they are centered so that their
+#' weighted mean is 0, \eqn{\sum_i u_i h_i = 0}. A negative level means an
+#' industry sits upstream of the weighted average, and a positive level means
+#' it sits downstream. Because `u` includes transactions within an industry,
+#' merging industries with equal levels leaves `u`'s total and therefore the
+#' levels of the other industries unchanged. The system is solved by fixing the
+#' level of one industry and dropping its (redundant) equation, which leaves a
+#' positive definite system when the network is connected. Trophic levels in separate parts of a disconnected
 #' network are not comparable, so both functions abort if the network
 #' (treating each transaction as an undirected link) is not connected, e.g.
 #' when an industry has no transactions with any other industry.
@@ -82,7 +86,8 @@ io_trophic <- function(laplacian, call = rlang::caller_env()) {
   # and dropping its equation, which is redundant because the equations sum to
   # 0, leaves a positive definite system for a connected network. Fixing the
   # industry with the largest total weight keeps the system well conditioned.
-  # For a disconnected network the remaining system is singular.
+  # For a disconnected network the remaining system is singular. The levels
+  # are then centered to a weighted mean of 0.
   if (length(level) > 1L) {
     total_weight <- laplacian$in_weight + laplacian$out_weight
     fixed <- which.max(total_weight)
@@ -102,11 +107,8 @@ io_trophic <- function(laplacian, call = rlang::caller_env()) {
         )
       }
     )
+    level <- level - sum(total_weight * level) / sum(total_weight)
   }
 
-  list(
-    dim_name = laplacian$dim_name,
-    weight = laplacian$weight,
-    level = level - min(level)
-  )
+  list(dim_name = laplacian$dim_name, weight = laplacian$weight, level = level)
 }
