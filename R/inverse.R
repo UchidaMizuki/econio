@@ -6,6 +6,8 @@
 #'
 #' @return An `econ_io_table` object of the Leontief inverse matrix.
 #'
+#' @seealso [io_downstreamness()] for its column sums (backward linkage).
+#'
 #' @export
 io_leontief_inverse <- function(data, open_economy = NULL) {
   open_economy <- io_open_economy(data, open_economy)
@@ -25,6 +27,8 @@ io_leontief_inverse <- function(data, open_economy = NULL) {
 #' used.
 #'
 #' @return An `econ_io_table` object of the Ghosh inverse matrix.
+#'
+#' @seealso [io_upstreamness()] for its row sums (forward linkage).
 #'
 #' @export
 io_ghosh_inverse <- function(data, open_economy = NULL) {

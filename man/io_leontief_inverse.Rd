@@ -18,3 +18,6 @@ An \code{econ_io_table} object of the Leontief inverse matrix.
 \description{
 Leontief inverse matrix
 }
+\seealso{
+\code{\link[=io_downstreamness]{io_downstreamness()}} for its column sums (backward linkage).
+}

@@ -66,3 +66,7 @@ Miller, R. E. and Temurshoev, U. (2017). Output upstreamness and input
 downstreamness of industries/countries in world production. \emph{International
 Regional Science Review}, 40(5), 443-475.
 }
+\seealso{
+\code{\link[=io_leontief_inverse]{io_leontief_inverse()}} and \code{\link[=io_ghosh_inverse]{io_ghosh_inverse()}} for the
+underlying inverse matrices.
+}
