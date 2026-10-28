@@ -77,7 +77,7 @@ test_that("io_table_regional() and io_table_multiregional() work", {
     iotable_wrong_total_input <- iotable_dummy[[name]] |>
       dplyr::mutate(
         value = dplyr::if_else(
-          output_sector_type == "total",
+          input_sector_type == "total",
           value + 1 / 3,
           value
         )
@@ -146,6 +146,18 @@ test_that("io_check_axes() detects axis mismatches", {
     dplyr::slice(1)
   dim_names$output <- dim_names$output |>
     dplyr::anti_join(output_industry_sector, by = "sector")
+  iotable_mismatch <- dibble::broadcast(iotable, dim_names = dim_names)
+  expect_snapshot(io_check_axes(iotable_mismatch), error = TRUE)
+})
+
+test_that("io_check_axes() reports regions of mismatched multiregional axes", {
+  iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
+  dim_names <- dimnames(iotable)
+  dim_names$output <- dim_names$output |>
+    dplyr::filter(
+      !(.data$region == "region_2" &
+        io_sector_name(.data$sector) == "industry_1")
+    )
   iotable_mismatch <- dibble::broadcast(iotable, dim_names = dim_names)
   expect_snapshot(io_check_axes(iotable_mismatch), error = TRUE)
 })

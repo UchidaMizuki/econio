@@ -52,6 +52,28 @@ get_data_total_input <- function(iotable, open_economy = NULL) {
   }
 }
 
+read_iotable_dummy_raw <- function(name) {
+  readRDS(test_path("data", "iotable_dummy.rds"))[[name]]
+}
+
+# Flatten a dibble into the long format of the raw dummy data, i.e. columns
+# such as `input_region`, `input_sector_type`, `input_sector_name`, and `value`.
+as_long_tibble <- function(x) {
+  x <- tibble::as_tibble(x)
+  value <- x[[ncol(x)]]
+  axes <- x[-ncol(x)] |>
+    purrr::imap(\(axis, name) {
+      axis |>
+        dplyr::mutate(
+          sector_type = as.character(io_sector_type(.data$sector)),
+          sector_name = io_sector_name(.data$sector),
+          .keep = "unused"
+        ) |>
+        dplyr::rename_with(\(col) paste(name, col, sep = "_"))
+    })
+  dplyr::bind_cols(unname(axes), value = value)
+}
+
 read_iotable_dummy <- function(name) {
   name <- rlang::arg_match(
     name,

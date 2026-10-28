@@ -234,7 +234,7 @@ io_table_to_blocks <- function(data) {
     import <- data |>
       dplyr::filter(
         io_sector_type(.data$input) == "import",
-        io_sector_type(.data$output) == "industry"
+        io_sector_type(.data$output) %in% c("industry", "final_demand")
       )
     list(
       inter_industry = inter_industry,
@@ -264,6 +264,12 @@ io_table_to_regional <- function(
 ) {
   rlang::check_string(export_sector_name, allow_na = TRUE)
   rlang::check_string(import_sector_name, allow_na = TRUE)
+
+  if (!inherits(data, "io_table_multiregional")) {
+    cli::cli_abort(
+      "{.arg data} must be a multi-regional input-output table created with {.fn io_table_multiregional}."
+    )
+  }
 
   region <- io_region(data)
 
@@ -429,16 +435,11 @@ io_check_import_totals <- function(
     )
 
   if (!vctrs::vec_is_empty(data_import_total)) {
-    dim_name <- data_import_total[[axis_other]]
-    sector <- io_sector_name(dim_name)
-    if ("region" %in% names(dim_name)) {
-      sector <- paste(dim_name$region, sector, sep = "/")
-    }
     cli::cli_abort(
       c(
         "The total import values do not match.",
         glue::glue(
-          "{sector}: {data_import_total$import_total_actual} (`actual`) not nearly equal to {data_import_total$import_total_expected} (`expected`)."
+          "{io_axis_label(data_import_total[[axis_other]])}: {data_import_total$import_total_actual} (`actual`) not nearly equal to {data_import_total$import_total_expected} (`expected`)."
         ) |>
           rlang::set_names("x")
       ),
