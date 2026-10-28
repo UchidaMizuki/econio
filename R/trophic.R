@@ -59,100 +59,54 @@ NULL
 #' @rdname io_trophic
 #' @export
 io_trophic_level <- function(data) {
-  trophic <- io_trophic(data)
+  trophic <- io_trophic(io_laplacian(data))
   dibble::dibble(trophic$level, .dim_names = list(industry = trophic$dim_name))
 }
 
 #' @rdname io_trophic
 #' @export
 io_trophic_incoherence <- function(data) {
-  trophic <- io_trophic(data)
+  trophic <- io_trophic(io_laplacian(data))
   weight <- trophic$weight
   level <- trophic$level
   level_diff <- outer(level, level, \(from, to) to - from)
   sum(weight * (level_diff - 1)^2) / sum(weight)
 }
 
-io_trophic <- function(data, call = rlang::caller_env()) {
-  laplacian <- io_laplacian(data)
-  io_check_connected(laplacian, call = call)
-  level <- io_trophic_solve(laplacian)
-  list(dim_name = laplacian$dim_name, weight = laplacian$weight, level = level)
-}
-
-io_trophic_solve <- function(laplacian) {
+io_trophic <- function(laplacian, call = rlang::caller_env()) {
   imbalance <- laplacian$in_weight - laplacian$out_weight
   level <- numeric(length(imbalance))
-  if (length(level) == 1L) {
-    return(level)
-  }
 
   # The Laplacian is singular (its rows sum to 0), so the levels are only
   # defined up to an additive constant. Fixing the level of one industry to 0
   # and dropping its equation, which is redundant because the equations sum to
   # 0, leaves a positive definite system for a connected network. Fixing the
   # industry with the largest total weight keeps the system well conditioned.
-  total_weight <- laplacian$in_weight + laplacian$out_weight
-  fixed <- which.max(total_weight)
-  level[-fixed] <- solve(
-    laplacian$laplacian[-fixed, -fixed, drop = FALSE],
-    imbalance[-fixed]
-  )
-  level - min(level)
-}
-
-io_check_connected <- function(laplacian, call = rlang::caller_env()) {
-  component <- io_network_component(laplacian$weight)
-  n_component <- max(component)
-  if (n_component == 1L) {
-    return(invisible(laplacian))
+  # For a disconnected network the remaining system is singular.
+  if (length(level) > 1L) {
+    total_weight <- laplacian$in_weight + laplacian$out_weight
+    fixed <- which.max(total_weight)
+    level[-fixed] <- rlang::try_fetch(
+      solve(
+        laplacian$laplacian[-fixed, -fixed, drop = FALSE],
+        imbalance[-fixed]
+      ),
+      error = function(cnd) {
+        cli::cli_abort(
+          c(
+            "Can't compute trophic levels because the domestic production network is not connected.",
+            "i" = "Trophic levels in separate components are not comparable.",
+            "i" = "Remove or merge industries that have no transactions with the others."
+          ),
+          call = call
+        )
+      }
+    )
   }
 
-  component_size <- tabulate(component)
-  isolated <- component_size[component] == 1L
-  industry <- io_industry_label(laplacian$dim_name)
-  cli::cli_abort(
-    c(
-      "The domestic production network must be connected, but it has {n_component} separate components.",
-      "i" = "Trophic levels in separate components are not comparable.",
-      "i" = if (any(isolated)) {
-        "{sum(isolated)} industr{?y has/ies have} no transactions with other industries: {.val {industry[isolated]}}."
-      },
-      "i" = if (any(!isolated)) {
-        "Component sizes: {component_size}."
-      },
-      "i" = "Remove or merge disconnected industries before computing trophic levels."
-    ),
-    call = call
+  list(
+    dim_name = laplacian$dim_name,
+    weight = laplacian$weight,
+    level = level - min(level)
   )
-}
-
-io_network_component <- function(weight) {
-  adjacency <- weight + t(weight) > 0
-  n_industry <- nrow(adjacency)
-  component <- integer(n_industry)
-  id <- 0L
-  for (start in seq_len(n_industry)) {
-    if (component[[start]] != 0L) {
-      next
-    }
-    id <- id + 1L
-    component[[start]] <- id
-    frontier <- start
-    while (length(frontier) > 0) {
-      neighbor <- which(
-        colSums(adjacency[frontier, , drop = FALSE]) > 0 & component == 0L
-      )
-      component[neighbor] <- id
-      frontier <- neighbor
-    }
-  }
-  component
-}
-
-io_industry_label <- function(dim_name) {
-  label <- purrr::map(dim_name, function(x) {
-    if (inherits(x, "econ_io_sector")) io_sector_name(x) else as.character(x)
-  })
-  do.call(paste, c(unname(label), sep = "/"))
 }

@@ -19,5 +19,5 @@
 * `io_table_to_noncompetitive_import()` no longer leaves a leftover zero-valued `import` sector on the output axis when converting from a competitive import type table.
 * `io_total_input()` and `io_total_output()` now validate `same_region`.
 * `io_trophic_incoherence()` returns the trophic incoherence of the domestic production network.
-* `io_trophic_level()` returns the directed-network trophic level of each industry, following MacKay, Johnson and Sansom (2020). It and `io_trophic_incoherence()` abort when the domestic production network is not connected, since levels in separate components are not comparable (#30).
+* `io_trophic_level()` returns the directed-network trophic level of each industry, following MacKay, Johnson and Sansom (2020). It and `io_trophic_incoherence()` abort with an informative error when the domestic production network is not connected, since levels in separate components are not comparable (#30).
 * `io_upstreamness()` returns the row sums of the Ghosh inverse, i.e. the forward linkage.
