@@ -1,8 +1,11 @@
-#' Upstreamness and downstreamness
+#' Upstreamness and downstreamness (forward and backward linkages)
 #'
 #' Sector-level summaries of how far each industry is from final demand
 #' (upstreamness) and from primary inputs (downstreamness), derived from the
-#' Ghosh and Leontief inverse matrices respectively.
+#' Ghosh and Leontief inverse matrices respectively. Together they are the
+#' total forward and backward linkages of input-output linkage analysis; Miller
+#' and Temurshoev (2017) show that they coincide with output upstreamness and
+#' input downstreamness.
 #'
 #' `io_upstreamness()` returns the row sums of the Ghosh inverse, i.e. the
 #' total forward linkage (also called *output upstreamness*). A larger value
@@ -34,6 +37,13 @@
 #' Antràs, P. and Chor, D. (2018). On the measurement of upstreamness and
 #' downstreamness in global value chains. NBER Working Paper No. 24185.
 #'
+#' Miller, R. E. and Temurshoev, U. (2017). Output upstreamness and input
+#' downstreamness of industries/countries in world production. *International
+#' Regional Science Review*, 40(5), 443-475.
+#'
+#' @seealso [io_leontief_inverse()] and [io_ghosh_inverse()] for the
+#' underlying inverse matrices.
+#'
 #' @examples
 #' \dontrun{
 #' # `iotable` is a competitive import type `econ_io_table`.
@@ -42,10 +52,10 @@
 #' io_downstreamness(iotable, normalize = TRUE) # power of dispersion
 #' }
 #'
-#' @name io_upstreamness
+#' @name io_linkage
 NULL
 
-#' @rdname io_upstreamness
+#' @rdname io_linkage
 #' @export
 io_upstreamness <- function(data, open_economy = NULL, normalize = FALSE) {
   rlang::check_bool(normalize)
@@ -56,7 +66,7 @@ io_upstreamness <- function(data, open_economy = NULL, normalize = FALSE) {
   io_normalize(upstreamness, normalize = normalize)
 }
 
-#' @rdname io_upstreamness
+#' @rdname io_linkage
 #' @export
 io_downstreamness <- function(data, open_economy = NULL, normalize = FALSE) {
   rlang::check_bool(normalize)
