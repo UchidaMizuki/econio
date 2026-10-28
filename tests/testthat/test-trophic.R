@@ -155,5 +155,6 @@ test_that("io_trophic_level agrees with numerically minimizing the trophic objec
 
   actual <- suppressMessages(as.numeric(as.matrix(io_trophic_level(iotable))))
   expect_equal(actual, expected, tolerance = 1e-4)
-  expect_lte(objective(actual), optimum$value)
+  # Allow for rounding: the analytic solution must not be worse than optim().
+  expect_lte(objective(actual), optimum$value * (1 + 1e-10))
 })
