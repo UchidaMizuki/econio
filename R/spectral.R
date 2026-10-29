@@ -83,7 +83,6 @@ io_spectral_embedding <- function(
   paths = c("direct", "all")
 ) {
   rlang::check_bool(normalized)
-  paths <- rlang::arg_match(paths)
 
   laplacian <- io_laplacian(data, paths)
   n_industry <- ncol(laplacian$laplacian)

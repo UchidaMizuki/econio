@@ -96,7 +96,6 @@ NULL
 #' @rdname io_trophic
 #' @export
 io_trophic_level <- function(data, paths = c("direct", "all")) {
-  paths <- rlang::arg_match(paths)
   trophic <- io_trophic(io_laplacian(data, paths))
   dibble::dibble(trophic$level, .dim_names = list(industry = trophic$dim_name))
 }
@@ -104,7 +103,6 @@ io_trophic_level <- function(data, paths = c("direct", "all")) {
 #' @rdname io_trophic
 #' @export
 io_trophic_incoherence <- function(data, paths = c("direct", "all")) {
-  paths <- rlang::arg_match(paths)
   laplacian <- io_laplacian(data, paths)
   level <- io_trophic(laplacian)$level
   level_diff <- outer(level, level, \(from, to) to - from)

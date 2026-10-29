@@ -1,4 +1,10 @@
-io_laplacian <- function(data, paths = "direct") {
+io_laplacian <- function(
+  data,
+  paths = c("direct", "all"),
+  call = rlang::caller_env()
+) {
+  paths <- rlang::arg_match(paths, error_call = call)
+
   if (!inherits(data, "io_table_noncompetitive_import")) {
     cli::cli_inform(
       "Converting to a noncompetitive import type table with {.fn io_table_to_noncompetitive_import}."
@@ -20,12 +26,11 @@ io_laplacian <- function(data, paths = "direct") {
     )
   }
 
-  if (paths == "direct") {
-    io_laplacian_weight(weight, dim_name)
-  } else {
-    output <- as.vector(io_total_input(data))
-    io_laplacian_paths(weight, output, dim_name)
-  }
+  switch(
+    paths,
+    direct = io_laplacian_weight(weight, dim_name),
+    all = io_laplacian_paths(weight, as.vector(io_total_input(data)), dim_name)
+  )
 }
 
 # Weights over all direct and indirect paths. With `Z_n = A^n diag(x)` the
