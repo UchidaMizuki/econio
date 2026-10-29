@@ -14,8 +14,7 @@ An input-output table with negative domestic intermediate
 transactions transferred to the corresponding reverse-direction cell.
 }
 \description{
-Functions that build the domestic production network (such as
-\code{io_laplacian()}, and therefore \code{io_trophic_level()},
+Functions that build the domestic production network (\code{io_trophic_level()},
 \code{io_trophic_incoherence()}, and \code{io_spectral_embedding()}) convert to
 noncompetitive import type internally as needed, so there is usually no
 need to call {\link{io_table_to_noncompetitive_import}} yourself first.
