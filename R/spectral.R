@@ -51,7 +51,7 @@
 #' @param normalized A scalar logical. If `TRUE` (the default), use the
 #' normalized Laplacian, weighting the constraints by the total weight of each
 #' industry. If `FALSE`, use the unnormalized Laplacian.
-#' @param paths A string. `"direct"` (the default) weights the network by the
+#' @param paths A scalar character. `"direct"` (the default) weights the network by the
 #' direct domestic intermediate transactions. `"all"` (experimental) weights it
 #' by all direct and indirect transactions, \eqn{(L - I) \mathrm{diag}(x)};
 #' see the "Direct and indirect paths" section of [io_trophic_level()].

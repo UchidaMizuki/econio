@@ -211,15 +211,8 @@ test_that("io_trophic with paths = \"all\" leaves other levels unchanged when me
 
 test_that("io_trophic_level with paths = \"all\" agrees with numerically minimizing the path objective", {
   iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
-  weight <- io_laplacian(iotable)$weight
-  output <- as.vector(io_total_input(iotable))
-  input_coef <- sweep(weight, 2, output, "/")
-  power <- diag(nrow(input_coef))
-  transactions <- vector("list", 100)
-  for (n in seq_along(transactions)) {
-    power <- power %*% input_coef
-    transactions[[n]] <- sweep(power, 2, output, "*")
-  }
+  transactions <- get_path_transactions(iotable, 100)
+  weight <- Reduce(`+`, transactions)
 
   objective <- function(level) {
     level_diff <- outer(level, level, \(from, to) to - from)
@@ -231,8 +224,7 @@ test_that("io_trophic_level with paths = \"all\" agrees with numerically minimiz
     method = "BFGS",
     control = list(reltol = 1e-14)
   )
-  total_weight <- rowSums(Reduce(`+`, transactions)) +
-    colSums(Reduce(`+`, transactions))
+  total_weight <- rowSums(weight) + colSums(weight)
   expected <- optimum$par -
     sum(total_weight * optimum$par) / sum(total_weight)
 
@@ -241,7 +233,7 @@ test_that("io_trophic_level with paths = \"all\" agrees with numerically minimiz
   expect_lte(objective(actual), optimum$value * (1 + 1e-10))
   expect_equal(
     io_trophic_incoherence(iotable, paths = "all"),
-    objective(actual) / sum(Reduce(`+`, transactions))
+    objective(actual) / sum(weight)
   )
 })
 

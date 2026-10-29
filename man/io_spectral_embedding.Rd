@@ -22,7 +22,7 @@ return). By default, \code{1}, i.e. the Fiedler vector.}
 normalized Laplacian, weighting the constraints by the total weight of each
 industry. If \code{FALSE}, use the unnormalized Laplacian.}
 
-\item{paths}{A string. \code{"direct"} (the default) weights the network by the
+\item{paths}{A scalar character. \code{"direct"} (the default) weights the network by the
 direct domestic intermediate transactions. \code{"all"} (experimental) weights it
 by all direct and indirect transactions, \eqn{(L - I) \mathrm{diag}(x)};
 see the "Direct and indirect paths" section of \code{\link[=io_trophic_level]{io_trophic_level()}}.}

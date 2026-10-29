@@ -13,7 +13,7 @@ io_trophic_incoherence(data, paths = c("direct", "all"))
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
 
-\item{paths}{A string. \code{"direct"} (the default) uses the direct domestic
+\item{paths}{A scalar character. \code{"direct"} (the default) uses the direct domestic
 intermediate transactions, each spanning one level. \code{"all"} uses all direct
 and indirect transactions, each spanning its path length (experimental).}
 }

@@ -67,7 +67,7 @@
 #' the disaggregated one.
 #'
 #' @param data An `econ_io_table` object.
-#' @param paths A string. `"direct"` (the default) uses the direct domestic
+#' @param paths A scalar character. `"direct"` (the default) uses the direct domestic
 #' intermediate transactions, each spanning one level. `"all"` uses all direct
 #' and indirect transactions, each spanning its path length (experimental).
 #'

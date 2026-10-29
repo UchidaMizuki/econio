@@ -16,20 +16,17 @@ test_that("io_laplacian() aborts on negative transactions", {
 
 test_that("io_laplacian(paths = \"all\") sums transactions over all paths", {
   iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
-  direct <- io_laplacian(iotable)
-  all <- io_laplacian(iotable, paths = "all")
+  laplacian <- io_laplacian(iotable, paths = "all")
 
-  output <- as.vector(io_total_input(iotable))
-  input_coef <- sweep(direct$weight, 2, output, "/")
-  power <- diag(nrow(input_coef))
-  expected <- list(0, 0, 0)
-  for (n in 1:200) {
-    power <- power %*% input_coef
-    transaction <- sweep(power, 2, output, "*")
-    expected <- Map(\(moment, k) moment + n^k * transaction, expected, 0:2)
-  }
-
-  expect_equal(all$weight, expected[[1]])
-  expect_equal(all$length_weight, expected[[2]])
-  expect_equal(all$squared_length_weight, expected[[3]])
+  transactions <- get_path_transactions(iotable, 200)
+  n <- seq_along(transactions)
+  expect_equal(laplacian$weight, Reduce(`+`, transactions))
+  expect_equal(
+    laplacian$length_weight,
+    Reduce(`+`, Map(`*`, n, transactions))
+  )
+  expect_equal(
+    laplacian$squared_length_weight,
+    Reduce(`+`, Map(`*`, n^2, transactions))
+  )
 })
