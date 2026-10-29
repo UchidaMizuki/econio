@@ -12,7 +12,7 @@ test_that("io_spectral_embedding with normalized = FALSE returns the Fiedler vec
     # The Fiedler vector is orthogonal to the constant vector.
     expect_equal(sum(h), 0)
 
-    laplacian <- io_laplacian(iotable)$laplacian
+    laplacian <- io_network(iotable)$laplacian
     eigenvalues <- sort(eigen(laplacian, symmetric = TRUE)$values)
     # A unit eigenvector's Dirichlet energy equals its eigenvalue; the Fiedler
     # vector attains the smallest non-zero one.
@@ -26,8 +26,8 @@ test_that("io_spectral_embedding solves the normalized generalized eigenproblem"
     "multiregional_competitive_import"
   )) {
     iotable <- suppressMessages(read_iotable_dummy(name))
-    laplacian <- suppressMessages(io_laplacian(iotable))
-    total_weight <- laplacian$in_weight + laplacian$out_weight
+    network <- suppressMessages(io_network(iotable))
+    total_weight <- network$in_weight + network$out_weight
 
     embedding <- suppressMessages(io_spectral_embedding(iotable, dims = 2))
     h <- matrix(as.numeric(as.matrix(embedding)), ncol = 2)
@@ -35,15 +35,15 @@ test_that("io_spectral_embedding solves the normalized generalized eigenproblem"
     expect_equal(as.vector(crossprod(total_weight, h)), c(0, 0))
     expect_equal(crossprod(h, total_weight * h), diag(2))
 
-    eigenvalue <- diag(crossprod(h, laplacian$laplacian %*% h))
+    eigenvalue <- diag(crossprod(h, network$laplacian %*% h))
     expect_equal(
-      laplacian$laplacian %*% h,
+      network$laplacian %*% h,
       total_weight * h %*% diag(eigenvalue)
     )
 
     eigenvalues <- sort(Re(
       eigen(
-        laplacian$laplacian / total_weight,
+        network$laplacian / total_weight,
         only.values = TRUE
       )$values
     ))
@@ -100,7 +100,7 @@ test_that("io_spectral_embedding validates dims", {
 
 test_that("io_spectral_embedding agrees with numerically minimizing the Dirichlet energy", {
   iotable <- read_iotable_dummy("multiregional_competitive_import")
-  network <- suppressMessages(io_laplacian(iotable))
+  network <- suppressMessages(io_network(iotable))
   laplacian <- network$laplacian
   total_weight <- network$in_weight + network$out_weight
 

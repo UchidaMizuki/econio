@@ -1,4 +1,4 @@
-io_laplacian <- function(data) {
+io_network <- function(data) {
   if (!inherits(data, "io_table_noncompetitive_import")) {
     cli::cli_inform(
       "Converting to a noncompetitive import type table with {.fn io_table_to_noncompetitive_import}."
@@ -20,10 +20,10 @@ io_laplacian <- function(data) {
     )
   }
 
-  io_laplacian_weight(weight, dim_name)
+  io_network_weight(weight, dim_name)
 }
 
-io_laplacian_weight <- function(weight, dim_name) {
+io_network_weight <- function(weight, dim_name) {
   in_weight <- colSums(weight)
   out_weight <- rowSums(weight)
   total_weight <- in_weight + out_weight
@@ -38,9 +38,9 @@ io_laplacian_weight <- function(weight, dim_name) {
   )
 }
 
-io_abort_disconnected <- function(laplacian, call = rlang::caller_env()) {
-  total_weight <- laplacian$in_weight + laplacian$out_weight
-  industry <- io_axis_label(laplacian$dim_name)[total_weight == 0]
+io_abort_disconnected <- function(network, call = rlang::caller_env()) {
+  total_weight <- network$in_weight + network$out_weight
+  industry <- io_axis_label(network$dim_name)[total_weight == 0]
   cli::cli_abort(
     c(
       "The domestic production network must be connected.",

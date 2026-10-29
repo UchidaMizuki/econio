@@ -63,23 +63,23 @@ NULL
 #' @rdname io_trophic
 #' @export
 io_trophic_level <- function(data) {
-  trophic <- io_trophic(io_laplacian(data))
+  trophic <- io_trophic(io_network(data))
   dibble::dibble(trophic$level, .dim_names = list(industry = trophic$dim_name))
 }
 
 #' @rdname io_trophic
 #' @export
 io_trophic_incoherence <- function(data) {
-  trophic <- io_trophic(io_laplacian(data))
+  trophic <- io_trophic(io_network(data))
   weight <- trophic$weight
   level <- trophic$level
   level_diff <- outer(level, level, \(from, to) to - from)
   sum(weight * (level_diff - 1)^2) / sum(weight)
 }
 
-io_trophic <- function(laplacian, call = rlang::caller_env()) {
-  imbalance <- laplacian$in_weight - laplacian$out_weight
-  total_weight <- laplacian$in_weight + laplacian$out_weight
+io_trophic <- function(network, call = rlang::caller_env()) {
+  imbalance <- network$in_weight - network$out_weight
+  total_weight <- network$in_weight + network$out_weight
   n_industry <- length(imbalance)
 
   # The Laplacian is singular (its rows sum to 0), so the levels are only
@@ -88,17 +88,17 @@ io_trophic <- function(laplacian, call = rlang::caller_env()) {
   # Its multiplier is 0 because the imbalance sums to 0, and the system is
   # singular exactly when the network is disconnected.
   system <- rbind(
-    cbind(laplacian$laplacian, total_weight),
+    cbind(network$laplacian, total_weight),
     c(total_weight, 0)
   )
   solution <- rlang::try_fetch(
     solve(system, c(imbalance, 0)),
-    error = function(cnd) io_abort_disconnected(laplacian, call = call)
+    error = function(cnd) io_abort_disconnected(network, call = call)
   )
 
   list(
-    dim_name = laplacian$dim_name,
-    weight = laplacian$weight,
+    dim_name = network$dim_name,
+    weight = network$weight,
     level = unname(solution[seq_len(n_industry)])
   )
 }
