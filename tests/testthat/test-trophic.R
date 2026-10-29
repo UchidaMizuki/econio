@@ -63,14 +63,14 @@ test_that("io_trophic_level matches the pseudo-inverse solution", {
 
 test_that("io_trophic gives exact levels for a coherent chain", {
   weight <- rbind(c(0, 5, 0), c(0, 0, 5), c(0, 0, 0))
-  laplacian <- io_laplacian_weight(weight, tibble::tibble(sector = 1:3))
+  laplacian <- io_laplacian_direct(weight, tibble::tibble(sector = 1:3))
   # u = (5, 10, 5), so the weighted mean of (0, 1, 2) is 1.
   expect_equal(io_trophic(laplacian)$level, c(-1, 0, 1))
 })
 
 test_that("io_trophic matches the two-industry closed form", {
   weight <- rbind(c(4, 3), c(1, 7))
-  laplacian <- io_laplacian_weight(weight, tibble::tibble(sector = 1:2))
+  laplacian <- io_laplacian_direct(weight, tibble::tibble(sector = 1:2))
   # h_2 - h_1 = (3 - 1) / (3 + 1) = 0.5, centered with u = (12, 18).
   expect_equal(io_trophic(laplacian)$level, c(-0.3, 0.2))
 })
@@ -83,14 +83,14 @@ test_that("io_trophic leaves other levels unchanged when merging industries with
     c(0, 1, 0, 1),
     c(0, 0, 0, 0)
   )
-  laplacian <- io_laplacian_weight(weight, tibble::tibble(sector = 1:4))
+  laplacian <- io_laplacian_direct(weight, tibble::tibble(sector = 1:4))
   level <- io_trophic(laplacian)$level
   expect_equal(level[[2]], level[[3]])
 
   # Merging them turns their mutual transactions into a self-loop.
   merge <- rbind(c(1, 0, 0, 0), c(0, 1, 1, 0), c(0, 0, 0, 1))
   weight_merged <- merge %*% weight %*% t(merge)
-  laplacian_merged <- io_laplacian_weight(
+  laplacian_merged <- io_laplacian_direct(
     weight_merged,
     tibble::tibble(sector = 1:3)
   )
@@ -98,7 +98,7 @@ test_that("io_trophic leaves other levels unchanged when merging industries with
 })
 
 test_that("io_trophic returns 0 for a single industry", {
-  laplacian <- io_laplacian_weight(matrix(3), tibble::tibble(sector = 1))
+  laplacian <- io_laplacian_direct(matrix(3), tibble::tibble(sector = 1))
   expect_equal(io_trophic(laplacian)$level, 0)
 })
 
@@ -108,7 +108,7 @@ test_that("io_trophic is invariant to the unit of the table", {
   expected <- io_trophic(laplacian)$level
 
   for (unit in c(1e-6, 1e9)) {
-    laplacian_scaled <- io_laplacian_weight(
+    laplacian_scaled <- io_laplacian_direct(
       laplacian$weight * unit,
       laplacian$dim_name
     )
@@ -132,7 +132,7 @@ test_that("io_trophic aborts on separate components", {
     c(0, 0, 0, 2),
     c(0, 0, 0, 0)
   )
-  laplacian <- io_laplacian_weight(weight, tibble::tibble(sector = 1:4))
+  laplacian <- io_laplacian_direct(weight, tibble::tibble(sector = 1:4))
   expect_snapshot(io_trophic(laplacian), error = TRUE)
 })
 
@@ -177,7 +177,8 @@ test_that("io_trophic matches the two-industry closed form with path lengths", {
   laplacian <- io_laplacian_weight(
     weight,
     tibble::tibble(sector = 1:2),
-    length_weight = length_weight
+    length_weight = length_weight,
+    squared_length_weight = length_weight^2 / weight
   )
   # h_2 - h_1 = (6 - 3) / (3 + 1) = 0.75, centered with u = (12, 18).
   expect_equal(io_trophic(laplacian)$level, c(-0.45, 0.3))
@@ -190,7 +191,7 @@ test_that("io_trophic with paths = \"all\" leaves other levels unchanged when me
     c(0, 1, 0, 1),
     c(0, 0, 0, 0)
   )
-  laplacian <- io_laplacian_paths(
+  laplacian <- io_laplacian_all(
     weight,
     c(3, 4, 4, 4),
     tibble::tibble(sector = 1:4)

@@ -28,18 +28,27 @@ io_laplacian <- function(
 
   switch(
     paths,
-    direct = io_laplacian_weight(weight, dim_name),
-    all = io_laplacian_paths(weight, as.vector(io_total_input(data)), dim_name)
+    direct = io_laplacian_direct(weight, dim_name),
+    all = io_laplacian_all(weight, as.vector(io_total_input(data)), dim_name)
   )
 }
 
-# Weights over all direct and indirect paths. With `Z_n = A^n diag(x)` the
-# transactions along paths of length `n`, the edge weights are `sum_n Z_n`,
-# and `sum_n n Z_n` and `sum_n n^2 Z_n` give the first two moments of the path
-# length of each edge. The sums over `n >= 1` of `A^n`, `n A^n` and `n^2 A^n`
-# are `L - I`, `L (L - I)` and `(2 L - I) L (L - I)`, where `L` is the Leontief
-# inverse.
-io_laplacian_paths <- function(weight, output, dim_name) {
+# Direct transactions span paths of length 1.
+io_laplacian_direct <- function(weight, dim_name) {
+  io_laplacian_weight(
+    weight,
+    dim_name,
+    length_weight = weight,
+    squared_length_weight = weight
+  )
+}
+
+# With `Z_n = A^n diag(x)` the transactions along paths of length `n`, the
+# edge weights are `sum_n Z_n`, and `sum_n n Z_n` and `sum_n n^2 Z_n` give the
+# first two moments of the path length of each edge. The sums over `n >= 1` of
+# `A^n`, `n A^n` and `n^2 A^n` are `L - I`, `L (L - I)` and
+# `(2 L - I) L (L - I)`, where `L` is the Leontief inverse.
+io_laplacian_all <- function(weight, output, dim_name) {
   identity <- diag(nrow(weight))
   input_coef <- sweep(weight, 2, output, "/")
   input_coef[, output == 0] <- 0
@@ -57,13 +66,12 @@ io_laplacian_paths <- function(weight, output, dim_name) {
 }
 
 # `length_weight` and `squared_length_weight` are the edge weights multiplied
-# by the (squared) target length of each edge, summed over paths. For direct
-# transactions every edge has length 1, so both equal `weight`.
+# by the (squared) path length, summed over paths.
 io_laplacian_weight <- function(
   weight,
   dim_name,
-  length_weight = weight,
-  squared_length_weight = weight
+  length_weight,
+  squared_length_weight
 ) {
   in_weight <- colSums(weight)
   out_weight <- rowSums(weight)
