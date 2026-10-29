@@ -52,38 +52,39 @@ io_network_direct <- function(weight, dim_name) {
 # edge weights are `sum_n Z_n`, and `sum_n n Z_n` and `sum_n n^2 Z_n` give the
 # first two moments of the path length of each edge. The sums over `n >= 1` of
 # `A^n`, `n A^n` and `n^2 A^n` are `L - I`, `L (L - I)` and
-# `(2 L - I) L (L - I)`, where `L` is the Leontief inverse.
+# `(2 L - I) L (L - I)`, where `L` is the Leontief inverse, so each moment is
+# the previous one multiplied by `L` and `2 L - I`, respectively.
 io_network_all <- function(
   weight,
-  output,
+  total_input,
   dim_name,
   call = rlang::caller_env()
 ) {
-  identity <- diag(nrow(weight))
-  input_coef <- sweep(weight, 2, output, "/")
-  input_coef[, output == 0] <- 0
+  eye <- diag(nrow(weight))
+  input_coef <- sweep(weight, 2, total_input, "/")
+  input_coef[, total_input == 0] <- 0
 
   # The sums over paths converge only if the spectral radius of `A` is below 1.
-  radius <- max(Mod(eigen(input_coef, only.values = TRUE)$values))
-  if (radius >= 1) {
+  spectral_radius <- max(Mod(eigen(input_coef, only.values = TRUE)$values))
+  if (spectral_radius >= 1) {
     cli::cli_abort(
       c(
         "The sums of transactions over all paths do not converge.",
-        "x" = "The spectral radius of the domestic input coefficient matrix is {format(radius, digits = 3)}, not less than 1.",
+        "x" = "The spectral radius of the domestic input coefficient matrix is {format(spectral_radius, digits = 3)}, not less than 1.",
         "i" = "It is less than 1 when every industry has positive value added plus imports."
       ),
       call = call
     )
   }
-  leontief <- solve(identity - input_coef)
+  leontief <- solve(eye - input_coef)
 
-  path_sum <- leontief - identity
-  path_length_sum <- leontief %*% path_sum
-  path_squared_length_sum <- (2 * leontief - identity) %*% path_length_sum
+  path_weight <- sweep(leontief - eye, 2, total_input, "*")
+  weighted_length <- leontief %*% path_weight
+  weighted_squared_length <- (2 * leontief - eye) %*% weighted_length
   io_network_weight(
-    sweep(path_sum, 2, output, "*"),
-    weighted_length = sweep(path_length_sum, 2, output, "*"),
-    weighted_squared_length = sweep(path_squared_length_sum, 2, output, "*"),
+    path_weight,
+    weighted_length = weighted_length,
+    weighted_squared_length = weighted_squared_length,
     dim_name = dim_name
   )
 }
