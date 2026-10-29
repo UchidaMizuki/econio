@@ -5,8 +5,8 @@ test_that("io_trophic_level is centered to a weighted mean of 0", {
     "multiregional_competitive_import"
   )) {
     iotable <- read_iotable_dummy(name)
-    laplacian <- suppressMessages(io_laplacian(iotable))
-    total_weight <- laplacian$in_weight + laplacian$out_weight
+    network <- suppressMessages(io_network(iotable))
+    total_weight <- network$in_weight + network$out_weight
 
     actual <- suppressMessages(as.numeric(as.matrix(io_trophic_level(iotable))))
     expect_equal(sum(total_weight * actual), 0)
@@ -34,25 +34,25 @@ test_that("io_trophic_level solves the Laplacian system", {
     "multiregional_competitive_import"
   )) {
     iotable <- suppressMessages(read_iotable_dummy(name))
-    laplacian <- suppressMessages(io_laplacian(iotable))
-    imbalance <- laplacian$in_weight - laplacian$out_weight
+    network <- suppressMessages(io_network(iotable))
+    imbalance <- network$in_weight - network$out_weight
 
-    level <- io_trophic(laplacian)$level
-    expect_equal(as.vector(laplacian$laplacian %*% level), imbalance)
+    level <- io_trophic(network)$level
+    expect_equal(as.vector(network$laplacian %*% level), imbalance)
   }
 })
 
 test_that("io_trophic_level matches the pseudo-inverse solution", {
   iotable <- read_iotable_dummy("multiregional_competitive_import")
-  laplacian <- suppressMessages(io_laplacian(iotable))
-  imbalance <- laplacian$in_weight - laplacian$out_weight
+  network <- suppressMessages(io_network(iotable))
+  imbalance <- network$in_weight - network$out_weight
 
-  decomposition <- eigen(laplacian$laplacian, symmetric = TRUE)
+  decomposition <- eigen(network$laplacian, symmetric = TRUE)
   values <- decomposition$values
   inverse_values <- ifelse(values > 1e-8 * max(values), 1 / values, 0)
   expected <- decomposition$vectors %*%
     (inverse_values * crossprod(decomposition$vectors, imbalance))
-  total_weight <- laplacian$in_weight + laplacian$out_weight
+  total_weight <- network$in_weight + network$out_weight
   expected <- as.vector(
     expected - sum(total_weight * expected) / sum(total_weight)
   )
@@ -63,16 +63,16 @@ test_that("io_trophic_level matches the pseudo-inverse solution", {
 
 test_that("io_trophic gives exact levels for a coherent chain", {
   weight <- rbind(c(0, 5, 0), c(0, 0, 5), c(0, 0, 0))
-  laplacian <- io_laplacian_weight(weight, tibble::tibble(sector = 1:3))
+  network <- io_network_weight(weight, tibble::tibble(sector = 1:3))
   # u = (5, 10, 5), so the weighted mean of (0, 1, 2) is 1.
-  expect_equal(io_trophic(laplacian)$level, c(-1, 0, 1))
+  expect_equal(io_trophic(network)$level, c(-1, 0, 1))
 })
 
 test_that("io_trophic matches the two-industry closed form", {
   weight <- rbind(c(4, 3), c(1, 7))
-  laplacian <- io_laplacian_weight(weight, tibble::tibble(sector = 1:2))
+  network <- io_network_weight(weight, tibble::tibble(sector = 1:2))
   # h_2 - h_1 = (3 - 1) / (3 + 1) = 0.5, centered with u = (12, 18).
-  expect_equal(io_trophic(laplacian)$level, c(-0.3, 0.2))
+  expect_equal(io_trophic(network)$level, c(-0.3, 0.2))
 })
 
 test_that("io_trophic leaves other levels unchanged when merging industries with equal levels", {
@@ -83,36 +83,36 @@ test_that("io_trophic leaves other levels unchanged when merging industries with
     c(0, 1, 0, 1),
     c(0, 0, 0, 0)
   )
-  laplacian <- io_laplacian_weight(weight, tibble::tibble(sector = 1:4))
-  level <- io_trophic(laplacian)$level
+  network <- io_network_weight(weight, tibble::tibble(sector = 1:4))
+  level <- io_trophic(network)$level
   expect_equal(level[[2]], level[[3]])
 
   # Merging them turns their mutual transactions into a self-loop.
   merge <- rbind(c(1, 0, 0, 0), c(0, 1, 1, 0), c(0, 0, 0, 1))
   weight_merged <- merge %*% weight %*% t(merge)
-  laplacian_merged <- io_laplacian_weight(
+  network_merged <- io_network_weight(
     weight_merged,
     tibble::tibble(sector = 1:3)
   )
-  expect_equal(io_trophic(laplacian_merged)$level, level[c(1, 2, 4)])
+  expect_equal(io_trophic(network_merged)$level, level[c(1, 2, 4)])
 })
 
 test_that("io_trophic returns 0 for a single industry", {
-  laplacian <- io_laplacian_weight(matrix(3), tibble::tibble(sector = 1))
-  expect_equal(io_trophic(laplacian)$level, 0)
+  network <- io_network_weight(matrix(3), tibble::tibble(sector = 1))
+  expect_equal(io_trophic(network)$level, 0)
 })
 
 test_that("io_trophic is invariant to the unit of the table", {
   iotable <- read_iotable_dummy("multiregional_competitive_import")
-  laplacian <- suppressMessages(io_laplacian(iotable))
-  expected <- io_trophic(laplacian)$level
+  network <- suppressMessages(io_network(iotable))
+  expected <- io_trophic(network)$level
 
   for (unit in c(1e-6, 1e9)) {
-    laplacian_scaled <- io_laplacian_weight(
-      laplacian$weight * unit,
-      laplacian$dim_name
+    network_scaled <- io_network_weight(
+      network$weight * unit,
+      network$dim_name
     )
-    expect_equal(io_trophic(laplacian_scaled)$level, expected)
+    expect_equal(io_trophic(network_scaled)$level, expected)
   }
 })
 
@@ -132,13 +132,13 @@ test_that("io_trophic aborts on separate components", {
     c(0, 0, 0, 2),
     c(0, 0, 0, 0)
   )
-  laplacian <- io_laplacian_weight(weight, tibble::tibble(sector = 1:4))
-  expect_snapshot(io_trophic(laplacian), error = TRUE)
+  network <- io_network_weight(weight, tibble::tibble(sector = 1:4))
+  expect_snapshot(io_trophic(network), error = TRUE)
 })
 
 test_that("io_trophic_level agrees with numerically minimizing the trophic objective", {
   iotable <- read_iotable_dummy("multiregional_competitive_import")
-  weight <- suppressMessages(io_laplacian(iotable))$weight
+  weight <- suppressMessages(io_network(iotable))$weight
 
   objective <- function(level) {
     sum(weight * (outer(level, level, \(from, to) to - from) - 1)^2)

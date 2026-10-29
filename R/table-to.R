@@ -166,8 +166,7 @@ io_table_to_noncompetitive_import <- function(
 
 #' Convert byproduct transactions from the Stone method to the transfer method
 #'
-#' Functions that build the domestic production network (such as
-#' `io_laplacian()`, and therefore `io_trophic_level()`,
+#' Functions that build the domestic production network (`io_trophic_level()`,
 #' `io_trophic_incoherence()`, and `io_spectral_embedding()`) convert to
 #' noncompetitive import type internally as needed, so there is usually no
 #' need to call {\link{io_table_to_noncompetitive_import}} yourself first.
