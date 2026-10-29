@@ -157,6 +157,10 @@ test_that("io_trophic_level agrees with numerically minimizing the trophic objec
   expect_equal(actual, expected, tolerance = 1e-4)
   # Allow for rounding: the analytic solution must not be worse than optim().
   expect_lte(objective(actual), optimum$value * (1 + 1e-10))
+  expect_equal(
+    suppressMessages(io_trophic_incoherence(iotable)),
+    optimum$value / sum(weight)
+  )
 })
 
 test_that("io_trophic_incoherence with paths = \"direct\" is F_0", {
@@ -234,7 +238,7 @@ test_that("io_trophic_level with paths = \"all\" agrees with numerically minimiz
   expect_lte(objective(actual), optimum$value * (1 + 1e-10))
   expect_equal(
     io_trophic_incoherence(iotable, paths = "all"),
-    objective(actual) / sum(weight)
+    optimum$value / sum(weight)
   )
 })
 
