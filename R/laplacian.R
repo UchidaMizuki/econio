@@ -29,7 +29,12 @@ io_laplacian <- function(
   switch(
     paths,
     direct = io_laplacian_direct(weight, dim_name),
-    all = io_laplacian_all(weight, as.vector(io_total_input(data)), dim_name)
+    all = io_laplacian_all(
+      weight,
+      as.vector(io_total_input(data)),
+      dim_name,
+      call = call
+    )
   )
 }
 
@@ -37,9 +42,9 @@ io_laplacian <- function(
 io_laplacian_direct <- function(weight, dim_name) {
   io_laplacian_weight(
     weight,
-    dim_name,
-    length_weight = weight,
-    squared_length_weight = weight
+    weighted_length = weight,
+    weighted_squared_length = weight,
+    dim_name = dim_name
   )
 }
 
@@ -48,10 +53,28 @@ io_laplacian_direct <- function(weight, dim_name) {
 # first two moments of the path length of each edge. The sums over `n >= 1` of
 # `A^n`, `n A^n` and `n^2 A^n` are `L - I`, `L (L - I)` and
 # `(2 L - I) L (L - I)`, where `L` is the Leontief inverse.
-io_laplacian_all <- function(weight, output, dim_name) {
+io_laplacian_all <- function(
+  weight,
+  output,
+  dim_name,
+  call = rlang::caller_env()
+) {
   identity <- diag(nrow(weight))
   input_coef <- sweep(weight, 2, output, "/")
   input_coef[, output == 0] <- 0
+
+  # The sums over paths converge only if the spectral radius of `A` is below 1.
+  radius <- max(Mod(eigen(input_coef, only.values = TRUE)$values))
+  if (radius >= 1) {
+    cli::cli_abort(
+      c(
+        "The sums of transactions over all paths do not converge.",
+        "x" = "The spectral radius of the domestic input coefficient matrix is {format(radius, digits = 3)}, not less than 1.",
+        "i" = "It is less than 1 when every industry has positive value added plus imports."
+      ),
+      call = call
+    )
+  }
   leontief <- solve(identity - input_coef)
 
   path_sum <- leontief - identity
@@ -59,39 +82,36 @@ io_laplacian_all <- function(weight, output, dim_name) {
   path_squared_length_sum <- (2 * leontief - identity) %*% path_length_sum
   io_laplacian_weight(
     sweep(path_sum, 2, output, "*"),
-    dim_name,
-    length_weight = sweep(path_length_sum, 2, output, "*"),
-    squared_length_weight = sweep(path_squared_length_sum, 2, output, "*")
+    weighted_length = sweep(path_length_sum, 2, output, "*"),
+    weighted_squared_length = sweep(path_squared_length_sum, 2, output, "*"),
+    dim_name = dim_name
   )
 }
 
-# `length_weight` and `squared_length_weight` are the edge weights multiplied
-# by the (squared) path length, summed over paths.
+# `weighted_length` and `weighted_squared_length` are the (squared) path
+# lengths weighted by the transactions along each path, summed over paths.
+# `total_weight` is the weight in plus out of each industry.
 io_laplacian_weight <- function(
   weight,
-  dim_name,
-  length_weight,
-  squared_length_weight
+  weighted_length,
+  weighted_squared_length,
+  dim_name
 ) {
-  in_weight <- colSums(weight)
-  out_weight <- rowSums(weight)
-  total_weight <- in_weight + out_weight
+  total_weight <- colSums(weight) + rowSums(weight)
   laplacian <- diag(total_weight, nrow = length(total_weight)) -
     (weight + t(weight))
   list(
-    dim_name = dim_name,
     weight = weight,
-    length_weight = length_weight,
-    squared_length_weight = squared_length_weight,
-    in_weight = in_weight,
-    out_weight = out_weight,
+    weighted_length = weighted_length,
+    weighted_squared_length = weighted_squared_length,
+    dim_name = dim_name,
+    total_weight = total_weight,
     laplacian = laplacian
   )
 }
 
 io_abort_disconnected <- function(laplacian, call = rlang::caller_env()) {
-  total_weight <- laplacian$in_weight + laplacian$out_weight
-  industry <- io_axis_label(laplacian$dim_name)[total_weight == 0]
+  industry <- io_axis_label(laplacian$dim_name)[laplacian$total_weight == 0]
   cli::cli_abort(
     c(
       "The domestic production network must be connected.",

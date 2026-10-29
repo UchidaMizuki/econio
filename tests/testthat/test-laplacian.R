@@ -22,11 +22,19 @@ test_that("io_laplacian(paths = \"all\") sums transactions over all paths", {
   n <- seq_along(transactions)
   expect_equal(laplacian$weight, Reduce(`+`, transactions))
   expect_equal(
-    laplacian$length_weight,
+    laplacian$weighted_length,
     Reduce(`+`, Map(`*`, n, transactions))
   )
   expect_equal(
-    laplacian$squared_length_weight,
+    laplacian$weighted_squared_length,
     Reduce(`+`, Map(`*`, n^2, transactions))
+  )
+})
+
+test_that("io_laplacian_all() aborts when the sums over paths diverge", {
+  weight <- rbind(c(0, 2), c(2, 0))
+  expect_snapshot(
+    io_laplacian_all(weight, c(1, 1), tibble::tibble(sector = 1:2)),
+    error = TRUE
   )
 })

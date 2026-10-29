@@ -6,7 +6,7 @@ test_that("io_trophic_level is centered to a weighted mean of 0", {
   )) {
     iotable <- read_iotable_dummy(name)
     laplacian <- suppressMessages(io_laplacian(iotable))
-    total_weight <- laplacian$in_weight + laplacian$out_weight
+    total_weight <- laplacian$total_weight
 
     actual <- suppressMessages(as.numeric(as.matrix(io_trophic_level(iotable))))
     expect_equal(sum(total_weight * actual), 0)
@@ -35,7 +35,7 @@ test_that("io_trophic_level solves the Laplacian system", {
   )) {
     iotable <- suppressMessages(read_iotable_dummy(name))
     laplacian <- suppressMessages(io_laplacian(iotable))
-    imbalance <- laplacian$in_weight - laplacian$out_weight
+    imbalance <- colSums(laplacian$weight) - rowSums(laplacian$weight)
 
     level <- io_trophic(laplacian)$level
     expect_equal(as.vector(laplacian$laplacian %*% level), imbalance)
@@ -45,14 +45,14 @@ test_that("io_trophic_level solves the Laplacian system", {
 test_that("io_trophic_level matches the pseudo-inverse solution", {
   iotable <- read_iotable_dummy("multiregional_competitive_import")
   laplacian <- suppressMessages(io_laplacian(iotable))
-  imbalance <- laplacian$in_weight - laplacian$out_weight
+  imbalance <- colSums(laplacian$weight) - rowSums(laplacian$weight)
 
   decomposition <- eigen(laplacian$laplacian, symmetric = TRUE)
   values <- decomposition$values
   inverse_values <- ifelse(values > 1e-8 * max(values), 1 / values, 0)
   expected <- decomposition$vectors %*%
     (inverse_values * crossprod(decomposition$vectors, imbalance))
-  total_weight <- laplacian$in_weight + laplacian$out_weight
+  total_weight <- laplacian$total_weight
   expected <- as.vector(
     expected - sum(total_weight * expected) / sum(total_weight)
   )
@@ -173,12 +173,12 @@ test_that("io_trophic_incoherence with paths = \"direct\" is F_0", {
 
 test_that("io_trophic matches the two-industry closed form with path lengths", {
   weight <- rbind(c(4, 3), c(1, 7))
-  length_weight <- rbind(c(5, 6), c(3, 9))
+  weighted_length <- rbind(c(5, 6), c(3, 9))
   laplacian <- io_laplacian_weight(
     weight,
-    tibble::tibble(sector = 1:2),
-    length_weight = length_weight,
-    squared_length_weight = length_weight^2 / weight
+    weighted_length = weighted_length,
+    weighted_squared_length = weighted_length^2 / weight,
+    dim_name = tibble::tibble(sector = 1:2)
   )
   # h_2 - h_1 = (6 - 3) / (3 + 1) = 0.75, centered with u = (12, 18).
   expect_equal(io_trophic(laplacian)$level, c(-0.45, 0.3))
@@ -203,9 +203,9 @@ test_that("io_trophic with paths = \"all\" leaves other levels unchanged when me
   aggregate <- \(x) merge %*% x %*% t(merge)
   laplacian_merged <- io_laplacian_weight(
     aggregate(laplacian$weight),
-    tibble::tibble(sector = 1:3),
-    length_weight = aggregate(laplacian$length_weight),
-    squared_length_weight = aggregate(laplacian$squared_length_weight)
+    weighted_length = aggregate(laplacian$weighted_length),
+    weighted_squared_length = aggregate(laplacian$weighted_squared_length),
+    dim_name = tibble::tibble(sector = 1:3)
   )
   expect_equal(io_trophic(laplacian_merged)$level, level[c(1, 2, 4)])
 })
@@ -236,6 +236,22 @@ test_that("io_trophic_level with paths = \"all\" agrees with numerically minimiz
     io_trophic_incoherence(iotable, paths = "all"),
     objective(actual) / sum(weight)
   )
+})
+
+test_that("io_trophic_incoherence satisfies F = (sum(Q) - h'v) / sum(W)", {
+  iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
+  for (paths in c("direct", "all")) {
+    laplacian <- io_laplacian(iotable, paths = paths)
+    level <- io_trophic(laplacian)$level
+    imbalance <- colSums(laplacian$weighted_length) -
+      rowSums(laplacian$weighted_length)
+
+    expect_equal(
+      io_trophic_incoherence(iotable, paths = paths),
+      (sum(laplacian$weighted_squared_length) - sum(level * imbalance)) /
+        sum(laplacian$weight)
+    )
+  }
 })
 
 test_that("io_trophic_level validates paths", {

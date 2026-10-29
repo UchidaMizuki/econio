@@ -89,7 +89,7 @@ io_spectral_embedding <- function(
 
   rlang::check_number_whole(dims, min = 1, max = n_industry - 1)
 
-  total_weight <- laplacian$in_weight + laplacian$out_weight
+  total_weight <- laplacian$total_weight
   if (!normalized) {
     scale <- rep(1, n_industry)
   } else if (any(total_weight == 0)) {

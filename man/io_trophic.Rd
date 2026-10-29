@@ -90,6 +90,10 @@ Merging industries with equal levels leaves the other levels unchanged only
 if the path weights are computed from the disaggregated table and then
 summed: the Leontief inverse of an aggregated table is not the aggregate of
 the disaggregated one.
+
+The sums over paths converge only if the spectral radius of \code{A} is less
+than 1, which holds when every industry has positive value added plus
+imports. Otherwise, the functions abort.
 }
 
 \examples{

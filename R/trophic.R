@@ -66,6 +66,10 @@
 #' summed: the Leontief inverse of an aggregated table is not the aggregate of
 #' the disaggregated one.
 #'
+#' The sums over paths converge only if the spectral radius of `A` is less
+#' than 1, which holds when every industry has positive value added plus
+#' imports. Otherwise, the functions abort.
+#'
 #' @param data An `econ_io_table` object.
 #' @param paths A scalar character. `"direct"` (the default) uses the direct domestic
 #' intermediate transactions, each spanning one level. `"all"` uses all direct
@@ -108,17 +112,17 @@ io_trophic_incoherence <- function(data, paths = c("direct", "all")) {
   level_diff <- outer(level, level, \(from, to) to - from)
   # `sum_n Z_n (dh - n)^2`, expanded in the moments of the path length.
   objective <- sum(laplacian$weight * level_diff^2) -
-    2 * sum(laplacian$length_weight * level_diff) +
-    sum(laplacian$squared_length_weight)
+    2 * sum(laplacian$weighted_length * level_diff) +
+    sum(laplacian$weighted_squared_length)
   objective / sum(laplacian$weight)
 }
 
 io_trophic <- function(laplacian, call = rlang::caller_env()) {
   # The imbalance of the target lengths, which is in minus out for direct
   # transactions.
-  imbalance <- colSums(laplacian$length_weight) -
-    rowSums(laplacian$length_weight)
-  total_weight <- laplacian$in_weight + laplacian$out_weight
+  imbalance <- colSums(laplacian$weighted_length) -
+    rowSums(laplacian$weighted_length)
+  total_weight <- laplacian$total_weight
   n_industry <- length(imbalance)
 
   # The Laplacian is singular (its rows sum to 0), so the levels are only

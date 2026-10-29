@@ -27,7 +27,7 @@ test_that("io_spectral_embedding solves the normalized generalized eigenproblem"
   )) {
     iotable <- suppressMessages(read_iotable_dummy(name))
     laplacian <- suppressMessages(io_laplacian(iotable))
-    total_weight <- laplacian$in_weight + laplacian$out_weight
+    total_weight <- laplacian$total_weight
 
     embedding <- suppressMessages(io_spectral_embedding(iotable, dims = 2))
     h <- matrix(as.numeric(as.matrix(embedding)), ncol = 2)
@@ -102,7 +102,7 @@ test_that("io_spectral_embedding agrees with numerically minimizing the Dirichle
   iotable <- read_iotable_dummy("multiregional_competitive_import")
   network <- suppressMessages(io_laplacian(iotable))
   laplacian <- network$laplacian
-  total_weight <- network$in_weight + network$out_weight
+  total_weight <- network$total_weight
 
   for (normalized in c(TRUE, FALSE)) {
     constraint_weight <- if (normalized) {
@@ -152,7 +152,7 @@ test_that("io_spectral_embedding agrees with numerically minimizing the Dirichle
 test_that("io_spectral_embedding with paths = \"all\" uses the all-path Laplacian", {
   iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
   laplacian <- io_laplacian(iotable, paths = "all")
-  total_weight <- laplacian$in_weight + laplacian$out_weight
+  total_weight <- laplacian$total_weight
 
   h <- as.numeric(as.matrix(io_spectral_embedding(iotable, paths = "all")))
   expect_equal(sum(total_weight * h), 0)
