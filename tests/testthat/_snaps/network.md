@@ -1,28 +1,28 @@
-# io_laplacian() informs only when converting implicitly
+# io_network() informs only when converting implicitly
 
     Code
-      laplacian <- io_laplacian(iotable_noncompetitive)
+      network <- io_network(iotable_noncompetitive)
 
 ---
 
     Code
-      laplacian <- io_laplacian(iotable_competitive)
+      network <- io_network(iotable_competitive)
     Message
       Converting to a noncompetitive import type table with `io_table_to_noncompetitive_import()`.
 
-# io_laplacian() aborts on negative transactions
+# io_network() aborts on negative transactions
 
     Code
-      io_laplacian(iotable_negative)
+      io_network(iotable_negative)
     Condition
-      Error in `io_laplacian()`:
+      Error in `io_network()`:
       ! Found 1 negative domestic intermediate transaction (e.g. from byproduct treatment such as the Stone method).
       i Use `io_table_to_byproduct_transfer()` to convert negative entries to the transfer method before building the industry network.
 
-# io_laplacian_all() aborts when the sums over paths diverge
+# io_network_all() aborts when the sums over paths diverge
 
     Code
-      io_laplacian_all(weight, c(1, 1), tibble::tibble(sector = 1:2))
+      io_network_all(weight, c(1, 1), tibble::tibble(sector = 1:2))
     Condition
       Error:
       ! The sums of transactions over all paths do not converge.

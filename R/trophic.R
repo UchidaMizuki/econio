@@ -100,29 +100,29 @@ NULL
 #' @rdname io_trophic
 #' @export
 io_trophic_level <- function(data, paths = c("direct", "all")) {
-  trophic <- io_trophic(io_laplacian(data, paths))
+  trophic <- io_trophic(io_network(data, paths))
   dibble::dibble(trophic$level, .dim_names = list(industry = trophic$dim_name))
 }
 
 #' @rdname io_trophic
 #' @export
 io_trophic_incoherence <- function(data, paths = c("direct", "all")) {
-  laplacian <- io_laplacian(data, paths)
-  level <- io_trophic(laplacian)$level
+  network <- io_network(data, paths)
+  level <- io_trophic(network)$level
   level_diff <- outer(level, level, \(from, to) to - from)
   # `sum_n Z_n (dh - n)^2`, expanded in the moments of the path length.
-  objective <- sum(laplacian$weight * level_diff^2) -
-    2 * sum(laplacian$weighted_length * level_diff) +
-    sum(laplacian$weighted_squared_length)
-  objective / sum(laplacian$weight)
+  objective <- sum(network$weight * level_diff^2) -
+    2 * sum(network$weighted_length * level_diff) +
+    sum(network$weighted_squared_length)
+  objective / sum(network$weight)
 }
 
-io_trophic <- function(laplacian, call = rlang::caller_env()) {
+io_trophic <- function(network, call = rlang::caller_env()) {
   # The imbalance of the target lengths, which is in minus out for direct
   # transactions.
-  imbalance <- colSums(laplacian$weighted_length) -
-    rowSums(laplacian$weighted_length)
-  total_weight <- laplacian$total_weight
+  imbalance <- colSums(network$weighted_length) -
+    rowSums(network$weighted_length)
+  total_weight <- network$total_weight
   n_industry <- length(imbalance)
 
   # The Laplacian is singular (its rows sum to 0), so the levels are only
@@ -131,16 +131,16 @@ io_trophic <- function(laplacian, call = rlang::caller_env()) {
   # Its multiplier is 0 because the imbalance sums to 0, and the system is
   # singular exactly when the network is disconnected.
   system <- rbind(
-    cbind(laplacian$laplacian, total_weight),
+    cbind(network$laplacian, total_weight),
     c(total_weight, 0)
   )
   solution <- rlang::try_fetch(
     solve(system, c(imbalance, 0)),
-    error = function(cnd) io_abort_disconnected(laplacian, call = call)
+    error = function(cnd) io_abort_disconnected(network, call = call)
   )
 
   list(
-    dim_name = laplacian$dim_name,
+    dim_name = network$dim_name,
     level = unname(solution[seq_len(n_industry)])
   )
 }

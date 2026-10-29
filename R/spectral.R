@@ -84,16 +84,16 @@ io_spectral_embedding <- function(
 ) {
   rlang::check_bool(normalized)
 
-  laplacian <- io_laplacian(data, paths)
-  n_industry <- ncol(laplacian$laplacian)
+  network <- io_network(data, paths)
+  n_industry <- ncol(network$laplacian)
 
   rlang::check_number_whole(dims, min = 1, max = n_industry - 1)
 
-  total_weight <- laplacian$total_weight
+  total_weight <- network$total_weight
   if (!normalized) {
     scale <- rep(1, n_industry)
   } else if (any(total_weight == 0)) {
-    io_abort_disconnected(laplacian, call = rlang::current_env())
+    io_abort_disconnected(network, call = rlang::current_env())
   } else {
     scale <- sqrt(total_weight)
   }
@@ -101,7 +101,7 @@ io_spectral_embedding <- function(
   # `Λ h = λ diag(u) h` via the symmetric matrix
   # `diag(u)^(-1/2) Λ diag(u)^(-1/2)`, then back-transform.
   decomposition <- eigen(
-    laplacian$laplacian / (scale %o% scale),
+    network$laplacian / (scale %o% scale),
     symmetric = TRUE
   )
 
@@ -113,7 +113,7 @@ io_spectral_embedding <- function(
     eigenvalues[[n_industry - 1L]] <=
       n_industry * .Machine$double.eps * eigenvalues[[1]]
   ) {
-    io_abort_disconnected(laplacian, call = rlang::current_env())
+    io_abort_disconnected(network, call = rlang::current_env())
   }
 
   # Take the `dims` smallest non-zero eigenvectors, i.e. columns
@@ -133,13 +133,13 @@ io_spectral_embedding <- function(
   if (dims == 1) {
     dibble::dibble(
       as.vector(eigenvectors),
-      .dim_names = list(industry = laplacian$dim_name)
+      .dim_names = list(industry = network$dim_name)
     )
   } else {
     dibble::dibble(
       as.vector(eigenvectors),
       .dim_names = list(
-        industry = laplacian$dim_name,
+        industry = network$dim_name,
         component = seq_len(dims)
       )
     )

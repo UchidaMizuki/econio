@@ -21,7 +21,7 @@
 # io_trophic aborts on separate components
 
     Code
-      io_trophic(laplacian)
+      io_trophic(network)
     Condition
       Error:
       ! The domestic production network must be connected.

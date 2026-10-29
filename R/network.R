@@ -1,4 +1,4 @@
-io_laplacian <- function(
+io_network <- function(
   data,
   paths = c("direct", "all"),
   call = rlang::caller_env()
@@ -28,8 +28,8 @@ io_laplacian <- function(
 
   switch(
     paths,
-    direct = io_laplacian_direct(weight, dim_name),
-    all = io_laplacian_all(
+    direct = io_network_direct(weight, dim_name),
+    all = io_network_all(
       weight,
       as.vector(io_total_input(data)),
       dim_name,
@@ -39,8 +39,8 @@ io_laplacian <- function(
 }
 
 # Direct transactions span paths of length 1.
-io_laplacian_direct <- function(weight, dim_name) {
-  io_laplacian_weight(
+io_network_direct <- function(weight, dim_name) {
+  io_network_weight(
     weight,
     weighted_length = weight,
     weighted_squared_length = weight,
@@ -53,7 +53,7 @@ io_laplacian_direct <- function(weight, dim_name) {
 # first two moments of the path length of each edge. The sums over `n >= 1` of
 # `A^n`, `n A^n` and `n^2 A^n` are `L - I`, `L (L - I)` and
 # `(2 L - I) L (L - I)`, where `L` is the Leontief inverse.
-io_laplacian_all <- function(
+io_network_all <- function(
   weight,
   output,
   dim_name,
@@ -80,7 +80,7 @@ io_laplacian_all <- function(
   path_sum <- leontief - identity
   path_length_sum <- leontief %*% path_sum
   path_squared_length_sum <- (2 * leontief - identity) %*% path_length_sum
-  io_laplacian_weight(
+  io_network_weight(
     sweep(path_sum, 2, output, "*"),
     weighted_length = sweep(path_length_sum, 2, output, "*"),
     weighted_squared_length = sweep(path_squared_length_sum, 2, output, "*"),
@@ -91,7 +91,7 @@ io_laplacian_all <- function(
 # `weighted_length` and `weighted_squared_length` are the (squared) path
 # lengths weighted by the transactions along each path, summed over paths.
 # `total_weight` is the weight in plus out of each industry.
-io_laplacian_weight <- function(
+io_network_weight <- function(
   weight,
   weighted_length,
   weighted_squared_length,
@@ -110,8 +110,8 @@ io_laplacian_weight <- function(
   )
 }
 
-io_abort_disconnected <- function(laplacian, call = rlang::caller_env()) {
-  industry <- io_axis_label(laplacian$dim_name)[laplacian$total_weight == 0]
+io_abort_disconnected <- function(network, call = rlang::caller_env()) {
+  industry <- io_axis_label(network$dim_name)[network$total_weight == 0]
   cli::cli_abort(
     c(
       "The domestic production network must be connected.",
