@@ -14,20 +14,16 @@ test_that("io_network() aborts on negative transactions", {
   expect_snapshot(io_network(iotable_negative), error = TRUE)
 })
 
-test_that("io_network(paths = \"all\") sums transactions over all paths", {
+test_that("io_network(paths = \"all\") gives all-path weights and average propagation lengths", {
   iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
   network <- io_network(iotable, paths = "all")
 
   transactions <- get_path_transactions(iotable, 200)
-  n <- seq_along(transactions)
-  expect_equal(network$weight, Reduce(`+`, transactions))
+  weight <- Reduce(`+`, transactions)
+  expect_equal(network$weight, weight)
   expect_equal(
-    network$weighted_length,
-    Reduce(`+`, Map(`*`, n, transactions))
-  )
-  expect_equal(
-    network$weighted_squared_length,
-    Reduce(`+`, Map(`*`, n^2, transactions))
+    network$path_length,
+    Reduce(`+`, Map(`*`, seq_along(transactions), transactions)) / weight
   )
 })
 

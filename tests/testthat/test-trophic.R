@@ -14,17 +14,18 @@ test_that("io_trophic_level is centered to a weighted mean of 0", {
   }
 })
 
-test_that("io_trophic_incoherence is a non-negative scalar", {
+test_that("io_trophic_incoherence is a scalar in [0, 1]", {
   for (name in c(
     "regional_noncompetitive_import",
     "regional_competitive_import"
   )) {
-    iotable <- read_iotable_dummy(name)
-
-    f0 <- io_trophic_incoherence(iotable)
-    expect_length(f0, 1L)
-    expect_true(is.finite(f0))
-    expect_gte(f0, 0)
+    iotable <- suppressMessages(read_iotable_dummy(name))
+    for (paths in c("direct", "all")) {
+      f0 <- suppressMessages(io_trophic_incoherence(iotable, paths = paths))
+      expect_length(f0, 1L)
+      expect_gte(f0, 0)
+      expect_lte(f0, 1)
+    }
   }
 })
 
@@ -177,14 +178,13 @@ test_that("io_trophic_incoherence with paths = \"direct\" is F_0", {
 
 test_that("io_trophic matches the two-industry closed form with path lengths", {
   weight <- rbind(c(4, 3), c(1, 7))
-  weighted_length <- rbind(c(5, 6), c(3, 9))
+  path_length <- rbind(c(1.25, 2), c(3, 9 / 7))
   network <- io_network_weight(
     weight,
-    weighted_length = weighted_length,
-    weighted_squared_length = weighted_length^2 / weight,
+    path_length = path_length,
     dim_name = tibble::tibble(sector = 1:2)
   )
-  # h_2 - h_1 = (6 - 3) / (3 + 1) = 0.75, centered with u = (12, 18).
+  # h_2 - h_1 = (3 * 2 - 1 * 3) / (3 + 1) = 0.75, centered with u = (12, 18).
   expect_equal(io_trophic(network)$level, c(-0.45, 0.3))
 })
 
@@ -205,55 +205,72 @@ test_that("io_trophic with paths = \"all\" leaves other levels unchanged when me
 
   merge <- rbind(c(1, 0, 0, 0), c(0, 1, 1, 0), c(0, 0, 0, 1))
   aggregate <- \(x) merge %*% x %*% t(merge)
+  weight_merged <- aggregate(network$weight)
+  path_length_merged <- aggregate(network$weight * network$path_length) /
+    weight_merged
+  path_length_merged[weight_merged == 0] <- 0
   network_merged <- io_network_weight(
-    aggregate(network$weight),
-    weighted_length = aggregate(network$weighted_length),
-    weighted_squared_length = aggregate(network$weighted_squared_length),
+    weight_merged,
+    path_length = path_length_merged,
     dim_name = tibble::tibble(sector = 1:3)
   )
   expect_equal(io_trophic(network_merged)$level, level[c(1, 2, 4)])
 })
 
-test_that("io_trophic_level with paths = \"all\" agrees with numerically minimizing the path objective", {
+test_that("io_trophic with paths = \"all\" agrees with numerically minimizing the path and target objectives", {
   iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
   transactions <- get_path_transactions(iotable, 100)
   weight <- Reduce(`+`, transactions)
+  path_length <- Reduce(`+`, Map(`*`, seq_along(transactions), transactions)) /
+    weight
+  level_diff <- \(level) outer(level, level, \(from, to) to - from)
 
-  objective <- function(level) {
-    level_diff <- outer(level, level, \(from, to) to - from)
-    sum(purrr::imap_dbl(transactions, \(z, n) sum(z * (level_diff - n)^2)))
+  # Each path of length `n` targets a level difference of `n`.
+  path_objective <- function(level) {
+    sum(purrr::imap_dbl(
+      transactions,
+      \(z, n) sum(z * (level_diff(level) - n)^2)
+    ))
   }
-  optimum <- optim(
-    rep(0, nrow(weight)),
-    objective,
-    method = "BFGS",
-    control = list(reltol = 1e-14)
-  )
+  # Each edge targets its average propagation length (MacKay et al., 2020,
+  # section 7).
+  target_objective <- function(level) {
+    sum(weight * (level_diff(level) - path_length)^2)
+  }
   total_weight <- rowSums(weight) + colSums(weight)
-  expected <- optimum$par -
-    sum(total_weight * optimum$par) / sum(total_weight)
-
   actual <- as.numeric(as.matrix(io_trophic_level(iotable, paths = "all")))
-  expect_equal(actual, expected, tolerance = 1e-4)
-  expect_lte(objective(actual), optimum$value * (1 + 1e-10))
+
+  for (objective in list(path_objective, target_objective)) {
+    optimum <- optim(
+      rep(0, nrow(weight)),
+      objective,
+      method = "BFGS",
+      control = list(reltol = 1e-14)
+    )
+    expected <- optimum$par -
+      sum(total_weight * optimum$par) / sum(total_weight)
+    expect_equal(actual, expected, tolerance = 1e-4)
+    expect_lte(objective(actual), optimum$value * (1 + 1e-10))
+  }
+  # `optimum` is now the minimum of the target objective.
   expect_equal(
     io_trophic_incoherence(iotable, paths = "all"),
-    optimum$value / sum(weight)
+    optimum$value / sum(weight * path_length^2)
   )
 })
 
-test_that("io_trophic_incoherence satisfies F = (sum(Q) - h'v) / sum(W)", {
+test_that("io_trophic_incoherence satisfies 1 - F_0 = sum(W tau dh) / sum(W tau^2)", {
   iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
   for (paths in c("direct", "all")) {
     network <- io_network(iotable, paths = paths)
     level <- io_trophic(network)$level
-    imbalance <- colSums(network$weighted_length) -
-      rowSums(network$weighted_length)
+    level_diff <- outer(level, level, \(from, to) to - from)
+    length_weight <- network$weight * network$path_length
 
     expect_equal(
-      io_trophic_incoherence(iotable, paths = paths),
-      (sum(network$weighted_squared_length) - sum(level * imbalance)) /
-        sum(network$weight)
+      1 - io_trophic_incoherence(iotable, paths = paths),
+      sum(length_weight * level_diff) /
+        sum(length_weight * network$path_length)
     )
   }
 })

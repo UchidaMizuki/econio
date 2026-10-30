@@ -40,20 +40,13 @@ io_network <- function(
 
 # Direct transactions span paths of length 1.
 io_network_direct <- function(weight, dim_name) {
-  io_network_weight(
-    weight,
-    weighted_length = weight,
-    weighted_squared_length = weight,
-    dim_name = dim_name
-  )
+  io_network_weight(weight, path_length = 1, dim_name = dim_name)
 }
 
-# With `Z_n = A^n diag(x)` the transactions along paths of length `n`, the
-# edge weights are `sum_n Z_n`, and `sum_n n Z_n` and `sum_n n^2 Z_n` give the
-# first two moments of the path length of each edge. The sums over `n >= 1` of
-# `A^n`, `n A^n` and `n^2 A^n` are `L - I`, `L (L - I)` and
-# `(2 L - I) L (L - I)`, where `L` is the Leontief inverse, so each moment is
-# the previous one multiplied by `L` and `2 L - I`, respectively.
+# With `Z_n = A^n diag(x)` the transactions along paths of length `n`, the edge
+# weights are `W = sum_n Z_n = (L - I) diag(x)` and the path lengths are the
+# average propagation lengths `sum_n n Z_n / W = L (L - I) / (L - I)`
+# (elementwise), where `L` is the Leontief inverse.
 io_network_all <- function(
   weight,
   total_input,
@@ -78,33 +71,27 @@ io_network_all <- function(
   }
   leontief <- solve(eye - input_coef)
 
-  path_weight <- sweep(leontief - eye, 2, total_input, "*")
-  weighted_length <- leontief %*% path_weight
-  weighted_squared_length <- (2 * leontief - eye) %*% weighted_length
+  path_sum <- leontief - eye
+  path_length <- leontief %*% path_sum / path_sum
+  # Pairs without any path have no weight, so their length is irrelevant.
+  path_length[path_sum == 0] <- 0
   io_network_weight(
-    path_weight,
-    weighted_length = weighted_length,
-    weighted_squared_length = weighted_squared_length,
+    sweep(path_sum, 2, total_input, "*"),
+    path_length = path_length,
     dim_name = dim_name
   )
 }
 
-# `weighted_length` and `weighted_squared_length` are the (squared) path
-# lengths weighted by the transactions along each path, summed over paths.
-# `total_weight` is the weight in plus out of each industry.
-io_network_weight <- function(
-  weight,
-  weighted_length,
-  weighted_squared_length,
-  dim_name
-) {
+# `path_length` is the target level difference of each edge (MacKay, Johnson
+# and Sansom, 2020, section 7). `total_weight` is the weight in plus out of
+# each industry.
+io_network_weight <- function(weight, path_length, dim_name) {
   total_weight <- colSums(weight) + rowSums(weight)
   laplacian <- diag(total_weight, nrow = length(total_weight)) -
     (weight + t(weight))
   list(
     weight = weight,
-    weighted_length = weighted_length,
-    weighted_squared_length = weighted_squared_length,
+    path_length = path_length,
     dim_name = dim_name,
     total_weight = total_weight,
     laplacian = laplacian
