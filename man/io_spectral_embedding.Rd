@@ -4,7 +4,12 @@
 \alias{io_spectral_embedding}
 \title{Laplacian spectral embedding}
 \usage{
-io_spectral_embedding(data, dims = 1, normalized = TRUE)
+io_spectral_embedding(
+  data,
+  dims = 1,
+  normalized = TRUE,
+  paths = c("direct", "all")
+)
 }
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
@@ -16,6 +21,11 @@ return). By default, \code{1}, i.e. the Fiedler vector.}
 \item{normalized}{A scalar logical. If \code{TRUE} (the default), use the
 normalized Laplacian, weighting the constraints by the total weight of each
 industry. If \code{FALSE}, use the unnormalized Laplacian.}
+
+\item{paths}{A scalar character. \code{"direct"} (the default) weights the network by the
+direct domestic intermediate transactions. \code{"all"} (experimental) weights it
+by all direct and indirect transactions, \eqn{(L - I) \mathrm{diag}(x)};
+see the "Direct and indirect paths" section of \code{\link[=io_trophic_level]{io_trophic_level()}}.}
 }
 \value{
 A \code{dibble}. With \code{dims = 1}, one value per industry. With

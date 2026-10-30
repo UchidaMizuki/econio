@@ -41,13 +41,59 @@
 #' coherent (every edge spans exactly one level) and larger when production
 #' contains more cycles and feedback.
 #'
+#' @section Direct and indirect paths:
+#' `r lifecycle::badge("experimental")`
+#'
+#' With `paths = "all"`, indirect transactions are included as well, using the
+#' extension of MacKay, Johnson and Sansom (2020, section 7) to arbitrary
+#' target level differences \eqn{\tau_{ij}}:
+#'
+#' \deqn{F_0 = \min_h \frac{\sum_{ij} w_{ij} (h_j - h_i - \tau_{ij})^2}
+#' {\sum_{ij} w_{ij} \tau_{ij}^2}.}
+#'
+#' Let \eqn{Z_n = A^n \mathrm{diag}(x)} be the transactions along paths of
+#' length `n`, where `A` is the domestic input coefficient matrix and `x` the
+#' domestic output. The edge weights are all direct and indirect transactions,
+#' \eqn{W = \sum_{n \ge 1} Z_n = (L - I) \mathrm{diag}(x)}, where `L` is the
+#' Leontief inverse, and the targets are the average propagation lengths
+#' \eqn{\tau_{ij} = \sum_n n (Z_n)_{ij} / W_{ij} = [L (L - I)]_{ij} / (L -
+#' I)_{ij}} (Dietzenbacher, Romero Luna and Bosma, 2005). With `paths =
+#' "direct"`, \eqn{W} is the direct transactions and \eqn{\tau_{ij} = 1}, which
+#' gives the definitions above. The levels also minimize the sum over paths
+#' \eqn{\sum_n \sum_{ij} (Z_n)_{ij} (h_j - h_i - n)^2}, i.e. each path of length
+#' `n` targets a level difference of `n`. The problem is equivalent to the
+#' Helmholtz-Hodge decomposition of the flows \eqn{W_{ij} \tau_{ij}} with
+#' conductivities \eqn{W_{ij}} (Kichikawa et al., 2019; MacKay, Johnson and
+#' Sansom, 2020, appendix A.14).
+#'
+#' Merging industries with equal levels leaves the other levels unchanged only
+#' if `W` and \eqn{W_{ij} \tau_{ij}} are computed from the disaggregated table
+#' and then summed: the Leontief inverse of an aggregated table is not the
+#' aggregate of the disaggregated one.
+#'
+#' The sums over paths converge only if the spectral radius of `A` is less
+#' than 1, which holds when every industry has positive value added plus
+#' imports. Otherwise, the functions abort.
+#'
 #' @param data An `econ_io_table` object.
+#' @param paths A scalar character. `"direct"` (the default) uses the direct
+#' domestic intermediate transactions, each targeting a level difference of 1.
+#' `"all"` (experimental) uses all direct and indirect transactions, each
+#' targeting its average propagation length.
 #'
 #' @return
 #' * `io_trophic_level()`: a `dibble` with one trophic level per industry.
 #' * `io_trophic_incoherence()`: a scalar numeric.
 #'
 #' @references
+#' Dietzenbacher, E., Romero Luna, I. and Bosma, N. S. (2005). Using average
+#' propagation lengths to identify production chains in the Andalusian economy.
+#' *Estudios de Economía Aplicada*, 23(2), 405-422.
+#'
+#' Kichikawa, Y., Iyetomi, H., Iino, T. and Inoue, H. (2019). Community
+#' structure based on circular flow in a large-scale transaction network.
+#' *Applied Network Science*, 4, 92.
+#'
 #' MacKay, R. S., Johnson, S. and Sansom, B. (2020). How directed is a directed
 #' network? *Royal Society Open Science*, 7(9), 201138.
 #'
@@ -55,6 +101,7 @@
 #' \dontrun{
 #' io_trophic_level(iotable)
 #' io_trophic_incoherence(iotable)
+#' io_trophic_level(iotable, paths = "all")
 #' }
 #'
 #' @name io_trophic
@@ -62,24 +109,26 @@ NULL
 
 #' @rdname io_trophic
 #' @export
-io_trophic_level <- function(data) {
-  trophic <- io_trophic(io_network(data))
+io_trophic_level <- function(data, paths = c("direct", "all")) {
+  trophic <- io_trophic(io_network(data, paths))
   dibble::dibble(trophic$level, .dim_names = list(industry = trophic$dim_name))
 }
 
 #' @rdname io_trophic
 #' @export
-io_trophic_incoherence <- function(data) {
-  trophic <- io_trophic(io_network(data))
-  weight <- trophic$weight
-  level <- trophic$level
+io_trophic_incoherence <- function(data, paths = c("direct", "all")) {
+  network <- io_network(data, paths)
+  level <- io_trophic(network)$level
   level_diff <- outer(level, level, \(from, to) to - from)
-  sum(weight * (level_diff - 1)^2) / sum(weight)
+  sum(network$weight * (level_diff - network$path_length)^2) /
+    sum(network$weight * network$path_length^2)
 }
 
 io_trophic <- function(network, call = rlang::caller_env()) {
-  imbalance <- network$in_weight - network$out_weight
-  total_weight <- network$in_weight + network$out_weight
+  # `v` in `Λ h = v`, which is in minus out for direct transactions.
+  length_weight <- network$weight * network$path_length
+  imbalance <- colSums(length_weight) - rowSums(length_weight)
+  total_weight <- network$total_weight
   n_industry <- length(imbalance)
 
   # The Laplacian is singular (its rows sum to 0), so the levels are only
@@ -98,7 +147,6 @@ io_trophic <- function(network, call = rlang::caller_env()) {
 
   list(
     dim_name = network$dim_name,
-    weight = network$weight,
     level = unname(solution[seq_len(n_industry)])
   )
 }

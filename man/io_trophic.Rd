@@ -6,12 +6,17 @@
 \alias{io_trophic_incoherence}
 \title{Trophic levels and trophic incoherence}
 \usage{
-io_trophic_level(data)
+io_trophic_level(data, paths = c("direct", "all"))
 
-io_trophic_incoherence(data)
+io_trophic_incoherence(data, paths = c("direct", "all"))
 }
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
+
+\item{paths}{A scalar character. \code{"direct"} (the default) uses the direct
+domestic intermediate transactions, each targeting a level difference of 1.
+\code{"all"} (experimental) uses all direct and indirect transactions, each
+targeting its average propagation length.}
 }
 \value{
 \itemize{
@@ -61,14 +66,58 @@ a scalar in \verb{[0, 1]}-ish range that is 0 when the network is perfectly
 coherent (every edge spans exactly one level) and larger when production
 contains more cycles and feedback.
 }
+\section{Direct and indirect paths}{
+
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
+
+With \code{paths = "all"}, indirect transactions are included as well, using the
+extension of MacKay, Johnson and Sansom (2020, section 7) to arbitrary
+target level differences \eqn{\tau_{ij}}:
+
+\deqn{F_0 = \min_h \frac{\sum_{ij} w_{ij} (h_j - h_i - \tau_{ij})^2}
+{\sum_{ij} w_{ij} \tau_{ij}^2}.}
+
+Let \eqn{Z_n = A^n \mathrm{diag}(x)} be the transactions along paths of
+length \code{n}, where \code{A} is the domestic input coefficient matrix and \code{x} the
+domestic output. The edge weights are all direct and indirect transactions,
+\eqn{W = \sum_{n \ge 1} Z_n = (L - I) \mathrm{diag}(x)}, where \code{L} is the
+Leontief inverse, and the targets are the average propagation lengths
+\eqn{\tau_{ij} = \sum_n n (Z_n)_{ij} / W_{ij} = [L (L - I)]_{ij} / (L -
+I)_{ij}} (Dietzenbacher, Romero Luna and Bosma, 2005). With \code{paths = "direct"}, \eqn{W} is the direct transactions and \eqn{\tau_{ij} = 1}, which
+gives the definitions above. The levels also minimize the sum over paths
+\eqn{\sum_n \sum_{ij} (Z_n)_{ij} (h_j - h_i - n)^2}, i.e. each path of length
+\code{n} targets a level difference of \code{n}. The problem is equivalent to the
+Helmholtz-Hodge decomposition of the flows \eqn{W_{ij} \tau_{ij}} with
+conductivities \eqn{W_{ij}} (Kichikawa et al., 2019; MacKay, Johnson and
+Sansom, 2020, appendix A.14).
+
+Merging industries with equal levels leaves the other levels unchanged only
+if \code{W} and \eqn{W_{ij} \tau_{ij}} are computed from the disaggregated table
+and then summed: the Leontief inverse of an aggregated table is not the
+aggregate of the disaggregated one.
+
+The sums over paths converge only if the spectral radius of \code{A} is less
+than 1, which holds when every industry has positive value added plus
+imports. Otherwise, the functions abort.
+}
+
 \examples{
 \dontrun{
 io_trophic_level(iotable)
 io_trophic_incoherence(iotable)
+io_trophic_level(iotable, paths = "all")
 }
 
 }
 \references{
+Dietzenbacher, E., Romero Luna, I. and Bosma, N. S. (2005). Using average
+propagation lengths to identify production chains in the Andalusian economy.
+\emph{Estudios de Economía Aplicada}, 23(2), 405-422.
+
+Kichikawa, Y., Iyetomi, H., Iino, T. and Inoue, H. (2019). Community
+structure based on circular flow in a large-scale transaction network.
+\emph{Applied Network Science}, 4, 92.
+
 MacKay, R. S., Johnson, S. and Sansom, B. (2020). How directed is a directed
 network? \emph{Royal Society Open Science}, 7(9), 201138.
 }

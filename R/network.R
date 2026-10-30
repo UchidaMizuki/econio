@@ -1,4 +1,10 @@
-io_network <- function(data) {
+io_network <- function(
+  data,
+  paths = c("direct", "all"),
+  call = rlang::caller_env()
+) {
+  paths <- rlang::arg_match(paths, error_call = call)
+
   if (!inherits(data, "io_table_noncompetitive_import")) {
     cli::cli_inform(
       "Converting to a noncompetitive import type table with {.fn io_table_to_noncompetitive_import}."
@@ -20,27 +26,80 @@ io_network <- function(data) {
     )
   }
 
-  io_network_weight(weight, dim_name)
+  switch(
+    paths,
+    direct = io_network_direct(weight, dim_name),
+    all = io_network_all(
+      weight,
+      as.vector(io_total_input(data)),
+      dim_name,
+      call = call
+    )
+  )
 }
 
-io_network_weight <- function(weight, dim_name) {
-  in_weight <- colSums(weight)
-  out_weight <- rowSums(weight)
-  total_weight <- in_weight + out_weight
+# Direct transactions span paths of length 1.
+io_network_direct <- function(weight, dim_name) {
+  io_network_weight(weight, path_length = 1, dim_name = dim_name)
+}
+
+# With `Z_n = A^n diag(x)` the transactions along paths of length `n`, the edge
+# weights are `W = sum_n Z_n = (L - I) diag(x)` and the path lengths are the
+# average propagation lengths `sum_n n Z_n / W = L (L - I) / (L - I)`
+# (elementwise), where `L` is the Leontief inverse.
+io_network_all <- function(
+  weight,
+  total_input,
+  dim_name,
+  call = rlang::caller_env()
+) {
+  eye <- diag(nrow(weight))
+  input_coef <- sweep(weight, 2, total_input, "/")
+  input_coef[, total_input == 0] <- 0
+
+  # The sums over paths converge only if the spectral radius of `A` is below 1.
+  spectral_radius <- max(Mod(eigen(input_coef, only.values = TRUE)$values))
+  if (spectral_radius >= 1) {
+    cli::cli_abort(
+      c(
+        "The sums of transactions over all paths do not converge.",
+        "x" = "The spectral radius of the domestic input coefficient matrix is {format(spectral_radius, digits = 3)}, not less than 1.",
+        "i" = "It is less than 1 when every industry has positive value added plus imports."
+      ),
+      call = call
+    )
+  }
+  leontief <- solve(eye - input_coef)
+
+  path_sum <- leontief - eye
+  path_length <- leontief %*% path_sum / path_sum
+  # Pairs without any path have no weight, so their length is irrelevant.
+  path_length[path_sum == 0] <- 0
+  io_network_weight(
+    sweep(path_sum, 2, total_input, "*"),
+    path_length = path_length,
+    dim_name = dim_name
+  )
+}
+
+# `path_length` is the target level difference of each edge (MacKay, Johnson
+# and Sansom, 2020, section 7). `total_weight` is the weight in plus out of
+# each industry.
+io_network_weight <- function(weight, path_length, dim_name) {
+  total_weight <- colSums(weight) + rowSums(weight)
   laplacian <- diag(total_weight, nrow = length(total_weight)) -
     (weight + t(weight))
   list(
-    dim_name = dim_name,
     weight = weight,
-    in_weight = in_weight,
-    out_weight = out_weight,
+    path_length = path_length,
+    dim_name = dim_name,
+    total_weight = total_weight,
     laplacian = laplacian
   )
 }
 
 io_abort_disconnected <- function(network, call = rlang::caller_env()) {
-  total_weight <- network$in_weight + network$out_weight
-  industry <- io_axis_label(network$dim_name)[total_weight == 0]
+  industry <- io_axis_label(network$dim_name)[network$total_weight == 0]
   cli::cli_abort(
     c(
       "The domestic production network must be connected.",

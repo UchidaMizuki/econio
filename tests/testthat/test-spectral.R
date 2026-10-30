@@ -27,7 +27,7 @@ test_that("io_spectral_embedding solves the normalized generalized eigenproblem"
   )) {
     iotable <- suppressMessages(read_iotable_dummy(name))
     network <- suppressMessages(io_network(iotable))
-    total_weight <- network$in_weight + network$out_weight
+    total_weight <- network$total_weight
 
     embedding <- suppressMessages(io_spectral_embedding(iotable, dims = 2))
     h <- matrix(as.numeric(as.matrix(embedding)), ncol = 2)
@@ -100,51 +100,74 @@ test_that("io_spectral_embedding validates dims", {
 
 test_that("io_spectral_embedding agrees with numerically minimizing the Dirichlet energy", {
   iotable <- read_iotable_dummy("multiregional_competitive_import")
-  network <- suppressMessages(io_network(iotable))
-  laplacian <- network$laplacian
-  total_weight <- network$in_weight + network$out_weight
+  for (paths in c("direct", "all")) {
+    network <- suppressMessages(io_network(iotable, paths = paths))
+    laplacian <- network$laplacian
+    total_weight <- network$total_weight
 
-  for (normalized in c(TRUE, FALSE)) {
-    constraint_weight <- if (normalized) {
-      total_weight
-    } else {
-      rep(1, nrow(laplacian))
-    }
+    for (normalized in c(TRUE, FALSE)) {
+      constraint_weight <- if (normalized) {
+        total_weight
+      } else {
+        rep(1, nrow(laplacian))
+      }
 
-    # Minimize the Rayleigh quotient h' L h / h' D h over h orthogonal to the
-    # constant vector in the D inner product.
-    project <- function(z) {
-      z - sum(constraint_weight * z) / sum(constraint_weight)
-    }
-    quotient <- function(z) {
-      h <- project(z)
-      sum(h * (laplacian %*% h)) / sum(constraint_weight * h^2)
-    }
-    gradient <- function(z) {
-      h <- project(z)
-      norm <- sum(constraint_weight * h^2)
-      grad_h <- 2 *
-        (as.vector(laplacian %*% h) - quotient(z) * constraint_weight * h) /
-        norm
-      grad_h - sum(grad_h) * constraint_weight / sum(constraint_weight)
-    }
-    set.seed(1)
-    optimum <- optim(
-      rnorm(nrow(laplacian)),
-      quotient,
-      gradient,
-      method = "BFGS",
-      control = list(reltol = 1e-16, maxit = 1000)
-    )
-    expected <- project(optimum$par)
-    expected <- expected / sqrt(sum(constraint_weight * expected^2))
-    expected <- expected * sign(expected[which.max(abs(expected))])
+      # Minimize the Rayleigh quotient h' L h / h' D h over h orthogonal to the
+      # constant vector in the D inner product.
+      project <- function(z) {
+        z - sum(constraint_weight * z) / sum(constraint_weight)
+      }
+      quotient <- function(z) {
+        h <- project(z)
+        sum(h * (laplacian %*% h)) / sum(constraint_weight * h^2)
+      }
+      gradient <- function(z) {
+        h <- project(z)
+        norm <- sum(constraint_weight * h^2)
+        grad_h <- 2 *
+          (as.vector(laplacian %*% h) - quotient(z) * constraint_weight * h) /
+          norm
+        grad_h - sum(grad_h) * constraint_weight / sum(constraint_weight)
+      }
+      set.seed(1)
+      optimum <- optim(
+        rnorm(nrow(laplacian)),
+        quotient,
+        gradient,
+        method = "BFGS",
+        control = list(reltol = 1e-16, maxit = 1000)
+      )
+      expected <- project(optimum$par)
+      expected <- expected / sqrt(sum(constraint_weight * expected^2))
+      expected <- expected * sign(expected[which.max(abs(expected))])
 
-    actual <- suppressMessages(as.numeric(as.matrix(io_spectral_embedding(
-      iotable,
-      normalized = normalized
-    ))))
-    expect_equal(sum(actual * (laplacian %*% actual)), optimum$value)
-    expect_equal(actual, expected, tolerance = 1e-4)
+      actual <- suppressMessages(as.numeric(as.matrix(io_spectral_embedding(
+        iotable,
+        normalized = normalized,
+        paths = paths
+      ))))
+      expect_equal(sum(actual * (laplacian %*% actual)), optimum$value)
+      expect_equal(actual, expected, tolerance = 1e-4)
+    }
   }
+})
+
+test_that("io_spectral_embedding with paths = \"all\" uses the all-path Laplacian", {
+  iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
+  network <- io_network(iotable, paths = "all")
+  total_weight <- network$total_weight
+
+  h <- as.numeric(as.matrix(io_spectral_embedding(iotable, paths = "all")))
+  expect_equal(sum(total_weight * h), 0)
+  expect_equal(sum(total_weight * h^2), 1)
+
+  eigenvalue <- sum(h * (network$laplacian %*% h))
+  expect_equal(
+    as.vector(network$laplacian %*% h),
+    eigenvalue * total_weight * h
+  )
+  eigenvalues <- sort(Re(
+    eigen(network$laplacian / total_weight, only.values = TRUE)$values
+  ))
+  expect_equal(eigenvalue, eigenvalues[[2]])
 })
