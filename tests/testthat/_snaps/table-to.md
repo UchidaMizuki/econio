@@ -38,27 +38,37 @@
       x region_3/industry_2: 42 (`actual`) not nearly equal to 21 (`expected`).
       x region_3/industry_3: 72 (`actual`) not nearly equal to 36 (`expected`).
 
-# io_table_to_noncompetitive_import() errors when imports exceed regional demand
+# io_table_to_noncompetitive_import() warns but converts when import coefficients are above 1 or negative
+
+    Code
+      out <- io_table_to_noncompetitive_import(iotable)
+    Condition
+      Warning in `io_table_to_noncompetitive_import()`:
+      Some import coefficients are above 1 or negative, so some domestic transactions are negative.
+      x industry_1: import coefficient 1.143 (imports 40, regional demand 35).
+      i Import coefficients above 1 often come from re-exports.
+      i Use `io_table_remove_reexport()` to remove them first.
+
+---
+
+    Code
+      out <- io_table_to_noncompetitive_import(iotable)
+    Condition
+      Warning in `io_table_to_noncompetitive_import()`:
+      Some import coefficients are above 1 or negative, so some domestic transactions are negative.
+      x industry_1: import coefficient -4 (imports 20, regional demand -5).
+      i Negative regional demand often comes from byproducts recorded as negative inputs (the Stone method) in final demand.
+      i Supply an import table with `data_import` to avoid this.
+
+# io_table_to_noncompetitive_import() errors when imports have zero regional demand
 
     Code
       io_table_to_noncompetitive_import(iotable)
     Condition
       Error in `io_table_to_noncompetitive_import()`:
-      ! Imports must not exceed regional demand (intermediate plus final demand), or domestic transactions become negative.
-      x industry_1: imports of 40 exceed regional demand of 35 (import coefficient 1.143).
-      i Imports beyond regional demand are typically re-exports.
-      i Use `io_table_remove_reexport()` to remove them from both imports and exports first.
-
-# io_table_to_noncompetitive_import() errors when imports have non-positive regional demand
-
-    Code
-      io_table_to_noncompetitive_import(iotable)
-    Condition
-      Error in `io_table_to_noncompetitive_import()`:
-      ! Imports must not exceed regional demand (intermediate plus final demand), or domestic transactions become negative.
-      x industry_1: imports of 20 exceed regional demand of -5.
-      i Regional demand can be non-positive when final demand sectors generate byproducts recorded as negative inputs by the Stone method.
-      i Supply an import table with `data_import` to allocate such imports.
+      ! Can't compute import coefficients for sectors with imports but zero regional demand.
+      x industry_1: imports 25.
+      i Supply an import table with `data_import`.
 
 # io_table_to_regional() errors for regional tables
 

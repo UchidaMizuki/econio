@@ -167,7 +167,7 @@ get_iotable_reexport <- function(
 }
 
 # industry_1 has imports of 20 but regional demand of -5.
-get_iotable_nonpositive_demand <- function() {
+get_iotable_negative_demand <- function() {
   get_iotable_reexport(
     export_1 = c(export = 45, outflow = 15),
     import_1 = c(import = -15, inflow = -5),

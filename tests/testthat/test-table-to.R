@@ -180,13 +180,23 @@ test_that("io_table_to_noncompetitive_import() uses data_import", {
   }
 })
 
-test_that("io_table_to_noncompetitive_import() errors when imports exceed regional demand", {
-  iotable <- get_iotable_reexport()
-  expect_snapshot(io_table_to_noncompetitive_import(iotable), error = TRUE)
+test_that("io_table_to_noncompetitive_import() warns but converts when import coefficients are above 1 or negative", {
+  for (iotable in list(get_iotable_reexport(), get_iotable_negative_demand())) {
+    expect_snapshot(out <- io_table_to_noncompetitive_import(iotable))
+    expect_s3_class(out, "io_table_noncompetitive_import")
+    expect_equal(
+      as.vector(io_total_output(out)),
+      as.vector(io_total_output(iotable))
+    )
+  }
 })
 
-test_that("io_table_to_noncompetitive_import() errors when imports have non-positive regional demand", {
-  iotable <- get_iotable_nonpositive_demand()
+test_that("io_table_to_noncompetitive_import() errors when imports have zero regional demand", {
+  iotable <- get_iotable_reexport(
+    export_1 = c(export = 45, outflow = 15),
+    import_1 = c(import = -20, inflow = -5),
+    final_demand_1 = -15
+  )
   expect_snapshot(io_table_to_noncompetitive_import(iotable), error = TRUE)
 })
 

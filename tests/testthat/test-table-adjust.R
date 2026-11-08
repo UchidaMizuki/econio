@@ -60,8 +60,8 @@ test_that("io_table_remove_reexport() returns data unchanged without re-exports"
   }
 })
 
-test_that("io_table_remove_reexport() leaves sectors with non-positive regional demand unchanged", {
-  iotable <- get_iotable_nonpositive_demand()
+test_that("io_table_remove_reexport() leaves sectors with negative regional demand unchanged", {
+  iotable <- get_iotable_negative_demand()
   expect_identical(io_table_remove_reexport(iotable), iotable)
 })
 
