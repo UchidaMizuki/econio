@@ -45,7 +45,10 @@ io_table_transfer_byproduct <- function(data) {
 #' of each such sector (see [io_import_coef()]) becomes 1, so that
 #' [io_table_to_noncompetitive_import()] no longer makes its domestic
 #' transactions negative. Sectors whose imports are within their regional demand
-#' are left unchanged.
+#' are left unchanged, and so are sectors whose regional demand is not positive,
+#' e.g. because final demand sectors generate byproducts recorded as negative
+#' inputs by the Stone method: their re-exports can't be identified, and
+#' [io_table_to_noncompetitive_import()] reports them.
 #'
 #' @param data A competitive import type input-output table.
 #'
@@ -64,14 +67,18 @@ io_table_remove_reexport <- function(data) {
   }
 
   excess <- io_import_excess(data)
-  is_excess <- excess$excess > 0
+  # Re-exports can't be identified without positive regional demand.
+  is_excess <- excess$excess > 0 & excess$regional_demand > 0
   if (!any(is_excess)) {
     return(data)
   }
 
   infeasible <- excess |>
     tibble::as_tibble() |>
-    dplyr::filter(exceeds(.data$excess, .data$export))
+    dplyr::filter(
+      .data$regional_demand > 0,
+      exceeds(.data$excess, .data$export)
+    )
   if (!vctrs::vec_is_empty(infeasible)) {
     cli::cli_abort(
       c(

@@ -49,6 +49,17 @@
       i Imports beyond regional demand are typically re-exports.
       i Use `io_table_remove_reexport()` to remove them from both imports and exports first.
 
+# io_table_to_noncompetitive_import() errors when imports have non-positive regional demand
+
+    Code
+      io_table_to_noncompetitive_import(iotable)
+    Condition
+      Error in `io_table_to_noncompetitive_import()`:
+      ! Imports must not exceed regional demand (intermediate plus final demand), or domestic transactions become negative.
+      x industry_1: imports of 20 exceed regional demand of -5.
+      i Regional demand can be non-positive when final demand sectors generate byproducts recorded as negative inputs by the Stone method.
+      i Supply an import table with `data_import` to allocate such imports.
+
 # io_table_to_regional() errors for regional tables
 
     Code

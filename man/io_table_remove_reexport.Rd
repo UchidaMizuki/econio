@@ -26,5 +26,8 @@ Total output and regional demand stay the same, and the import coefficient
 of each such sector (see \code{\link[=io_import_coef]{io_import_coef()}}) becomes 1, so that
 \code{\link[=io_table_to_noncompetitive_import]{io_table_to_noncompetitive_import()}} no longer makes its domestic
 transactions negative. Sectors whose imports are within their regional demand
-are left unchanged.
+are left unchanged, and so are sectors whose regional demand is not positive,
+e.g. because final demand sectors generate byproducts recorded as negative
+inputs by the Stone method: their re-exports can't be identified, and
+\code{\link[=io_table_to_noncompetitive_import]{io_table_to_noncompetitive_import()}} reports them.
 }

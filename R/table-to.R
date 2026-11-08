@@ -84,7 +84,10 @@ io_table_to_competitive_import <- function(
 #' regional demand, i.e. its import coefficient is above 1, its domestic
 #' transactions would become negative, so this aborts. This typically happens
 #' when goods are imported and then re-exported; use
-#' [io_table_remove_reexport()] to remove such re-exports first.
+#' [io_table_remove_reexport()] to remove such re-exports first. This also
+#' aborts if a sector has imports but no positive regional demand to allocate
+#' them over, e.g. because final demand sectors generate byproducts recorded as
+#' negative inputs by the Stone method; supply `data_import` in that case.
 #'
 #' @param data An input-output table.
 #' @param data_import An optional import table. By default, `NULL`.
@@ -126,10 +129,8 @@ io_table_to_noncompetitive_import <- function(
         import_total_tolerance = import_total_tolerance
       )
   } else {
+    io_check_import_excess(data)
     import_coef <- io_import_coef(data)
-    if (any(exceeds(import_coef, 1))) {
-      io_abort_import_coef(data)
-    }
     # Removing re-exports can leave coefficients just above 1 by rounding.
     import_coef <- dibble::ifelse(import_coef > 1, 1, import_coef)
 
@@ -429,21 +430,45 @@ io_check_import_totals <- function(
   data_import
 }
 
-io_abort_import_coef <- function(data, call = rlang::caller_env()) {
+io_check_import_excess <- function(data, call = rlang::caller_env()) {
+  # Imports can't be allocated over non-positive regional demand at all.
   excess <- io_import_excess(data) |>
     tibble::as_tibble() |>
-    dplyr::filter(exceeds(.data$import, .data$regional_demand)) |>
-    dplyr::mutate(import_coef = .data$import / .data$regional_demand)
+    dplyr::filter(exceeds(.data$import, pmax(.data$regional_demand, 0)))
+  if (vctrs::vec_is_empty(excess)) {
+    return(invisible(data))
+  }
+
+  is_positive <- excess$regional_demand > 0
+  import_coef <- ifelse(
+    is_positive,
+    glue::glue(
+      " (import coefficient {signif(excess$import / excess$regional_demand, 4)})"
+    ),
+    ""
+  )
+  info_reexport <- if (any(is_positive)) {
+    c(
+      "i" = "Imports beyond regional demand are typically re-exports.",
+      "i" = "Use {.fn io_table_remove_reexport} to remove them from both imports and exports first."
+    )
+  }
+  info_nonpositive <- if (!all(is_positive)) {
+    c(
+      "i" = "Regional demand can be non-positive when final demand sectors generate byproducts recorded as negative inputs by the Stone method.",
+      "i" = "Supply an import table with {.arg data_import} to allocate such imports."
+    )
+  }
 
   cli::cli_abort(
     c(
       "Imports must not exceed regional demand (intermediate plus final demand), or domestic transactions become negative.",
       glue::glue(
-        "{io_axis_label(excess$input)}: imports of {signif(excess$import, 4)} exceed regional demand of {signif(excess$regional_demand, 4)} (import coefficient {signif(excess$import_coef, 4)})."
+        "{io_axis_label(excess$input)}: imports of {signif(excess$import, 4)} exceed regional demand of {signif(excess$regional_demand, 4)}{import_coef}."
       ) |>
         rlang::set_names("x"),
-      "i" = "Imports beyond regional demand are typically re-exports.",
-      "i" = "Use {.fn io_table_remove_reexport} to remove them from both imports and exports first."
+      info_reexport,
+      info_nonpositive
     ),
     call = call
   )

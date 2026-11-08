@@ -32,5 +32,8 @@ coefficient (see \code{\link[=io_import_coef]{io_import_coef()}}). If the import
 regional demand, i.e. its import coefficient is above 1, its domestic
 transactions would become negative, so this aborts. This typically happens
 when goods are imported and then re-exported; use
-\code{\link[=io_table_remove_reexport]{io_table_remove_reexport()}} to remove such re-exports first.
+\code{\link[=io_table_remove_reexport]{io_table_remove_reexport()}} to remove such re-exports first. This also
+aborts if a sector has imports but no positive regional demand to allocate
+them over, e.g. because final demand sectors generate byproducts recorded as
+negative inputs by the Stone method; supply \code{data_import} in that case.
 }

@@ -185,6 +185,11 @@ test_that("io_table_to_noncompetitive_import() errors when imports exceed region
   expect_snapshot(io_table_to_noncompetitive_import(iotable), error = TRUE)
 })
 
+test_that("io_table_to_noncompetitive_import() errors when imports have non-positive regional demand", {
+  iotable <- get_iotable_nonpositive_demand()
+  expect_snapshot(io_table_to_noncompetitive_import(iotable), error = TRUE)
+})
+
 test_that("io_table_to_competitive_import() with data_import inverts io_table_to_noncompetitive_import()", {
   for (name in c(
     "regional_competitive_import",
