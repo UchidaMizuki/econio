@@ -2,6 +2,11 @@
 
 <!-- Insert package-specific content here. use_tidy_agents() will preserve this section when updating the rest of the file. -->
 
+### Naming
+
+- Use `io_table_to_{type}()` only for functions that change the class of an input-output table, e.g. `io_table_to_noncompetitive_import()` (competitive to noncompetitive import type) or `io_table_to_regional()` (multiregional to regional tables).
+- Name functions that modify a table but keep its class `io_table_{verb}_{object}()`, e.g. `io_table_transfer_byproduct()` or `io_table_remove_reexport()`. Put them in `R/table-adjust.R`.
+
 ## Package development
 
 ### Key commands

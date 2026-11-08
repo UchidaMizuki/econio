@@ -26,5 +26,11 @@ By default, \code{.Machine$double.eps^0.5}.}
 A noncompetitive import type input-output table.
 }
 \description{
-Convert an input-output table to a noncompetitive import type table
+Without \code{data_import}, the imports of each sector are allocated over its
+regional demand (intermediate plus final demand) in proportion to the import
+coefficient (see \code{\link[=io_import_coef]{io_import_coef()}}). If the imports of a sector exceed its
+regional demand, i.e. its import coefficient is above 1, its domestic
+transactions would become negative, so this aborts. This typically happens
+when goods are imported and then re-exported; use
+\code{\link[=io_table_remove_reexport]{io_table_remove_reexport()}} to remove such re-exports first.
 }

@@ -78,6 +78,14 @@ io_table_to_competitive_import <- function(
 
 #' Convert an input-output table to a noncompetitive import type table
 #'
+#' Without `data_import`, the imports of each sector are allocated over its
+#' regional demand (intermediate plus final demand) in proportion to the import
+#' coefficient (see [io_import_coef()]). If the imports of a sector exceed its
+#' regional demand, i.e. its import coefficient is above 1, its domestic
+#' transactions would become negative, so this aborts. This typically happens
+#' when goods are imported and then re-exported; use
+#' [io_table_remove_reexport()] to remove such re-exports first.
+#'
 #' @param data An input-output table.
 #' @param data_import An optional import table. By default, `NULL`.
 #' @param import_sector_name A name for the import sector. By default,
@@ -118,8 +126,15 @@ io_table_to_noncompetitive_import <- function(
         import_total_tolerance = import_total_tolerance
       )
   } else {
+    import_coef <- io_import_coef(data)
+    if (any(exceeds(import_coef, 1))) {
+      io_abort_import_coef(data)
+    }
+    # Removing re-exports can leave coefficients just above 1 by rounding.
+    import_coef <- dibble::ifelse(import_coef > 1, 1, import_coef)
+
     import <- dibble::broadcast(
-      regional_demand * io_same_region(regional_demand) * io_import_coef(data),
+      regional_demand * io_same_region(regional_demand) * import_coef,
       dim_names = c("input", "output")
     )
   }
@@ -162,40 +177,6 @@ io_table_to_noncompetitive_import <- function(
     class(out) == "io_table_competitive_import"
   ] <- "io_table_noncompetitive_import"
   out
-}
-
-#' Convert byproduct transactions from the Stone method to the transfer method
-#'
-#' Functions that build the domestic production network (`io_trophic_level()`,
-#' `io_trophic_incoherence()`, and `io_spectral_embedding()`) convert to
-#' noncompetitive import type internally as needed, so there is usually no
-#' need to call {\link{io_table_to_noncompetitive_import}} yourself first.
-#' In fact, converting first is best avoided: a leftover negative domestic
-#' intermediate transaction can leak into the import allocation during that
-#' conversion and produce a negative import value.
-#'
-#' @param data An input-output table.
-#'
-#' @return An input-output table with negative domestic intermediate
-#' transactions transferred to the corresponding reverse-direction cell.
-#'
-#' @export
-io_table_to_byproduct_transfer <- function(data) {
-  data <- io_check_axes(data)
-
-  inter_industry <- io_inter_industry(data)
-  dim_names <- dimnames(inter_industry)
-  weight <- as.matrix(inter_industry)
-
-  if (sum(weight < 0) == 0) {
-    return(data)
-  }
-
-  weight <- pmax(weight, 0) + t(pmax(-weight, 0))
-  inter_industry <- dibble::dibble(as.vector(weight), .dim_names = dim_names)
-
-  data |>
-    dplyr::rows_update(inter_industry)
 }
 
 io_table_to_blocks <- function(data) {
@@ -446,4 +427,24 @@ io_check_import_totals <- function(
     )
   }
   data_import
+}
+
+io_abort_import_coef <- function(data, call = rlang::caller_env()) {
+  excess <- io_import_excess(data) |>
+    tibble::as_tibble() |>
+    dplyr::filter(exceeds(.data$import, .data$regional_demand)) |>
+    dplyr::mutate(import_coef = .data$import / .data$regional_demand)
+
+  cli::cli_abort(
+    c(
+      "Imports must not exceed regional demand (intermediate plus final demand), or domestic transactions become negative.",
+      glue::glue(
+        "{io_axis_label(excess$input)}: imports of {signif(excess$import, 4)} exceed regional demand of {signif(excess$regional_demand, 4)} (import coefficient {signif(excess$import_coef, 4)})."
+      ) |>
+        rlang::set_names("x"),
+      "i" = "Imports beyond regional demand are typically re-exports.",
+      "i" = "Use {.fn io_table_remove_reexport} to remove them from both imports and exports first."
+    ),
+    call = call
+  )
 }

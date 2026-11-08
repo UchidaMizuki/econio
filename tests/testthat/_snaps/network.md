@@ -15,9 +15,10 @@
     Code
       io_network(iotable_negative)
     Condition
-      Error in `io_network()`:
-      ! Found 1 negative domestic intermediate transaction (e.g. from byproduct treatment such as the Stone method).
-      i Use `io_table_to_byproduct_transfer()` to convert negative entries to the transfer method before building the industry network.
+      Error:
+      ! Found 1 negative domestic intermediate transaction.
+      i For negatives from byproduct treatment such as the Stone method, use `io_table_transfer_byproduct()` to convert them to the transfer method before building the industry network.
+      i For negatives from imports that exceed regional demand (an import coefficient above 1), e.g. re-exports, use `io_table_remove_reexport()` before converting to a noncompetitive import type table.
 
 # io_network_all() aborts when the sums over paths diverge
 
