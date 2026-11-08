@@ -127,7 +127,7 @@ io_table_to_noncompetitive_import <- function(
       )
   } else {
     import_coef <- io_import_coef(data)
-    if (any(import_coef > 1 + .Machine$double.eps^0.5)) {
+    if (any(exceeds(import_coef, 1))) {
       io_abort_import_coef(data)
     }
     # Removing re-exports can leave coefficients just above 1 by rounding.
@@ -432,15 +432,14 @@ io_check_import_totals <- function(
 io_abort_import_coef <- function(data, call = rlang::caller_env()) {
   excess <- io_import_excess(data) |>
     tibble::as_tibble() |>
-    dplyr::filter(
-      .data$excess > .Machine$double.eps^0.5 * .data$regional_demand
-    )
+    dplyr::filter(exceeds(.data$import, .data$regional_demand)) |>
+    dplyr::mutate(import_coef = .data$import / .data$regional_demand)
 
   cli::cli_abort(
     c(
       "Imports must not exceed regional demand (intermediate plus final demand), or domestic transactions become negative.",
       glue::glue(
-        "{io_axis_label(excess$input)}: imports of {signif(excess$import, 4)} exceed regional demand of {signif(excess$regional_demand, 4)} (import coefficient {signif(excess$import / excess$regional_demand, 4)})."
+        "{io_axis_label(excess$input)}: imports of {signif(excess$import, 4)} exceed regional demand of {signif(excess$regional_demand, 4)} (import coefficient {signif(excess$import_coef, 4)})."
       ) |>
         rlang::set_names("x"),
       "i" = "Imports beyond regional demand are typically re-exports.",

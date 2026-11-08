@@ -60,6 +60,13 @@ test_that("io_table_remove_reexport() returns data unchanged without re-exports"
   }
 })
 
+test_that("io_table_remove_reexport() removes all exports when re-exports equal exports", {
+  iotable <- get_iotable_reexport(export_1 = c(export = 3.75, outflow = 1.25))
+  export <- io_table_remove_reexport(iotable) |>
+    io_total_output(output_sector_type = "export")
+  expect_equal(as.vector(export)[[1]], 0)
+})
+
 test_that("io_table_remove_reexport() errors when re-exports exceed exports", {
   iotable <- get_iotable_reexport(export_1 = c(export = 1, outflow = 1))
   expect_snapshot(io_table_remove_reexport(iotable), error = TRUE)

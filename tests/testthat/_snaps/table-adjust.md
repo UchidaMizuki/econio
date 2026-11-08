@@ -6,6 +6,7 @@
       Error in `io_table_remove_reexport()`:
       ! Re-exports must not exceed exports.
       x industry_1: imports exceed regional demand by 5, but exports are 2.
+      i This happens when output is negative, or when re-exports go to other regions, which can't be removed without changing their demand.
 
 # io_table_remove_reexport() errors for noncompetitive import type tables
 

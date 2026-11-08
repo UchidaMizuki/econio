@@ -71,9 +71,7 @@ io_table_remove_reexport <- function(data) {
 
   infeasible <- excess |>
     tibble::as_tibble() |>
-    dplyr::filter(
-      .data$excess - .data$export > .Machine$double.eps^0.5 * .data$excess
-    )
+    dplyr::filter(exceeds(.data$excess, .data$export))
   if (!vctrs::vec_is_empty(infeasible)) {
     cli::cli_abort(
       c(
@@ -81,7 +79,8 @@ io_table_remove_reexport <- function(data) {
         glue::glue(
           "{io_axis_label(infeasible$input)}: imports exceed regional demand by {signif(infeasible$excess, 4)}, but exports are {signif(infeasible$export, 4)}."
         ) |>
-          rlang::set_names("x")
+          rlang::set_names("x"),
+        "i" = "This happens when output is negative, or when re-exports go to other regions, which can't be removed without changing their demand."
       )
     )
   }
