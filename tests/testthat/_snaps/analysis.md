@@ -1,3 +1,11 @@
+# io_induced_production checks its inputs
+
+    Code
+      io_induced_production(1)
+    Condition
+      Error in `io_induced_production()`:
+      ! `data` must be an <econ_io_table> object, not a number.
+
 # io_self_sufficiency_rate is only defined for competitive import tables
 
     Code

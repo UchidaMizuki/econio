@@ -1,12 +1,12 @@
-test_that("io_production_induce returns the expected components", {
+test_that("io_induced_production returns the expected components", {
   # Noncompetitive import: final demand and export inducement only.
   for (name in c(
     "regional_noncompetitive_import",
     "multiregional_noncompetitive_import"
   )) {
     iotable <- read_iotable_dummy(name)
-    pi <- io_production_induce(iotable)
-    expect_setequal(names(pi), c("total_final_demand", "total_export"))
+    pi <- io_induced_production(iotable)
+    expect_setequal(names(pi), c("final_demand", "export"))
   }
 
   # Competitive import, closed economy: import inducement is also returned.
@@ -15,16 +15,49 @@ test_that("io_production_induce returns the expected components", {
     "multiregional_competitive_import"
   )) {
     iotable <- read_iotable_dummy(name)
-    pi <- io_production_induce(iotable, open_economy = FALSE)
-    expect_setequal(
-      names(pi),
-      c("total_final_demand", "total_export", "total_import")
-    )
+    pi <- io_induced_production(iotable, open_economy = FALSE)
+    expect_setequal(names(pi), c("final_demand", "export", "import"))
 
     # Competitive import, open economy: no separate import column.
-    pi_open <- io_production_induce(iotable, open_economy = TRUE)
-    expect_setequal(names(pi_open), c("total_final_demand", "total_export"))
+    pi_open <- io_induced_production(iotable, open_economy = TRUE)
+    expect_setequal(names(pi_open), c("final_demand", "export"))
   }
+})
+
+test_that("io_induced_production adds up to total input", {
+  for (name in c(
+    "regional_noncompetitive_import",
+    "multiregional_noncompetitive_import"
+  )) {
+    iotable <- read_iotable_dummy(name)
+    pi <- io_induced_production(iotable)
+    expect_equal(
+      as.vector(pi$final_demand + pi$export),
+      as.vector(io_total_input(iotable))
+    )
+  }
+
+  for (name in c(
+    "regional_competitive_import",
+    "multiregional_competitive_import"
+  )) {
+    iotable <- read_iotable_dummy(name)
+    pi <- io_induced_production(iotable, open_economy = FALSE)
+    expect_equal(
+      as.vector(pi$final_demand + pi$export - pi$import),
+      as.vector(io_total_input(iotable))
+    )
+
+    pi_open <- io_induced_production(iotable, open_economy = TRUE)
+    expect_equal(
+      as.vector(pi_open$final_demand + pi_open$export),
+      as.vector(io_total_input(iotable))
+    )
+  }
+})
+
+test_that("io_induced_production checks its inputs", {
+  expect_snapshot(io_induced_production(1), error = TRUE)
 })
 
 test_that("io_self_sufficiency_rate is only defined for competitive import tables", {
