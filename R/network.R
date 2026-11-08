@@ -20,9 +20,11 @@ io_network <- function(
   if (n_negative > 0) {
     cli::cli_abort(
       c(
-        "Found {n_negative} negative domestic intermediate transaction{?s} (e.g. from byproduct treatment such as the Stone method).",
-        "i" = "Use {.fn io_table_to_byproduct_transfer} to convert negative entries to the transfer method before building the industry network."
-      )
+        "Found {n_negative} negative domestic intermediate transaction{?s}.",
+        "i" = "For negatives from byproduct treatment such as the Stone method, use {.fn io_table_to_byproduct_transfer} to convert them to the transfer method before building the industry network.",
+        "i" = "For negatives from imports that exceed regional demand (an import coefficient above 1), e.g. re-exports, use {.fn io_table_remove_reexport} before converting to a noncompetitive import type table."
+      ),
+      call = call
     )
   }
 

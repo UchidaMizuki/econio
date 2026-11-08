@@ -180,6 +180,11 @@ test_that("io_table_to_noncompetitive_import() uses data_import", {
   }
 })
 
+test_that("io_table_to_noncompetitive_import() errors when imports exceed regional demand", {
+  iotable <- get_iotable_reexport()
+  expect_snapshot(io_table_to_noncompetitive_import(iotable), error = TRUE)
+})
+
 test_that("io_table_to_competitive_import() with data_import inverts io_table_to_noncompetitive_import()", {
   for (name in c(
     "regional_competitive_import",
@@ -236,6 +241,44 @@ test_that("io_table_to_byproduct_transfer() handles negative transactions in bot
   expect_equal(sum(weight < 0), 0)
   expect_equal(weight[1, 3], 4)
   expect_equal(weight[3, 1], 10)
+})
+
+test_that("io_table_remove_reexport() removes re-exports from imports and exports", {
+  iotable <- get_iotable_reexport()
+  actual <- io_table_remove_reexport(iotable)
+
+  # The excess of 5 is split 3:1 over the export and import columns.
+  expected <- get_iotable_reexport(
+    export_1 = c(export = 26.25, outflow = 8.75),
+    import_1 = c(import = -26.25, inflow = -8.75)
+  )
+  expect_equal(actual, expected)
+  expect_equal(io_total_output(actual), io_total_output(iotable))
+
+  domestic <- io_table_to_noncompetitive_import(actual) |>
+    get_data_regional_demand() |>
+    as.matrix()
+  expect_all_equal(domestic[1, ], 0)
+})
+
+test_that("io_table_remove_reexport() returns data unchanged without re-exports", {
+  for (name in c(
+    "regional_competitive_import",
+    "multiregional_competitive_import"
+  )) {
+    iotable <- read_iotable_dummy(name)
+    expect_identical(io_table_remove_reexport(iotable), iotable)
+  }
+})
+
+test_that("io_table_remove_reexport() errors when re-exports exceed exports", {
+  iotable <- get_iotable_reexport(export_1 = c(export = 1, outflow = 1))
+  expect_snapshot(io_table_remove_reexport(iotable), error = TRUE)
+})
+
+test_that("io_table_remove_reexport() errors for noncompetitive import type tables", {
+  iotable <- read_iotable_dummy("regional_noncompetitive_import")
+  expect_snapshot(io_table_remove_reexport(iotable), error = TRUE)
 })
 
 test_that("io_table_to_regional() works", {

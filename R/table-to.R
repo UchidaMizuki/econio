@@ -78,6 +78,14 @@ io_table_to_competitive_import <- function(
 
 #' Convert an input-output table to a noncompetitive import type table
 #'
+#' Without `data_import`, the imports of each sector are allocated over its
+#' regional demand (intermediate plus final demand) in proportion to the import
+#' coefficient (see [io_import_coef()]). If the imports of a sector exceed its
+#' regional demand, i.e. its import coefficient is above 1, its domestic
+#' transactions would become negative, so this aborts. This typically happens
+#' when goods are imported and then re-exported; use
+#' [io_table_remove_reexport()] to remove such re-exports first.
+#'
 #' @param data An input-output table.
 #' @param data_import An optional import table. By default, `NULL`.
 #' @param import_sector_name A name for the import sector. By default,
@@ -118,8 +126,15 @@ io_table_to_noncompetitive_import <- function(
         import_total_tolerance = import_total_tolerance
       )
   } else {
+    import_coef <- io_import_coef(data)
+    if (any(import_coef > 1 + .Machine$double.eps^0.5)) {
+      io_abort_import_coef(data)
+    }
+    # Removing re-exports can leave coefficients just above 1 by rounding.
+    import_coef <- dibble::ifelse(import_coef > 1, 1, import_coef)
+
     import <- dibble::broadcast(
-      regional_demand * io_same_region(regional_demand) * io_import_coef(data),
+      regional_demand * io_same_region(regional_demand) * import_coef,
       dim_names = c("input", "output")
     )
   }
@@ -196,6 +211,91 @@ io_table_to_byproduct_transfer <- function(data) {
 
   data |>
     dplyr::rows_update(inter_industry)
+}
+
+#' Remove re-exports from an input-output table
+#'
+#' Treats the imports of each sector that exceed its regional demand
+#' (intermediate plus final demand within the same region) as re-exports, i.e.
+#' goods that are imported and then exported again, and subtracts them from
+#' both the imports and the exports of the sector. The excess is split over the
+#' import columns (e.g. imports and inflows) and the export columns (e.g.
+#' exports and outflows) of the sector in proportion to their values.
+#'
+#' Total output and regional demand stay the same, and the import coefficient
+#' of each such sector (see [io_import_coef()]) becomes 1, so that
+#' [io_table_to_noncompetitive_import()] no longer makes its domestic
+#' transactions negative. Sectors whose imports are within their regional demand
+#' are left unchanged.
+#'
+#' @param data A competitive import type input-output table.
+#'
+#' @return An input-output table with re-exports removed from its imports and
+#' exports.
+#'
+#' @export
+io_table_remove_reexport <- function(data) {
+  if (!inherits(data, "io_table_competitive_import")) {
+    cli::cli_abort(
+      c(
+        "{.arg data} must be a competitive import type input-output table.",
+        "i" = "Re-exports can only be identified when imports are recorded by product."
+      )
+    )
+  }
+
+  excess <- io_import_excess(data)
+  is_excess <- excess$excess > 0
+  if (!any(is_excess)) {
+    return(data)
+  }
+
+  infeasible <- excess |>
+    tibble::as_tibble() |>
+    dplyr::filter(
+      .data$excess - .data$export > .Machine$double.eps^0.5 * .data$excess
+    )
+  if (!vctrs::vec_is_empty(infeasible)) {
+    cli::cli_abort(
+      c(
+        "Re-exports must not exceed exports.",
+        glue::glue(
+          "{io_axis_label(infeasible$input)}: imports exceed regional demand by {signif(infeasible$excess, 4)}, but exports are {signif(infeasible$export, 4)}."
+        ) |>
+          rlang::set_names("x")
+      )
+    )
+  }
+
+  import_scale <- dibble::ifelse(
+    is_excess,
+    excess$regional_demand / excess$import,
+    1
+  )
+  # Rounding can leave the excess slightly above the exports.
+  export_scale <- dibble::ifelse(
+    is_excess,
+    pmax(1 - excess$excess / excess$export, 0),
+    1
+  )
+
+  import <- data |>
+    dplyr::filter(
+      io_sector_type(.data$input) == "industry",
+      io_sector_type(.data$output) == "import"
+    )
+  export <- data |>
+    dplyr::filter(
+      io_sector_type(.data$input) == "industry",
+      io_sector_type(.data$output) == "export"
+    )
+  data |>
+    dplyr::rows_update(
+      dibble::broadcast(import * import_scale, dim_names = c("input", "output"))
+    ) |>
+    dplyr::rows_update(
+      dibble::broadcast(export * export_scale, dim_names = c("input", "output"))
+    )
 }
 
 io_table_to_blocks <- function(data) {
@@ -446,4 +546,43 @@ io_check_import_totals <- function(
     )
   }
   data_import
+}
+
+# Imports, regional demand, the excess of imports over regional demand, and
+# exports by industry of a competitive import type table, where regional demand
+# is the intermediate and final demand within the same region.
+io_import_excess <- function(data) {
+  import <- -io_total_output(data, output_sector_type = "import")
+  regional_demand <- io_total_output(
+    data,
+    output_sector_type = c("industry", "final_demand"),
+    same_region = TRUE
+  )
+  dibble::dibble(
+    import = import,
+    regional_demand = regional_demand,
+    excess = import - regional_demand,
+    export = io_total_output(data, output_sector_type = "export")
+  )
+}
+
+io_abort_import_coef <- function(data, call = rlang::caller_env()) {
+  excess <- io_import_excess(data) |>
+    tibble::as_tibble() |>
+    dplyr::filter(
+      .data$excess > .Machine$double.eps^0.5 * .data$regional_demand
+    )
+
+  cli::cli_abort(
+    c(
+      "Imports must not exceed regional demand (intermediate plus final demand), or domestic transactions become negative.",
+      glue::glue(
+        "{io_axis_label(excess$input)}: imports of {signif(excess$import, 4)} exceed regional demand of {signif(excess$regional_demand, 4)} (import coefficient {signif(excess$import / excess$regional_demand, 4)})."
+      ) |>
+        rlang::set_names("x"),
+      "i" = "Imports beyond regional demand are typically re-exports.",
+      "i" = "Use {.fn io_table_remove_reexport} to remove them from both imports and exports first."
+    ),
+    call = call
+  )
 }

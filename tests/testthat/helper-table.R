@@ -128,3 +128,39 @@ get_data_import_uniform <- function(import) {
     dim_names = c("input", "output")
   )
 }
+
+# A regional competitive import type table whose `industry_1` imports 40, more
+# than its regional demand of 35, e.g. because of re-exports. Its export and
+# import columns can be changed while keeping total output at 35.
+get_iotable_reexport <- function(
+  export_1 = c(export = 30, outflow = 10),
+  import_1 = c(import = -30, inflow = -10)
+) {
+  output <- tibble::tribble(
+    ~output_sector_type , ~output_sector_name ,
+    "industry"          , "industry_1"        ,
+    "industry"          , "industry_2"        ,
+    "final_demand"      , "final_demand_1"    ,
+    "export"            , "export"            ,
+    "export"            , "outflow"           ,
+    "import"            , "import"            ,
+    "import"            , "inflow"
+  )
+  value <- list(
+    industry_1 = c(10, 5, 20, export_1, import_1),
+    industry_2 = c(4, 6, 30, 5, 5, -10, -5),
+    value_added_1 = c(21, 24, 0, 0, 0, 0, 0)
+  )
+  value |>
+    purrr::imap(\(value, input_sector_name) {
+      output |>
+        dplyr::mutate(
+          input_sector_type = sub("_[0-9]+$", "", input_sector_name),
+          input_sector_name = input_sector_name,
+          value = unname(value),
+          .before = 1
+        )
+    }) |>
+    purrr::list_rbind() |>
+    io_table_regional(import_type = "competitive_import")
+}
