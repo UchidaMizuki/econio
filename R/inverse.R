@@ -42,40 +42,79 @@ io_ghosh_inverse <- function(data, open_economy = NULL) {
   )
 }
 
-io_production_induce <- function(data, open_economy = NULL) {
+#' Induced production
+#'
+#' Computes the production of each industry induced, directly and indirectly
+#' through the Leontief inverse, by each type of final demand. With `L` the
+#' Leontief inverse, `f` final demand and `e` exports:
+#'
+#' * For noncompetitive import type tables: `final_demand = L f` and
+#'   `export = L e`.
+#' * For competitive import type tables with `open_economy = TRUE`:
+#'   `final_demand = L (f - M f_r)` and `export = L e`, where `M` is the import
+#'   coefficient (see [io_import_coef()]) and `f_r` the final demand of the
+#'   same region.
+#' * For competitive import type tables with `open_economy = FALSE`:
+#'   `final_demand = L f`, `export = L e` and `import = L m`, where `m` is the
+#'   imports as positive values, i.e. the production that imports replace.
+#'
+#' In all cases, `final_demand + export - import` (with `import` only when
+#' present) equals the total input of each industry ([io_total_input()]).
+#'
+#' @param data An `econ_io_table` object.
+#' @param open_economy A scalar logical passed to [io_leontief_inverse()]. If
+#'   `TRUE`, open economy assumptions are used.
+#'
+#' @return A `dibble` over the `output` industries with the columns
+#'   `final_demand`, `export` and, for competitive import type tables with
+#'   `open_economy = FALSE`, `import`.
+#'
+#' @seealso [io_leontief_inverse()] for the underlying inverse matrix.
+#'
+#' @examples
+#' \dontrun{
+#' # `iotable` is a competitive import type `econ_io_table`.
+#' io_induced_production(iotable, open_economy = FALSE)
+#' }
+#'
+#' @export
+io_induced_production <- function(data, open_economy = NULL) {
+  if (!inherits(data, "econ_io_table")) {
+    cli::cli_abort(
+      "{.arg data} must be an {.cls econ_io_table} object, not {.obj_type_friendly {data}}."
+    )
+  }
   open_economy <- io_open_economy(data, open_economy)
 
   leontief_inverse <- io_leontief_inverse(
     data,
     open_economy = open_economy
   )
-  total_final_demand <- io_total_output(
-    data,
-    output_sector_type = "final_demand"
-  )
-  total_export <- io_total_output(data, output_sector_type = "export")
+  final_demand <- io_total_output(data, output_sector_type = "final_demand")
+  export <- io_total_output(data, output_sector_type = "export")
 
-  if (inherits(data, "io_table_noncompetitive_import")) {
-    dibble::dibble(
-      total_final_demand = leontief_inverse %*% total_final_demand,
-      total_export = leontief_inverse %*% total_export
+  if (inherits(data, "io_table_competitive_import") && open_economy) {
+    final_demand_same_region <- io_total_output(
+      data,
+      output_sector_type = "final_demand",
+      same_region = TRUE
     )
-  } else if (inherits(data, "io_table_competitive_import")) {
-    if (open_economy) {
-      import_coef <- io_import_coef(data)
-      dibble::dibble(
-        total_final_demand = leontief_inverse %*%
-          ((1 - import_coef) * total_final_demand),
-        total_export = leontief_inverse %*% total_export
-      )
-    } else {
-      total_import <- -io_total_output(data, output_sector_type = "import")
-      dibble::dibble(
-        total_final_demand = leontief_inverse %*% total_final_demand,
-        total_export = leontief_inverse %*% total_export,
-        total_import = leontief_inverse %*% total_import
-      )
-    }
+    final_demand <- final_demand -
+      io_import_coef(data) * final_demand_same_region
+  }
+
+  if (inherits(data, "io_table_competitive_import") && !open_economy) {
+    import <- -io_total_output(data, output_sector_type = "import")
+    dibble::dibble(
+      final_demand = leontief_inverse %*% final_demand,
+      export = leontief_inverse %*% export,
+      import = leontief_inverse %*% import
+    )
+  } else {
+    dibble::dibble(
+      final_demand = leontief_inverse %*% final_demand,
+      export = leontief_inverse %*% export
+    )
   }
 }
 
@@ -86,10 +125,10 @@ io_self_sufficiency_rate <- function(data, summary = FALSE) {
     )
   }
 
-  production_induce <- io_production_induce(data, open_economy = FALSE)
-  total_final_demand <- production_induce$total_final_demand
-  total_export <- production_induce$total_export
-  total_import <- production_induce$total_import
+  induced_production <- io_induced_production(data, open_economy = FALSE)
+  total_final_demand <- induced_production$final_demand
+  total_export <- induced_production$export
+  total_import <- induced_production$import
 
   if (summary) {
     safe_divide(

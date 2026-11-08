@@ -7,18 +7,18 @@ io_tidy_skyline <- function(x, ...) {
     )
   }
 
-  io_production_induce(x, open_economy = FALSE) |>
+  io_induced_production(x, open_economy = FALSE) |>
     tibble::as_tibble() |>
     tidyr::unpack("output") |>
     dplyr::mutate(
-      total = .data$total_final_demand +
-        .data$total_export -
-        .data$total_import,
+      total = .data$final_demand +
+        .data$export -
+        .data$import,
       xmin = cumsum(.data$total) - .data$total,
       xmax = .data$xmin + .data$total,
 
-      rate_self_sufficiency_rate = .data$total / .data$total_final_demand,
-      rate_import_rate = .data$total_import / .data$total_final_demand,
+      rate_self_sufficiency_rate = .data$total / .data$final_demand,
+      rate_import_rate = .data$import / .data$final_demand,
 
       ymin_self_sufficiency_rate = 0,
       ymin_import_rate = .data$rate_self_sufficiency_rate,

@@ -5,6 +5,7 @@
 * `io_check_axes()`, `io_check_totals()`, `io_table_to_competitive_import()`, and `io_table_to_noncompetitive_import()` now label mismatched sectors of multi-regional tables with their region (e.g. `region_1/industry_1`) in error messages.
 * `io_check_totals()` now validates `total_tolerance` with a clearer error message.
 * `io_downstreamness()` returns the column sums of the Leontief inverse, i.e. the output multiplier (backward linkage), with a `normalize` option to obtain the power of dispersion.
+* `io_induced_production()` returns the production of each industry induced by final demand and exports (and, for competitive import type tables with `open_economy = FALSE`, by imports) through the Leontief inverse; together they add up to total input, including in multi-regional competitive import type tables with `open_economy = TRUE`.
 * `io_input_coef()`, `io_output_coef()`, `io_leontief_inverse()`, and `io_ghosh_inverse()` now report invalid `open_economy` values against the calling function with a clearer error message.
 * `io_reclass()` now validates `from_col`, `to_col`, `weight_col`, `weight_tolerance`, and `check_axes`.
 * `io_spectral_embedding()` is now marked as experimental.
