@@ -43,7 +43,7 @@
     Code
       out <- io_table_to_noncompetitive_import(iotable)
     Condition
-      Warning in `io_table_to_noncompetitive_import()`:
+      Warning:
       Some import coefficients are above 1 or negative, so some domestic transactions are negative.
       x industry_1: import coefficient 1.143 (imports 40, regional demand 35).
       i Import coefficients above 1 often come from re-exports.
@@ -54,7 +54,7 @@
     Code
       out <- io_table_to_noncompetitive_import(iotable)
     Condition
-      Warning in `io_table_to_noncompetitive_import()`:
+      Warning:
       Some import coefficients are above 1 or negative, so some domestic transactions are negative.
       x industry_1: import coefficient -4 (imports 20, regional demand -5).
       i Negative regional demand often comes from byproducts recorded as negative inputs (the Stone method) in final demand.

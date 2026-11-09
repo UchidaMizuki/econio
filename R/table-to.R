@@ -483,8 +483,7 @@ io_check_import_excess <- function(data, call = rlang::caller_env()) {
         rlang::set_names("x"),
       info_reexport,
       info_negative
-    ),
-    call = call
+    )
   )
   invisible(data)
 }

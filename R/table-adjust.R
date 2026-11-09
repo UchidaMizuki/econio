@@ -93,8 +93,7 @@ io_table_remove_reexport <- function(data) {
           rlang::set_names("x"),
         "i" = "Only up to the exports are removed as re-exports.",
         "i" = "This happens when output is negative, or when re-exports go to other regions within a multiregional table."
-      ),
-      call = rlang::current_env()
+      )
     )
   }
 
