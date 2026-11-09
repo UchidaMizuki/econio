@@ -1,12 +1,13 @@
-# io_table_remove_reexport() errors when re-exports exceed exports
+# io_table_remove_reexport() warns and removes up to the exports when the excess exceeds them
 
     Code
-      io_table_remove_reexport(iotable)
+      actual <- io_table_remove_reexport(iotable)
     Condition
-      Error in `io_table_remove_reexport()`:
-      ! Re-exports must not exceed exports.
-      x industry_1: imports exceed regional demand by 5, but exports are 2.
-      i This happens when output is negative, or when re-exports go to other regions, which can't be removed without changing their demand.
+      Warning in `io_table_remove_reexport()`:
+      Imports exceed regional demand by more than exports, so some import coefficients stay above 1.
+      x industry_1: excess 5, exports 2.
+      i Only up to the exports are removed as re-exports.
+      i This happens when output is negative, or when re-exports go to other regions within a multiregional table.
 
 # io_table_remove_reexport() errors for noncompetitive import type tables
 

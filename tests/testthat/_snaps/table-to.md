@@ -38,7 +38,7 @@
       x region_3/industry_2: 42 (`actual`) not nearly equal to 21 (`expected`).
       x region_3/industry_3: 72 (`actual`) not nearly equal to 36 (`expected`).
 
-# io_table_to_noncompetitive_import() warns but converts when import coefficients are above 1 or negative
+# io_table_to_noncompetitive_import() warns but converts when import coefficients are above 1
 
     Code
       out <- io_table_to_noncompetitive_import(iotable)
@@ -49,7 +49,7 @@
       i Import coefficients above 1 often come from re-exports.
       i Use `io_table_remove_reexport()` to remove them first.
 
----
+# io_table_to_noncompetitive_import() warns but converts when import coefficients are negative
 
     Code
       out <- io_table_to_noncompetitive_import(iotable)
