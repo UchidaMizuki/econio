@@ -180,8 +180,38 @@ test_that("io_table_to_noncompetitive_import() uses data_import", {
   }
 })
 
-test_that("io_table_to_noncompetitive_import() errors when imports exceed regional demand", {
+test_that("io_table_to_noncompetitive_import() warns but converts when import coefficients are above 1", {
   iotable <- get_iotable_reexport()
+  expect_snapshot(out <- io_table_to_noncompetitive_import(iotable))
+
+  # The import coefficient of industry_1 is 40 / 35.
+  domestic <- get_data_regional_demand(out) |> as.matrix()
+  expect_equal(domestic[1, ], c(10, 5, 20) * (1 - 40 / 35), ignore_attr = TRUE)
+  expect_equal(
+    as.vector(io_total_output(out)),
+    as.vector(io_total_output(iotable))
+  )
+})
+
+test_that("io_table_to_noncompetitive_import() warns but converts when import coefficients are negative", {
+  iotable <- get_iotable_negative_demand()
+  expect_snapshot(out <- io_table_to_noncompetitive_import(iotable))
+
+  # The import coefficient of industry_1 is 20 / -5.
+  domestic <- get_data_regional_demand(out) |> as.matrix()
+  expect_equal(domestic[1, ], c(10, 5, -20) * (1 + 4), ignore_attr = TRUE)
+  expect_equal(
+    as.vector(io_total_output(out)),
+    as.vector(io_total_output(iotable))
+  )
+})
+
+test_that("io_table_to_noncompetitive_import() errors when imports have zero regional demand", {
+  iotable <- get_iotable_reexport(
+    export_1 = c(export = 45, outflow = 15),
+    import_1 = c(import = -20, inflow = -5),
+    final_demand_1 = -15
+  )
   expect_snapshot(io_table_to_noncompetitive_import(iotable), error = TRUE)
 })
 

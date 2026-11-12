@@ -26,11 +26,17 @@ By default, \code{.Machine$double.eps^0.5}.}
 A noncompetitive import type input-output table.
 }
 \description{
-Without \code{data_import}, the imports of each sector are allocated over its
-regional demand (intermediate plus final demand) in proportion to the import
-coefficient (see \code{\link[=io_import_coef]{io_import_coef()}}). If the imports of a sector exceed its
-regional demand, i.e. its import coefficient is above 1, its domestic
-transactions would become negative, so this aborts. This typically happens
-when goods are imported and then re-exported; use
-\code{\link[=io_table_remove_reexport]{io_table_remove_reexport()}} to remove such re-exports first.
+Without \code{data_import}, the imports of each sector are split over its
+intermediate and final demand by its import coefficient (see
+\code{\link[=io_import_coef]{io_import_coef()}}), i.e. imports divided by regional demand (intermediate
+plus final demand within the same region).
+}
+\details{
+If an import coefficient is above 1 or negative, some domestic transactions
+become negative. This warns but still converts the table, so that it can be
+used for impact analysis as is. Import coefficients above 1 often come from
+re-exports, which \code{\link[=io_table_remove_reexport]{io_table_remove_reexport()}} removes. Negative ones often
+come from byproducts recorded as negative inputs (the Stone method) in final
+demand. If a sector has imports but zero regional demand, its import
+coefficient can't be computed, so this aborts; supply \code{data_import} instead.
 }

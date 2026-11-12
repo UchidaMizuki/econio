@@ -60,6 +60,11 @@ test_that("io_table_remove_reexport() returns data unchanged without re-exports"
   }
 })
 
+test_that("io_table_remove_reexport() leaves sectors with negative regional demand unchanged", {
+  iotable <- get_iotable_negative_demand()
+  expect_identical(io_table_remove_reexport(iotable), iotable)
+})
+
 test_that("io_table_remove_reexport() removes all exports when re-exports equal exports", {
   iotable <- get_iotable_reexport(export_1 = c(export = 3.75, outflow = 1.25))
   export <- io_table_remove_reexport(iotable) |>
@@ -67,9 +72,16 @@ test_that("io_table_remove_reexport() removes all exports when re-exports equal 
   expect_equal(as.vector(export)[[1]], 0)
 })
 
-test_that("io_table_remove_reexport() errors when re-exports exceed exports", {
+test_that("io_table_remove_reexport() warns and removes up to the exports when the excess exceeds them", {
   iotable <- get_iotable_reexport(export_1 = c(export = 1, outflow = 1))
-  expect_snapshot(io_table_remove_reexport(iotable), error = TRUE)
+  expect_snapshot(actual <- io_table_remove_reexport(iotable))
+
+  # Only 2 of the excess of 5 is removed, split 3:1 over the import columns.
+  expected <- get_iotable_reexport(
+    export_1 = c(export = 0, outflow = 0),
+    import_1 = c(import = -28.5, inflow = -9.5)
+  )
+  expect_equal(actual, expected)
 })
 
 test_that("io_table_remove_reexport() errors for noncompetitive import type tables", {

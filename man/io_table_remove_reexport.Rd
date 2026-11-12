@@ -25,6 +25,13 @@ exports and outflows) of the sector in proportion to their values.
 Total output and regional demand stay the same, and the import coefficient
 of each such sector (see \code{\link[=io_import_coef]{io_import_coef()}}) becomes 1, so that
 \code{\link[=io_table_to_noncompetitive_import]{io_table_to_noncompetitive_import()}} no longer makes its domestic
-transactions negative. Sectors whose imports are within their regional demand
-are left unchanged.
+transactions negative. Re-exports can't exceed exports: if the excess is
+larger than the exports of a sector, this removes all of its exports, warns,
+and leaves its import coefficient above 1.
+
+Sectors whose imports are within their regional demand are left unchanged,
+and so are sectors whose regional demand is not positive. The Stone method
+lowers regional demand by recording byproducts as negative inputs, which
+overstates the excess, so convert such byproducts with
+\code{\link[=io_table_transfer_byproduct]{io_table_transfer_byproduct()}} first.
 }

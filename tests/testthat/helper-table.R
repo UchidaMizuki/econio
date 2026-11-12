@@ -134,7 +134,8 @@ get_data_import_uniform <- function(import) {
 # import columns can be changed while keeping total output at 35.
 get_iotable_reexport <- function(
   export_1 = c(export = 30, outflow = 10),
-  import_1 = c(import = -30, inflow = -10)
+  import_1 = c(import = -30, inflow = -10),
+  final_demand_1 = 20
 ) {
   output <- tibble::tribble(
     ~output_sector_type , ~output_sector_name ,
@@ -147,7 +148,7 @@ get_iotable_reexport <- function(
     "import"            , "inflow"
   )
   value <- list(
-    industry_1 = c(10, 5, 20, export_1, import_1),
+    industry_1 = c(10, 5, final_demand_1, export_1, import_1),
     industry_2 = c(4, 6, 30, 5, 5, -10, -5),
     value_added_1 = c(21, 24, 0, 0, 0, 0, 0)
   )
@@ -163,4 +164,13 @@ get_iotable_reexport <- function(
     }) |>
     purrr::list_rbind() |>
     io_table_regional(import_type = "competitive_import")
+}
+
+# industry_1 has imports of 20 but regional demand of -5.
+get_iotable_negative_demand <- function() {
+  get_iotable_reexport(
+    export_1 = c(export = 45, outflow = 15),
+    import_1 = c(import = -15, inflow = -5),
+    final_demand_1 = -20
+  )
 }
