@@ -50,8 +50,15 @@ io_table_transfer_byproduct <- function(data) {
 #' Total output and regional demand stay the same, and the import coefficient
 #' of each such sector (see [io_import_coef()]) becomes 1, so that
 #' [io_table_to_noncompetitive_import()] no longer makes its domestic
-#' transactions negative. Sectors whose imports are within their regional demand
-#' are left unchanged.
+#' transactions negative. Re-exports can't exceed exports: if the excess is
+#' larger than the exports of a sector, this removes all of its exports, warns,
+#' and leaves its import coefficient above 1.
+#'
+#' Sectors whose imports are within their regional demand are left unchanged,
+#' and so are sectors whose regional demand is not positive. The Stone method
+#' lowers regional demand by recording byproducts as negative inputs, which
+#' overstates the excess, so convert such byproducts with
+#' [io_table_transfer_byproduct()] first.
 #'
 #' @param data A competitive import type input-output table.
 #'
@@ -70,38 +77,40 @@ io_table_remove_reexport <- function(data) {
   }
 
   excess <- io_import_excess(data)
-  is_excess <- excess$excess > 0
+  # Re-exports can't be identified without positive regional demand.
+  is_excess <- excess$excess > 0 & excess$regional_demand > 0
   if (!any(is_excess)) {
     return(data)
   }
 
-  infeasible <- excess |>
+  over_export <- excess |>
     tibble::as_tibble() |>
-    dplyr::filter(exceeds(.data$excess, .data$export))
-  if (!vctrs::vec_is_empty(infeasible)) {
-    cli::cli_abort(
+    dplyr::filter(
+      .data$regional_demand > 0,
+      exceeds(.data$excess, .data$export)
+    )
+  if (!vctrs::vec_is_empty(over_export)) {
+    cli::cli_warn(
       c(
-        "Re-exports must not exceed exports.",
+        "Imports exceed regional demand by more than exports, so some import coefficients stay above 1.",
         glue::glue(
-          "{io_axis_label(infeasible$input)}: imports exceed regional demand by {signif(infeasible$excess, 4)}, but exports are {signif(infeasible$export, 4)}."
+          "{io_axis_label(over_export$input)}: excess {signif(over_export$excess, 4)}, exports {signif(over_export$export, 4)}."
         ) |>
           rlang::set_names("x"),
-        "i" = "This happens when output is negative, or when re-exports go to other regions, which can't be removed without changing their demand."
+        "i" = "Only up to the exports are removed as re-exports.",
+        "i" = "This happens when output is negative, or when re-exports go to other regions within a multiregional table."
       )
     )
   }
 
-  import_scale <- dibble::ifelse(
+  reexport <- dibble::ifelse(
     is_excess,
-    excess$regional_demand / excess$import,
-    1
+    pmax(pmin(excess$excess, excess$export), 0),
+    0
   )
-  # Rounding can leave the excess slightly above the exports.
-  export_scale <- dibble::ifelse(
-    is_excess,
-    pmax(1 - excess$excess / excess$export, 0),
-    1
-  )
+  import_scale <- 1 - safe_divide(reexport, excess$import)
+  # Rounding can leave the re-exports slightly above the exports.
+  export_scale <- pmax(1 - safe_divide(reexport, excess$export), 0)
 
   import <- data |>
     dplyr::filter(
