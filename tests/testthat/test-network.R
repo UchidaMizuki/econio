@@ -1,17 +1,21 @@
-test_that("io_network() informs only when converting implicitly", {
-  iotable_noncompetitive <- read_iotable_dummy("regional_noncompetitive_import")
-  expect_snapshot(network <- io_network(iotable_noncompetitive))
-
-  iotable_competitive <- read_iotable_dummy("regional_competitive_import")
-  expect_snapshot(network <- io_network(iotable_competitive))
+test_that("io_network() converts competitive import type tables silently", {
+  iotable <- read_iotable_dummy("regional_competitive_import")
+  expect_no_message(io_network(iotable))
 })
 
 test_that("io_network() aborts on negative transactions", {
   iotable <- read_iotable_dummy("regional_noncompetitive_import")
   iotable_negative <- iotable
   iotable_negative[1, 1] <- -99
-
   expect_snapshot(io_network(iotable_negative), error = TRUE)
+
+  iotable_negative[1:3, 1:3] <- -1
+  expect_snapshot(io_network(iotable_negative), error = TRUE)
+})
+
+test_that("io_network() aborts on negatives from the import split", {
+  iotable <- get_iotable_reexport()
+  expect_snapshot(io_network(iotable), error = TRUE)
 })
 
 test_that("io_network(paths = \"all\") gives all-path weights and average propagation lengths", {

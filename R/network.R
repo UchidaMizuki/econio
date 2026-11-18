@@ -5,27 +5,15 @@ io_network <- function(
 ) {
   paths <- rlang::arg_match(paths, error_call = call)
 
-  if (!inherits(data, "io_table_noncompetitive_import")) {
-    cli::cli_inform(
-      "Converting to a noncompetitive import type table with {.fn io_table_to_noncompetitive_import}."
-    )
-  }
+  original <- io_inter_industry(data)
   data <- io_table_to_noncompetitive_import(data) |>
     io_check_axes()
   inter_industry <- io_inter_industry(data)
   dim_name <- dimnames(inter_industry)$input
   weight <- as.matrix(inter_industry)
 
-  n_negative <- sum(weight < 0)
-  if (n_negative > 0) {
-    cli::cli_abort(
-      c(
-        "Found {n_negative} negative domestic intermediate transaction{?s}.",
-        "i" = "For negatives from byproduct treatment such as the Stone method, use {.fn io_table_transfer_byproduct} to convert them to the transfer method before building the industry network.",
-        "i" = "For negatives from imports that exceed regional demand (an import coefficient above 1), e.g. re-exports, use {.fn io_table_remove_reexport} before converting to a noncompetitive import type table."
-      ),
-      call = call
-    )
+  if (any(weight < 0)) {
+    io_abort_negative_transaction(inter_industry, original, call = call)
   }
 
   switch(
@@ -97,6 +85,48 @@ io_network_weight <- function(weight, path_length, dim_name) {
     dim_name = dim_name,
     total_weight = total_weight,
     laplacian = laplacian
+  )
+}
+
+# `domestic` and `original` are the inter-industry blocks after and before the
+# conversion to noncompetitive import type.
+io_abort_negative_transaction <- function(
+  domestic,
+  original,
+  call = rlang::caller_env()
+) {
+  negative <- dibble::dibble(domestic = domestic, original = original) |>
+    tibble::as_tibble() |>
+    dplyr::filter(.data$domestic < 0) |>
+    dplyr::arrange(.data$domestic)
+  n_negative <- nrow(negative)
+  n_original <- sum(negative$original < 0)
+  n_shown <- min(n_negative, 5)
+  shown <- negative[seq_len(n_shown), ]
+
+  cli::cli_abort(
+    c(
+      "Can't build the industry network from negative domestic intermediate transactions.",
+      glue::glue(
+        "{io_axis_label(shown$input)} to {io_axis_label(shown$output)}: {format_number(shown$domestic)}."
+      ) |>
+        rlang::set_names("x"),
+      if (n_negative > n_shown) {
+        c("x" = "... and {n_negative - n_shown} more.")
+      },
+      if (n_original > 0) {
+        c(
+          "i" = "{n_original} {?is/are} already negative in {.arg data}, e.g. byproducts recorded as negative inputs (the Stone method).",
+          "i" = "{.fn io_table_transfer_byproduct} moves negative intermediate transactions to the reverse-direction cell."
+        )
+      },
+      if (n_original < n_negative) {
+        c(
+          "i" = "{n_negative - n_original} became negative when {.fn io_table_to_noncompetitive_import} split imports by import coefficients above 1."
+        )
+      }
+    ),
+    call = call
   )
 }
 
