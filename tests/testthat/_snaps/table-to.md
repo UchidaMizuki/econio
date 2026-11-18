@@ -46,8 +46,6 @@
       Warning:
       Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.
       * industry_1: import coefficient 1.142857 (imports 40, regional demand 35).
-      i Import coefficients above 1 often come from re-exports.
-      i Use `io_table_remove_reexport()` to remove them first.
 
 # io_table_to_noncompetitive_import() shows import coefficients just above 1 with enough digits
 
@@ -57,8 +55,6 @@
       Warning:
       Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.
       * industry_1: import coefficient 1.00001 (imports 35.00035, regional demand 35).
-      i Import coefficients above 1 often come from re-exports.
-      i Use `io_table_remove_reexport()` to remove them first.
 
 # io_table_to_noncompetitive_import() warns but converts when import coefficients are negative
 
@@ -68,8 +64,6 @@
       Warning:
       Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.
       * industry_1: import coefficient -4 (imports 20, regional demand -5).
-      i Negative regional demand often comes from byproducts recorded as negative inputs (the Stone method) in final demand.
-      i Supply an import table with `data_import` to avoid this.
 
 # io_table_to_noncompetitive_import() warns when both imports and regional demand are negative
 
@@ -79,8 +73,6 @@
       Warning:
       Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.
       * industry_1: import coefficient 1.2 (imports -6, regional demand -5).
-      i Negative regional demand often comes from byproducts recorded as negative inputs (the Stone method) in final demand.
-      i Supply an import table with `data_import` to avoid this.
 
 # io_table_to_noncompetitive_import() errors when imports have zero regional demand
 
