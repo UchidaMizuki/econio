@@ -193,6 +193,14 @@ test_that("io_table_to_noncompetitive_import() warns but converts when import co
   )
 })
 
+test_that("io_table_to_noncompetitive_import() shows import coefficients just above 1 with enough digits", {
+  iotable <- get_iotable_reexport(
+    export_1 = c(export = 25.00035, outflow = 10),
+    import_1 = c(import = -25.00035, inflow = -10)
+  )
+  expect_snapshot(out <- io_table_to_noncompetitive_import(iotable))
+})
+
 test_that("io_table_to_noncompetitive_import() warns but converts when import coefficients are negative", {
   iotable <- get_iotable_negative_demand()
   expect_snapshot(out <- io_table_to_noncompetitive_import(iotable))

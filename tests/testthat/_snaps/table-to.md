@@ -45,7 +45,18 @@
     Condition
       Warning:
       Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.
-      x industry_1: import coefficient 1.143 (imports 40, regional demand 35).
+      x industry_1: import coefficient 1.142857 (imports 40, regional demand 35).
+      i Import coefficients above 1 often come from re-exports.
+      i Use `io_table_remove_reexport()` to remove them first.
+
+# io_table_to_noncompetitive_import() shows import coefficients just above 1 with enough digits
+
+    Code
+      out <- io_table_to_noncompetitive_import(iotable)
+    Condition
+      Warning:
+      Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.
+      x industry_1: import coefficient 1.00001 (imports 35.00035, regional demand 35).
       i Import coefficients above 1 often come from re-exports.
       i Use `io_table_remove_reexport()` to remove them first.
 

@@ -448,7 +448,7 @@ io_check_import_coef <- function(data, call = rlang::caller_env()) {
       c(
         "Can't compute import coefficients for sectors with imports but zero regional demand.",
         glue::glue(
-          "{io_axis_label(zero$input)}: imports {signif(zero$import, 4)}."
+          "{io_axis_label(zero$input)}: imports {format_number(zero$import)}."
         ) |>
           rlang::set_names("x"),
         "i" = "Supply an import table with {.arg data_import}."
@@ -483,7 +483,7 @@ io_check_import_coef <- function(data, call = rlang::caller_env()) {
     c(
       "Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.",
       glue::glue(
-        "{io_axis_label(invalid$input)}: import coefficient {signif(invalid$import_coef, 4)} (imports {signif(invalid$import, 4)}, regional demand {signif(invalid$regional_demand, 4)})."
+        "{io_axis_label(invalid$input)}: import coefficient {format_import_coef(invalid$import_coef)} (imports {format_number(invalid$import)}, regional demand {format_number(invalid$regional_demand)})."
       ) |>
         rlang::set_names("x"),
       info_reexport,
