@@ -96,7 +96,7 @@ io_table_remove_reexport <- function(data) {
         glue::glue(
           "{io_axis_label(over_export$input)}: excess {format_number(over_export$excess)}, exports {format_number(over_export$export)}."
         ) |>
-          rlang::set_names("x"),
+          rlang::set_names("*"),
         "i" = "Only up to the exports are removed as re-exports.",
         "i" = "This happens when output is negative, or when re-exports go to other regions within a multiregional table."
       )

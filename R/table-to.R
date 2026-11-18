@@ -485,7 +485,7 @@ io_check_import_coef <- function(data, call = rlang::caller_env()) {
       glue::glue(
         "{io_axis_label(invalid$input)}: import coefficient {format_import_coef(invalid$import_coef)} (imports {format_number(invalid$import)}, regional demand {format_number(invalid$regional_demand)})."
       ) |>
-        rlang::set_names("x"),
+        rlang::set_names("*"),
       info_reexport,
       info_negative
     )

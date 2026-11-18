@@ -45,7 +45,7 @@
     Condition
       Warning:
       Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.
-      x industry_1: import coefficient 1.142857 (imports 40, regional demand 35).
+      * industry_1: import coefficient 1.142857 (imports 40, regional demand 35).
       i Import coefficients above 1 often come from re-exports.
       i Use `io_table_remove_reexport()` to remove them first.
 
@@ -56,7 +56,7 @@
     Condition
       Warning:
       Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.
-      x industry_1: import coefficient 1.00001 (imports 35.00035, regional demand 35).
+      * industry_1: import coefficient 1.00001 (imports 35.00035, regional demand 35).
       i Import coefficients above 1 often come from re-exports.
       i Use `io_table_remove_reexport()` to remove them first.
 
@@ -67,7 +67,7 @@
     Condition
       Warning:
       Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.
-      x industry_1: import coefficient -4 (imports 20, regional demand -5).
+      * industry_1: import coefficient -4 (imports 20, regional demand -5).
       i Negative regional demand often comes from byproducts recorded as negative inputs (the Stone method) in final demand.
       i Supply an import table with `data_import` to avoid this.
 
@@ -78,7 +78,7 @@
     Condition
       Warning:
       Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.
-      x industry_1: import coefficient 1.2 (imports -6, regional demand -5).
+      * industry_1: import coefficient 1.2 (imports -6, regional demand -5).
       i Negative regional demand often comes from byproducts recorded as negative inputs (the Stone method) in final demand.
       i Supply an import table with `data_import` to avoid this.
 
