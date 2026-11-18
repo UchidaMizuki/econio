@@ -206,6 +206,19 @@ test_that("io_table_to_noncompetitive_import() warns but converts when import co
   )
 })
 
+test_that("io_table_to_noncompetitive_import() warns when both imports and regional demand are negative", {
+  iotable <- get_iotable_reexport(
+    export_1 = c(export = 24, outflow = 10),
+    import_1 = c(import = 4.5, inflow = 1.5),
+    final_demand_1 = -20
+  )
+  expect_snapshot(out <- io_table_to_noncompetitive_import(iotable))
+
+  # The import coefficient of industry_1 is -6 / -5.
+  domestic <- get_data_regional_demand(out) |> as.matrix()
+  expect_equal(domestic[1, ], c(10, 5, -20) * (1 - 6 / 5), ignore_attr = TRUE)
+})
+
 test_that("io_table_to_noncompetitive_import() errors when imports have zero regional demand", {
   iotable <- get_iotable_reexport(
     export_1 = c(export = 45, outflow = 15),

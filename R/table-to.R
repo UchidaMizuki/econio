@@ -83,12 +83,13 @@ io_table_to_competitive_import <- function(
 #' [io_import_coef()]), i.e. imports divided by regional demand (intermediate
 #' plus final demand within the same region).
 #'
-#' If an import coefficient is above 1 or negative, some domestic transactions
-#' become negative. This warns but still converts the table, so that it can be
-#' used for impact analysis as is. Import coefficients above 1 often come from
-#' re-exports, which [io_table_remove_reexport()] removes. Negative ones often
-#' come from byproducts recorded as negative inputs (the Stone method) in final
-#' demand. If a sector has imports but zero regional demand, its import
+#' If an import coefficient is above 1 or negative, some domestic or imported
+#' transactions become negative. This warns but still converts the table, so
+#' that it can be used for impact analysis as is. Import coefficients above 1
+#' often come from re-exports, which [io_table_remove_reexport()] removes.
+#' Negative regional demand, which makes import coefficients negative or above
+#' 1, often comes from byproducts recorded as negative inputs (the Stone method)
+#' in final demand. If a sector has imports but zero regional demand, its import
 #' coefficient can't be computed, so this aborts; supply `data_import` instead.
 #'
 #' @param data An input-output table.
@@ -131,7 +132,7 @@ io_table_to_noncompetitive_import <- function(
         import_total_tolerance = import_total_tolerance
       )
   } else {
-    io_check_import_excess(data)
+    io_check_import_coef(data)
     import_coef <- io_import_coef(data)
     # Removing re-exports can leave coefficients just above 1 by rounding.
     import_coef <- dibble::ifelse(
@@ -436,17 +437,13 @@ io_check_import_totals <- function(
   data_import
 }
 
-io_check_import_excess <- function(data, call = rlang::caller_env()) {
+io_check_import_coef <- function(data, call = rlang::caller_env()) {
   excess <- io_import_excess(data) |>
-    tibble::as_tibble() |>
-    dplyr::filter(exceeds(.data$import, pmax(.data$regional_demand, 0)))
-  if (vctrs::vec_is_empty(excess)) {
-    return(invisible(data))
-  }
+    tibble::as_tibble()
 
-  is_zero <- excess$regional_demand == 0
-  if (any(is_zero)) {
-    zero <- excess[is_zero, ]
+  zero <- excess |>
+    dplyr::filter(.data$regional_demand == 0, .data$import != 0)
+  if (!vctrs::vec_is_empty(zero)) {
     cli::cli_abort(
       c(
         "Can't compute import coefficients for sectors with imports but zero regional demand.",
@@ -460,8 +457,16 @@ io_check_import_excess <- function(data, call = rlang::caller_env()) {
     )
   }
 
-  is_negative <- excess$regional_demand < 0
-  info_reexport <- if (!all(is_negative)) {
+  invalid <- excess |>
+    dplyr::filter(.data$regional_demand != 0) |>
+    dplyr::mutate(import_coef = .data$import / .data$regional_demand) |>
+    dplyr::filter(exceeds(.data$import_coef, 1) | .data$import_coef < 0)
+  if (vctrs::vec_is_empty(invalid)) {
+    return(invisible(data))
+  }
+
+  is_negative <- invalid$regional_demand < 0
+  info_reexport <- if (any(!is_negative & invalid$import_coef > 1)) {
     c(
       "i" = "Import coefficients above 1 often come from re-exports.",
       "i" = "Use {.fn io_table_remove_reexport} to remove them first."
@@ -476,9 +481,9 @@ io_check_import_excess <- function(data, call = rlang::caller_env()) {
 
   cli::cli_warn(
     c(
-      "Some import coefficients are above 1 or negative, so some domestic transactions are negative.",
+      "Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.",
       glue::glue(
-        "{io_axis_label(excess$input)}: import coefficient {signif(excess$import / excess$regional_demand, 4)} (imports {signif(excess$import, 4)}, regional demand {signif(excess$regional_demand, 4)})."
+        "{io_axis_label(invalid$input)}: import coefficient {signif(invalid$import_coef, 4)} (imports {signif(invalid$import, 4)}, regional demand {signif(invalid$regional_demand, 4)})."
       ) |>
         rlang::set_names("x"),
       info_reexport,

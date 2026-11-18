@@ -32,11 +32,12 @@ intermediate and final demand by its import coefficient (see
 plus final demand within the same region).
 }
 \details{
-If an import coefficient is above 1 or negative, some domestic transactions
-become negative. This warns but still converts the table, so that it can be
-used for impact analysis as is. Import coefficients above 1 often come from
-re-exports, which \code{\link[=io_table_remove_reexport]{io_table_remove_reexport()}} removes. Negative ones often
-come from byproducts recorded as negative inputs (the Stone method) in final
-demand. If a sector has imports but zero regional demand, its import
+If an import coefficient is above 1 or negative, some domestic or imported
+transactions become negative. This warns but still converts the table, so
+that it can be used for impact analysis as is. Import coefficients above 1
+often come from re-exports, which \code{\link[=io_table_remove_reexport]{io_table_remove_reexport()}} removes.
+Negative regional demand, which makes import coefficients negative or above
+1, often comes from byproducts recorded as negative inputs (the Stone method)
+in final demand. If a sector has imports but zero regional demand, its import
 coefficient can't be computed, so this aborts; supply \code{data_import} instead.
 }
