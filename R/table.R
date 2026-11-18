@@ -14,8 +14,9 @@ new_io_table <- function(data, ..., class = character()) {
 #' `"noncompetitive_import"`. By default, `NULL`, which infers the type from
 #' whether `"import"` appears in the input or output sector type column of
 #' `data`.
-#' @param total_tolerance A numeric. The tolerance for the total check. By
-#' default, `.Machine$double.eps^0.5`.
+#' @param total_tolerance A numeric. The tolerance for the total check,
+#' relative to the totals as in [all.equal()]. By default,
+#' `.Machine$double.eps^0.5`.
 #' @param check_axes A scalar logical. If `TRUE`, the input and output axes are
 #' checked to be identical. By default, `TRUE`.
 #'
@@ -93,8 +94,9 @@ io_table_regional <- function(
 #' `"noncompetitive_import"`. By default, `NULL`, which infers the type from
 #' whether `"import"` appears in the input or output sector type column of
 #' `data`.
-#' @param total_tolerance A numeric. The tolerance for the total check. By
-#' default, `.Machine$double.eps^0.5`.
+#' @param total_tolerance A numeric. The tolerance for the total check,
+#' relative to the totals as in [all.equal()]. By default,
+#' `.Machine$double.eps^0.5`.
 #' @param check_axes A scalar logical. If `TRUE`, the input and output axes are
 #' checked to be identical. By default, `TRUE`.
 #'
@@ -251,8 +253,9 @@ io_add_region <- function(data, axis, region) {
 #' Check input-output table totals
 #'
 #' @param data An input-output table.
-#' @param total_tolerance A numeric. The tolerance for the total check. By
-#' default, `.Machine$double.eps^0.5`.
+#' @param total_tolerance A numeric. The tolerance for the total check,
+#' relative to the totals as in [all.equal()]. By default,
+#' `.Machine$double.eps^0.5`.
 #'
 #' @return An `econ_io_table` object.
 #'
@@ -299,10 +302,10 @@ io_check_totals <- function(data, total_tolerance = .Machine$double.eps^0.5) {
       ) |>
         tibble::as_tibble() |>
         dplyr::filter(
-          !dplyr::near(
+          !nearly_equal(
             .data$total_actual,
             .data$total_expected,
-            tol = .env$total_tolerance
+            tolerance = .env$total_tolerance
           )
         )
 
@@ -311,7 +314,7 @@ io_check_totals <- function(data, total_tolerance = .Machine$double.eps^0.5) {
           c(
             "The total {axis} values do not match.",
             glue::glue(
-              "{io_axis_label(data_total[[axis_other]])}: {data_total$total_actual} (`actual`) not nearly equal to {data_total$total_expected} (`expected`)."
+              "{io_axis_label(data_total[[axis_other]])}: {format_number(data_total$total_actual, compare_to = data_total$total_expected)} (`actual`) not nearly equal to {format_number(data_total$total_expected, compare_to = data_total$total_actual)} (`expected`)."
             ) |>
               rlang::set_names("x")
           )

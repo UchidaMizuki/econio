@@ -27,8 +27,9 @@ and name columns.}
 whether \code{"import"} appears in the input or output sector type column of
 \code{data}.}
 
-\item{total_tolerance}{A numeric. The tolerance for the total check. By
-default, \code{.Machine$double.eps^0.5}.}
+\item{total_tolerance}{A numeric. The tolerance for the total check,
+relative to the totals as in \code{\link[=all.equal]{all.equal()}}. By default,
+\code{.Machine$double.eps^0.5}.}
 
 \item{check_axes}{A scalar logical. If \code{TRUE}, the input and output axes are
 checked to be identical. By default, \code{TRUE}.}

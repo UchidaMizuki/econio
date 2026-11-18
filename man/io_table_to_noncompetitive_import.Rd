@@ -19,8 +19,9 @@ io_table_to_noncompetitive_import(
 \item{import_sector_name}{A name for the import sector. By default,
 \code{NA_character_}.}
 
-\item{import_total_tolerance}{A numeric tolerance for checking import totals.
-By default, \code{.Machine$double.eps^0.5}.}
+\item{import_total_tolerance}{A numeric tolerance for checking import totals,
+relative to the totals as in \code{\link[=all.equal]{all.equal()}}. By default,
+\code{.Machine$double.eps^0.5}.}
 }
 \value{
 A noncompetitive import type input-output table.

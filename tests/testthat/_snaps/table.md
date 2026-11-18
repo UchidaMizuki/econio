@@ -15,9 +15,9 @@
     Condition
       Error in `io_check_totals()`:
       ! The total input values do not match.
-      x industry_1: 27 (`actual`) not nearly equal to 27.3333333333333 (`expected`).
-      x industry_2: 29 (`actual`) not nearly equal to 29.3333333333333 (`expected`).
-      x industry_3: 31 (`actual`) not nearly equal to 31.3333333333333 (`expected`).
+      x industry_1: 27 (`actual`) not nearly equal to 27.33333 (`expected`).
+      x industry_2: 29 (`actual`) not nearly equal to 29.33333 (`expected`).
+      x industry_3: 31 (`actual`) not nearly equal to 31.33333 (`expected`).
 
 ---
 
@@ -26,9 +26,9 @@
     Condition
       Error in `io_check_totals()`:
       ! The total output values do not match.
-      x industry_1: 27 (`actual`) not nearly equal to 27.1428571428571 (`expected`).
-      x industry_2: 29 (`actual`) not nearly equal to 29.1428571428571 (`expected`).
-      x industry_3: 31 (`actual`) not nearly equal to 31.1428571428571 (`expected`).
+      x industry_1: 27 (`actual`) not nearly equal to 27.14286 (`expected`).
+      x industry_2: 29 (`actual`) not nearly equal to 29.14286 (`expected`).
+      x industry_3: 31 (`actual`) not nearly equal to 31.14286 (`expected`).
 
 ---
 
@@ -47,9 +47,9 @@
     Condition
       Error in `io_check_totals()`:
       ! The total input values do not match.
-      x industry_1: 19 (`actual`) not nearly equal to 19.3333333333333 (`expected`).
-      x industry_2: 28 (`actual`) not nearly equal to 28.3333333333333 (`expected`).
-      x industry_3: 25 (`actual`) not nearly equal to 25.3333333333333 (`expected`).
+      x industry_1: 19 (`actual`) not nearly equal to 19.33333 (`expected`).
+      x industry_2: 28 (`actual`) not nearly equal to 28.33333 (`expected`).
+      x industry_3: 25 (`actual`) not nearly equal to 25.33333 (`expected`).
 
 ---
 
@@ -58,9 +58,9 @@
     Condition
       Error in `io_check_totals()`:
       ! The total output values do not match.
-      x industry_1: 19 (`actual`) not nearly equal to 19.1428571428571 (`expected`).
-      x industry_2: 28 (`actual`) not nearly equal to 28.1428571428571 (`expected`).
-      x industry_3: 25 (`actual`) not nearly equal to 25.1428571428571 (`expected`).
+      x industry_1: 19 (`actual`) not nearly equal to 19.14286 (`expected`).
+      x industry_2: 28 (`actual`) not nearly equal to 28.14286 (`expected`).
+      x industry_3: 25 (`actual`) not nearly equal to 25.14286 (`expected`).
 
 ---
 
@@ -79,15 +79,15 @@
     Condition
       Error in `io_check_totals()`:
       ! The total input values do not match.
-      x region_1/industry_1: 117 (`actual`) not nearly equal to 117.333333333333 (`expected`).
-      x region_1/industry_2: 123 (`actual`) not nearly equal to 123.333333333333 (`expected`).
-      x region_1/industry_3: 129 (`actual`) not nearly equal to 129.333333333333 (`expected`).
-      x region_2/industry_1: 153 (`actual`) not nearly equal to 153.333333333333 (`expected`).
-      x region_2/industry_2: 159 (`actual`) not nearly equal to 159.333333333333 (`expected`).
-      x region_2/industry_3: 165 (`actual`) not nearly equal to 165.333333333333 (`expected`).
-      x region_3/industry_1: 189 (`actual`) not nearly equal to 189.333333333333 (`expected`).
-      x region_3/industry_2: 195 (`actual`) not nearly equal to 195.333333333333 (`expected`).
-      x region_3/industry_3: 201 (`actual`) not nearly equal to 201.333333333333 (`expected`).
+      x region_1/industry_1: 117 (`actual`) not nearly equal to 117.3333 (`expected`).
+      x region_1/industry_2: 123 (`actual`) not nearly equal to 123.3333 (`expected`).
+      x region_1/industry_3: 129 (`actual`) not nearly equal to 129.3333 (`expected`).
+      x region_2/industry_1: 153 (`actual`) not nearly equal to 153.3333 (`expected`).
+      x region_2/industry_2: 159 (`actual`) not nearly equal to 159.3333 (`expected`).
+      x region_2/industry_3: 165 (`actual`) not nearly equal to 165.3333 (`expected`).
+      x region_3/industry_1: 189 (`actual`) not nearly equal to 189.3333 (`expected`).
+      x region_3/industry_2: 195 (`actual`) not nearly equal to 195.3333 (`expected`).
+      x region_3/industry_3: 201 (`actual`) not nearly equal to 201.3333 (`expected`).
 
 ---
 
@@ -96,15 +96,15 @@
     Condition
       Error in `io_check_totals()`:
       ! The total output values do not match.
-      x region_1/industry_1: 117 (`actual`) not nearly equal to 117.142857142857 (`expected`).
-      x region_1/industry_2: 123 (`actual`) not nearly equal to 123.142857142857 (`expected`).
-      x region_1/industry_3: 129 (`actual`) not nearly equal to 129.142857142857 (`expected`).
-      x region_2/industry_1: 153 (`actual`) not nearly equal to 153.142857142857 (`expected`).
-      x region_2/industry_2: 159 (`actual`) not nearly equal to 159.142857142857 (`expected`).
-      x region_2/industry_3: 165 (`actual`) not nearly equal to 165.142857142857 (`expected`).
-      x region_3/industry_1: 189 (`actual`) not nearly equal to 189.142857142857 (`expected`).
-      x region_3/industry_2: 195 (`actual`) not nearly equal to 195.142857142857 (`expected`).
-      x region_3/industry_3: 201 (`actual`) not nearly equal to 201.142857142857 (`expected`).
+      x region_1/industry_1: 117 (`actual`) not nearly equal to 117.1429 (`expected`).
+      x region_1/industry_2: 123 (`actual`) not nearly equal to 123.1429 (`expected`).
+      x region_1/industry_3: 129 (`actual`) not nearly equal to 129.1429 (`expected`).
+      x region_2/industry_1: 153 (`actual`) not nearly equal to 153.1429 (`expected`).
+      x region_2/industry_2: 159 (`actual`) not nearly equal to 159.1429 (`expected`).
+      x region_2/industry_3: 165 (`actual`) not nearly equal to 165.1429 (`expected`).
+      x region_3/industry_1: 189 (`actual`) not nearly equal to 189.1429 (`expected`).
+      x region_3/industry_2: 195 (`actual`) not nearly equal to 195.1429 (`expected`).
+      x region_3/industry_3: 201 (`actual`) not nearly equal to 201.1429 (`expected`).
 
 ---
 
@@ -123,15 +123,15 @@
     Condition
       Error in `io_check_totals()`:
       ! The total input values do not match.
-      x region_1/industry_1: 107 (`actual`) not nearly equal to 107.333333333333 (`expected`).
-      x region_1/industry_2: 114 (`actual`) not nearly equal to 114.333333333333 (`expected`).
-      x region_1/industry_3: 105 (`actual`) not nearly equal to 105.333333333333 (`expected`).
-      x region_2/industry_1: 117 (`actual`) not nearly equal to 117.333333333333 (`expected`).
-      x region_2/industry_2: 144 (`actual`) not nearly equal to 144.333333333333 (`expected`).
-      x region_2/industry_3: 135 (`actual`) not nearly equal to 135.333333333333 (`expected`).
-      x region_3/industry_1: 147 (`actual`) not nearly equal to 147.333333333333 (`expected`).
-      x region_3/industry_2: 174 (`actual`) not nearly equal to 174.333333333333 (`expected`).
-      x region_3/industry_3: 165 (`actual`) not nearly equal to 165.333333333333 (`expected`).
+      x region_1/industry_1: 107 (`actual`) not nearly equal to 107.3333 (`expected`).
+      x region_1/industry_2: 114 (`actual`) not nearly equal to 114.3333 (`expected`).
+      x region_1/industry_3: 105 (`actual`) not nearly equal to 105.3333 (`expected`).
+      x region_2/industry_1: 117 (`actual`) not nearly equal to 117.3333 (`expected`).
+      x region_2/industry_2: 144 (`actual`) not nearly equal to 144.3333 (`expected`).
+      x region_2/industry_3: 135 (`actual`) not nearly equal to 135.3333 (`expected`).
+      x region_3/industry_1: 147 (`actual`) not nearly equal to 147.3333 (`expected`).
+      x region_3/industry_2: 174 (`actual`) not nearly equal to 174.3333 (`expected`).
+      x region_3/industry_3: 165 (`actual`) not nearly equal to 165.3333 (`expected`).
 
 ---
 
@@ -140,15 +140,15 @@
     Condition
       Error in `io_check_totals()`:
       ! The total output values do not match.
-      x region_1/industry_1: 107 (`actual`) not nearly equal to 107.142857142857 (`expected`).
-      x region_1/industry_2: 114 (`actual`) not nearly equal to 114.142857142857 (`expected`).
-      x region_1/industry_3: 105 (`actual`) not nearly equal to 105.142857142857 (`expected`).
-      x region_2/industry_1: 117 (`actual`) not nearly equal to 117.142857142857 (`expected`).
-      x region_2/industry_2: 144 (`actual`) not nearly equal to 144.142857142857 (`expected`).
-      x region_2/industry_3: 135 (`actual`) not nearly equal to 135.142857142857 (`expected`).
-      x region_3/industry_1: 147 (`actual`) not nearly equal to 147.142857142857 (`expected`).
-      x region_3/industry_2: 174 (`actual`) not nearly equal to 174.142857142857 (`expected`).
-      x region_3/industry_3: 165 (`actual`) not nearly equal to 165.142857142857 (`expected`).
+      x region_1/industry_1: 107 (`actual`) not nearly equal to 107.1429 (`expected`).
+      x region_1/industry_2: 114 (`actual`) not nearly equal to 114.1429 (`expected`).
+      x region_1/industry_3: 105 (`actual`) not nearly equal to 105.1429 (`expected`).
+      x region_2/industry_1: 117 (`actual`) not nearly equal to 117.1429 (`expected`).
+      x region_2/industry_2: 144 (`actual`) not nearly equal to 144.1429 (`expected`).
+      x region_2/industry_3: 135 (`actual`) not nearly equal to 135.1429 (`expected`).
+      x region_3/industry_1: 147 (`actual`) not nearly equal to 147.1429 (`expected`).
+      x region_3/industry_2: 174 (`actual`) not nearly equal to 174.1429 (`expected`).
+      x region_3/industry_3: 165 (`actual`) not nearly equal to 165.1429 (`expected`).
 
 # io_table_regional() validates its scalar arguments
 

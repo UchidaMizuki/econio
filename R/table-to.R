@@ -4,8 +4,9 @@
 #' @param data_import An optional import table. By default, `NULL`.
 #' @param import_sector_name A name for the import sector. By default,
 #' `NA_character_`.
-#' @param import_total_tolerance A numeric tolerance for checking import totals.
-#' By default, `.Machine$double.eps^0.5`.
+#' @param import_total_tolerance A numeric tolerance for checking import totals,
+#' relative to the totals as in [all.equal()]. By default,
+#' `.Machine$double.eps^0.5`.
 #'
 #' @return A competitive import type input-output table.
 #'
@@ -97,8 +98,9 @@ io_table_to_competitive_import <- function(
 #' @param data_import An optional import table. By default, `NULL`.
 #' @param import_sector_name A name for the import sector. By default,
 #' `NA_character_`.
-#' @param import_total_tolerance A numeric tolerance for checking import totals.
-#' By default, `.Machine$double.eps^0.5`.
+#' @param import_total_tolerance A numeric tolerance for checking import totals,
+#' relative to the totals as in [all.equal()]. By default,
+#' `.Machine$double.eps^0.5`.
 #'
 #' @return A noncompetitive import type input-output table.
 #'
@@ -416,10 +418,10 @@ io_check_import_totals <- function(
   ) |>
     tibble::as_tibble() |>
     dplyr::filter(
-      !dplyr::near(
+      !nearly_equal(
         .data$import_total_actual,
         .data$import_total_expected,
-        tol = .env$import_total_tolerance
+        tolerance = .env$import_total_tolerance
       )
     )
 
@@ -428,7 +430,7 @@ io_check_import_totals <- function(
       c(
         "The total import values do not match.",
         glue::glue(
-          "{io_axis_label(data_import_total[[axis_other]])}: {data_import_total$import_total_actual} (`actual`) not nearly equal to {data_import_total$import_total_expected} (`expected`)."
+          "{io_axis_label(data_import_total[[axis_other]])}: {format_number(data_import_total$import_total_actual, compare_to = data_import_total$import_total_expected)} (`actual`) not nearly equal to {format_number(data_import_total$import_total_expected, compare_to = data_import_total$import_total_actual)} (`expected`)."
         ) |>
           rlang::set_names("x")
       ),
@@ -470,7 +472,7 @@ io_check_import_coef <- function(data, call = rlang::caller_env()) {
     c(
       "Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.",
       glue::glue(
-        "{io_axis_label(invalid$input)}: import coefficient {format_number_near_one(invalid$import_coef)} (imports {format_number(invalid$import)}, regional demand {format_number(invalid$regional_demand)})."
+        "{io_axis_label(invalid$input)}: import coefficient {format_number(invalid$import_coef, compare_to = 1)} (imports {format_number(invalid$import)}, regional demand {format_number(invalid$regional_demand)})."
       ) |>
         rlang::set_names("*")
     )
