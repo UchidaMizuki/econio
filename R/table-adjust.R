@@ -94,11 +94,10 @@ io_table_remove_reexport <- function(data) {
       c(
         "Imports exceed regional demand by more than exports, so some import coefficients stay above 1.",
         glue::glue(
-          "{io_axis_label(over_export$input)}: excess {signif(over_export$excess, 4)}, exports {signif(over_export$export, 4)}."
+          "{io_axis_label(over_export$input)}: excess {format_number(over_export$excess)}, exports {format_number(over_export$export)}."
         ) |>
-          rlang::set_names("x"),
-        "i" = "Only up to the exports are removed as re-exports.",
-        "i" = "This happens when output is negative, or when re-exports go to other regions within a multiregional table."
+          rlang::set_names("*"),
+        "i" = "Only up to the exports are removed as re-exports."
       )
     )
   }

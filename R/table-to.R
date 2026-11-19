@@ -86,11 +86,12 @@ io_table_to_competitive_import <- function(
 #' If an import coefficient is above 1 or negative, some domestic or imported
 #' transactions become negative. This warns but still converts the table, so
 #' that it can be used for impact analysis as is. Import coefficients above 1
-#' often come from re-exports, which [io_table_remove_reexport()] removes.
-#' Negative regional demand, which makes import coefficients negative or above
-#' 1, often comes from byproducts recorded as negative inputs (the Stone method)
-#' in final demand. If a sector has imports but zero regional demand, its import
-#' coefficient can't be computed, so this aborts; supply `data_import` instead.
+#' often come from re-exports, which [io_table_remove_reexport()] removes, and
+#' ones just above 1 from rounding in published tables. Negative regional
+#' demand, which makes import coefficients negative or above 1, often comes from
+#' byproducts recorded as negative inputs (the Stone method) in final demand. If
+#' a sector has imports but zero regional demand, its import coefficient can't
+#' be computed, so this aborts; supply `data_import` instead.
 #'
 #' @param data An input-output table.
 #' @param data_import An optional import table. By default, `NULL`.
@@ -448,7 +449,7 @@ io_check_import_coef <- function(data, call = rlang::caller_env()) {
       c(
         "Can't compute import coefficients for sectors with imports but zero regional demand.",
         glue::glue(
-          "{io_axis_label(zero$input)}: imports {signif(zero$import, 4)}."
+          "{io_axis_label(zero$input)}: imports {format_number(zero$import)}."
         ) |>
           rlang::set_names("x"),
         "i" = "Supply an import table with {.arg data_import}."
@@ -465,29 +466,13 @@ io_check_import_coef <- function(data, call = rlang::caller_env()) {
     return(invisible(data))
   }
 
-  is_negative <- invalid$regional_demand < 0
-  info_reexport <- if (any(!is_negative & invalid$import_coef > 1)) {
-    c(
-      "i" = "Import coefficients above 1 often come from re-exports.",
-      "i" = "Use {.fn io_table_remove_reexport} to remove them first."
-    )
-  }
-  info_negative <- if (any(is_negative)) {
-    c(
-      "i" = "Negative regional demand often comes from byproducts recorded as negative inputs (the Stone method) in final demand.",
-      "i" = "Supply an import table with {.arg data_import} to avoid this."
-    )
-  }
-
   cli::cli_warn(
     c(
       "Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.",
       glue::glue(
-        "{io_axis_label(invalid$input)}: import coefficient {signif(invalid$import_coef, 4)} (imports {signif(invalid$import, 4)}, regional demand {signif(invalid$regional_demand, 4)})."
+        "{io_axis_label(invalid$input)}: import coefficient {format_number_near_one(invalid$import_coef)} (imports {format_number(invalid$import)}, regional demand {format_number(invalid$regional_demand)})."
       ) |>
-        rlang::set_names("x"),
-      info_reexport,
-      info_negative
+        rlang::set_names("*")
     )
   )
   invisible(data)
