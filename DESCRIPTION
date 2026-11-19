@@ -18,7 +18,7 @@ Imports:
     lifecycle,
     pillar,
     purrr,
-    rlang (>= 1.1.0),
+    rlang (>= 1.2.0),
     scales,
     tibble,
     tidyr,
