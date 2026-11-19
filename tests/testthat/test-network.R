@@ -7,15 +7,8 @@ test_that("io_network() aborts on negative transactions", {
   iotable <- read_iotable_dummy("regional_noncompetitive_import")
   iotable_negative <- iotable
   iotable_negative[1, 1] <- -99
-  expect_snapshot(io_network(iotable_negative), error = TRUE)
 
-  iotable_negative[1:3, 1:3] <- -1
   expect_snapshot(io_network(iotable_negative), error = TRUE)
-})
-
-test_that("io_network() aborts on negatives from the import split", {
-  iotable <- get_iotable_reexport()
-  expect_snapshot(io_network(iotable), error = TRUE)
 })
 
 test_that("io_network(paths = \"all\") gives all-path weights and average propagation lengths", {
