@@ -1,24 +1,11 @@
-# io_network() informs only when converting implicitly
-
-    Code
-      network <- io_network(iotable_noncompetitive)
-
----
-
-    Code
-      network <- io_network(iotable_competitive)
-    Message
-      Converting to a noncompetitive import type table with `io_table_to_noncompetitive_import()`.
-
 # io_network() aborts on negative transactions
 
     Code
       io_network(iotable_negative)
     Condition
       Error:
-      ! Found 1 negative domestic intermediate transaction.
-      i For negatives from byproduct treatment such as the Stone method, use `io_table_transfer_byproduct()` to convert them to the transfer method before building the industry network.
-      i For negatives from imports that exceed regional demand (an import coefficient above 1), e.g. re-exports, use `io_table_remove_reexport()` before converting to a noncompetitive import type table.
+      ! Can't build the industry network from negative domestic intermediate transactions.
+      x Found 1 negative transaction.
 
 # io_network_all() aborts when the sums over paths diverge
 
