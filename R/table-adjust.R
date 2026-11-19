@@ -25,14 +25,17 @@ io_table_transfer_byproduct <- function(data) {
 
   inter_industry <- io_inter_industry(data)
   dim_names <- dimnames(inter_industry)
-  weight <- as.matrix(inter_industry)
+  transaction <- as.matrix(inter_industry)
 
-  if (sum(weight < 0) == 0) {
+  if (sum(transaction < 0) == 0) {
     return(data)
   }
 
-  weight <- pmax(weight, 0) + t(pmax(-weight, 0))
-  inter_industry <- dibble::dibble(as.vector(weight), .dim_names = dim_names)
+  transaction <- pmax(transaction, 0) + t(pmax(-transaction, 0))
+  inter_industry <- dibble::dibble(
+    as.vector(transaction),
+    .dim_names = dim_names
+  )
 
   data |>
     dplyr::rows_update(inter_industry)
@@ -76,14 +79,14 @@ io_table_remove_reexport <- function(data) {
     )
   }
 
-  excess <- io_import_excess(data)
+  balance <- io_import_balance(data)
   # Re-exports can't be identified without positive regional demand.
-  is_excess <- excess$excess > 0 & excess$regional_demand > 0
+  is_excess <- balance$excess > 0 & balance$regional_demand > 0
   if (!any(is_excess)) {
     return(data)
   }
 
-  over_export <- excess |>
+  over_export <- balance |>
     tibble::as_tibble() |>
     dplyr::filter(
       .data$regional_demand > 0,
@@ -104,12 +107,12 @@ io_table_remove_reexport <- function(data) {
 
   reexport <- dibble::ifelse(
     is_excess,
-    pmax(pmin(excess$excess, excess$export), 0),
+    pmax(pmin(balance$excess, balance$export), 0),
     0
   )
-  import_scale <- 1 - safe_divide(reexport, excess$import)
+  import_scale <- 1 - safe_divide(reexport, balance$import)
   # Rounding can leave the re-exports slightly above the exports.
-  export_scale <- pmax(1 - safe_divide(reexport, excess$export), 0)
+  export_scale <- pmax(1 - safe_divide(reexport, balance$export), 0)
 
   import <- data |>
     dplyr::filter(
@@ -133,7 +136,7 @@ io_table_remove_reexport <- function(data) {
 # Imports, regional demand, the excess of imports over regional demand, and
 # exports by industry of a competitive import type table, where regional demand
 # is the intermediate and final demand within the same region.
-io_import_excess <- function(data) {
+io_import_balance <- function(data) {
   import <- -io_total_output(data, output_sector_type = "import")
   regional_demand <- io_total_output(
     data,

@@ -136,12 +136,12 @@ io_trophic <- function(network, call = rlang::caller_env()) {
   # Solve `Λ h = v` subject to this constraint as one bordered (KKT) system.
   # Its multiplier is 0 because the imbalance sums to 0, and the system is
   # singular exactly when the network is disconnected.
-  system <- rbind(
+  bordered_laplacian <- rbind(
     cbind(network$laplacian, total_weight),
     c(total_weight, 0)
   )
   solution <- rlang::try_fetch(
-    solve(system, c(imbalance, 0)),
+    solve(bordered_laplacian, c(imbalance, 0)),
     error = function(cnd) io_abort_disconnected(network, call = call)
   )
 
