@@ -27,8 +27,11 @@
 #' In both cases the eigenvectors associated with the smallest non-zero
 #' eigenvalues are returned. With `dims = 1` this is the **Fiedler vector**.
 #' A disconnected network has one zero eigenvalue per component, which makes
-#' the embedding arbitrary, so the function aborts if the network (treating
-#' each transaction as an undirected link) is not connected.
+#' the embedding arbitrary. Industries without transactions with any other
+#' industry (e.g. industries with zero output in a regional table) are
+#' therefore left out of the network, with a message, and get `NA`; the
+#' function aborts if the remaining network (treating each transaction as an
+#' undirected link) is not connected.
 #'
 #' Like [io_trophic_level()], the table is first converted to a noncompetitive
 #' import type table with [io_table_to_noncompetitive_import()] so that the
@@ -57,7 +60,8 @@
 #' see the "Direct and indirect paths" section of [io_trophic_level()].
 #'
 #' @return A `dibble`. With `dims = 1`, one value per industry. With
-#' `dims > 1`, an `industry` by `component` array.
+#' `dims > 1`, an `industry` by `component` array. Industries without
+#' transactions with any other industry get `NA`.
 #'
 #' @references
 #' Belkin, M. and Niyogi, P. (2003). Laplacian eigenmaps for dimensionality
@@ -89,14 +93,9 @@ io_spectral_embedding <- function(
 
   rlang::check_number_whole(dims, min = 1, max = n_industry - 1)
 
-  total_weight <- network$total_weight
-  if (!normalized) {
-    scale <- rep(1, n_industry)
-  } else if (any(total_weight == 0)) {
-    io_abort_disconnected(network, call = rlang::current_env())
-  } else {
-    scale <- sqrt(total_weight)
-  }
+  # Industries in the network have transactions with others, so their total
+  # weight is positive.
+  scale <- if (normalized) sqrt(network$total_weight) else rep(1, n_industry)
   # With `normalized = TRUE`, solve the generalized problem
   # `Λ h = λ diag(u) h` via the symmetric matrix
   # `diag(u)^(-1/2) Λ diag(u)^(-1/2)`, then back-transform.
@@ -128,18 +127,19 @@ io_spectral_embedding <- function(
     2,
     function(column) sign(column[which.max(abs(column))])
   )
-  eigenvectors <- sweep(eigenvectors, 2, signs, `*`)
+  eigenvectors <- sweep(eigenvectors, 2, signs, `*`) |>
+    io_network_expand(network)
 
   if (dims == 1) {
     dibble::dibble(
       as.vector(eigenvectors),
-      .dim_names = list(industry = network$dim_name)
+      .dim_names = list(industry = network$all_dim_name)
     )
   } else {
     dibble::dibble(
       as.vector(eigenvectors),
       .dim_names = list(
-        industry = network$dim_name,
+        industry = network$all_dim_name,
         component = seq_len(dims)
       )
     )

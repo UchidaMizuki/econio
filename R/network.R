@@ -28,16 +28,49 @@ io_network <- function(
     )
   }
 
-  switch(
+  # Industries without transactions with other industries (e.g. with zero
+  # output in a regional table) don't affect the results of the others, and
+  # have no results of their own, so they are left out of the network.
+  off_diagonal <- weight
+  diag(off_diagonal) <- 0
+  connected <- rowSums(off_diagonal) + colSums(off_diagonal) > 0
+  if (!any(connected)) {
+    cli::cli_abort(
+      "No industries have domestic intermediate transactions with other industries.",
+      call = call
+    )
+  }
+  if (!all(connected)) {
+    isolated <- io_axis_label(dim_name)[!connected]
+    cli::cli_inform(
+      "Returning {.code NA} for {length(isolated)} industr{?y/ies} without domestic intermediate transactions with other industries: {.val {isolated}}."
+    )
+  }
+
+  connected_weight <- weight[connected, connected, drop = FALSE]
+  connected_dim_name <- vctrs::vec_slice(dim_name, connected)
+  network <- switch(
     paths,
-    direct = io_network_direct(weight, dim_name),
+    direct = io_network_direct(connected_weight, connected_dim_name),
     all = io_network_all(
-      weight,
-      as.vector(io_total_input(data)),
-      dim_name,
+      connected_weight,
+      as.vector(io_total_input(data))[connected],
+      connected_dim_name,
       call = call
     )
   )
+  network$all_dim_name <- dim_name
+  network$connected <- connected
+  network
+}
+
+# Expands `value`, with one row per connected industry of `network`, to all
+# industries, with `NA` for the industries left out of the network.
+io_network_expand <- function(value, network) {
+  value <- as.matrix(value)
+  out <- matrix(NA_real_, length(network$connected), ncol(value))
+  out[network$connected, ] <- value
+  out
 }
 
 # Direct transactions span paths of length 1.
@@ -101,13 +134,9 @@ io_network_weight <- function(weight, path_length, dim_name) {
 }
 
 io_abort_disconnected <- function(network, call = rlang::caller_env()) {
-  industry <- io_axis_label(network$dim_name)[network$total_weight == 0]
   cli::cli_abort(
     c(
       "The domestic production network must be connected.",
-      "x" = if (length(industry) > 0) {
-        "{length(industry)} industr{?y has/ies have} no domestic intermediate transactions: {.val {industry}}."
-      },
       "i" = "Results for separate parts of the network are not comparable.",
       "i" = "Remove or merge industries that are not linked to the others."
     ),

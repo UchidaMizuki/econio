@@ -1,33 +1,9 @@
-# io_spectral_embedding aborts on a disconnected network
+# io_spectral_embedding returns NA for an industry with no links to others
 
     Code
-      io_spectral_embedding(iotable_isolated)
-    Condition
-      Error in `io_spectral_embedding()`:
-      ! The domestic production network must be connected.
-      x 1 industry has no domestic intermediate transactions: "industry_1".
-      i Results for separate parts of the network are not comparable.
-      i Remove or merge industries that are not linked to the others.
-
----
-
-    Code
-      io_spectral_embedding(iotable_self_loop)
-    Condition
-      Error in `io_spectral_embedding()`:
-      ! The domestic production network must be connected.
-      i Results for separate parts of the network are not comparable.
-      i Remove or merge industries that are not linked to the others.
-
----
-
-    Code
-      io_spectral_embedding(iotable_self_loop, normalized = FALSE)
-    Condition
-      Error in `io_spectral_embedding()`:
-      ! The domestic production network must be connected.
-      i Results for separate parts of the network are not comparable.
-      i Remove or merge industries that are not linked to the others.
+      embedding <- io_spectral_embedding(iotable_isolated)
+    Message
+      Returning `NA` for 1 industry without domestic intermediate transactions with other industries: "industry_1".
 
 # io_spectral_embedding validates normalized
 

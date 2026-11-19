@@ -53,22 +53,30 @@ test_that("io_spectral_embedding solves the normalized generalized eigenproblem"
   }
 })
 
-test_that("io_spectral_embedding aborts on a disconnected network", {
+test_that("io_spectral_embedding returns NA for an industry with no links to others", {
   iotable <- read_iotable_dummy("regional_noncompetitive_import")
   iotable_isolated <- iotable
   iotable_isolated[1, 1:3] <- 0
   iotable_isolated[1:3, 1] <- 0
-  expect_snapshot(io_spectral_embedding(iotable_isolated), error = TRUE)
-
   # Industry 1 keeps its own transactions, so its total weight is positive.
   iotable_self_loop <- iotable
   iotable_self_loop[1, 2:3] <- 0
   iotable_self_loop[2:3, 1] <- 0
-  expect_snapshot(io_spectral_embedding(iotable_self_loop), error = TRUE)
-  expect_snapshot(
-    io_spectral_embedding(iotable_self_loop, normalized = FALSE),
-    error = TRUE
-  )
+
+  expect_snapshot(embedding <- io_spectral_embedding(iotable_isolated))
+  for (data in list(iotable_isolated, iotable_self_loop)) {
+    total_weight <- suppressMessages(io_network(data))$total_weight
+    for (normalized in c(TRUE, FALSE)) {
+      embedding <- suppressMessages(as.vector(as.matrix(
+        io_spectral_embedding(data, normalized = normalized)
+      )))
+      constraint_weight <- if (normalized) total_weight else c(1, 1)
+
+      expect_equal(embedding[[1]], NA_real_)
+      expect_equal(sum(constraint_weight * embedding[-1]), 0)
+      expect_equal(sum(constraint_weight * embedding[-1]^2), 1)
+    }
+  }
 })
 
 test_that("io_spectral_embedding validates normalized", {

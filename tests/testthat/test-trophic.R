@@ -117,13 +117,31 @@ test_that("io_trophic is invariant to the unit of the table", {
   }
 })
 
-test_that("io_trophic_level aborts on an industry with no links to others", {
+test_that("io_trophic_level returns NA for an industry with no links to others", {
   iotable <- read_iotable_dummy("regional_noncompetitive_import")
+  # Industry 1 keeps its own transactions.
   iotable[1, 2:3] <- 0
   iotable[2:3, 1] <- 0
+  weight <- as.matrix(io_inter_industry(iotable))[-1, -1]
+  network <- io_network_direct(weight, tibble::tibble(sector = 2:3))
+  level <- io_trophic(network)$level
+  level_diff <- outer(level, level, \(from, to) to - from)
+
+  expect_snapshot(trophic_level <- io_trophic_level(iotable))
+  expect_equal(as.vector(as.matrix(trophic_level)), c(NA, level))
+  expect_equal(
+    suppressMessages(io_trophic_incoherence(iotable)),
+    sum(weight * (level_diff - 1)^2) / sum(weight)
+  )
+})
+
+test_that("io_trophic_level aborts when no industries have links to others", {
+  iotable <- read_iotable_dummy("regional_noncompetitive_import")
+  iotable[1, 2:3] <- 0
+  iotable[2, c(1, 3)] <- 0
+  iotable[3, 1:2] <- 0
 
   expect_snapshot(io_trophic_level(iotable), error = TRUE)
-  expect_snapshot(io_trophic_incoherence(iotable), error = TRUE)
 })
 
 test_that("io_trophic aborts on separate components", {

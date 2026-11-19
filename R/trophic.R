@@ -21,10 +21,16 @@
 #' merging industries with equal levels leaves `u`'s total and therefore the
 #' levels of the other industries unchanged. The levels are obtained by solving
 #' the system together with this constraint, which has a unique solution when
-#' the network is connected. Trophic levels in separate parts of a disconnected
-#' network are not comparable, so both functions abort if the network
-#' (treating each transaction as an undirected link) is not connected, e.g.
-#' when an industry has no transactions with any other industry.
+#' the network is connected.
+#'
+#' Industries without transactions with any other industry (e.g. industries
+#' with zero output in a regional table) don't affect the levels of the others
+#' and have no level of their own, so they are left out of the network, with a
+#' message: `io_trophic_level()` returns `NA` for them, and
+#' `io_trophic_incoherence()` leaves out their transactions within the
+#' industry. Trophic levels in separate parts of a disconnected network are not
+#' comparable, so both functions abort if the remaining network (treating each
+#' transaction as an undirected link) is not connected.
 #'
 #' Value-added and final-demand sectors are not nodes and do not receive a
 #' trophic level, but they are **not** ignored: because the table balances, an
@@ -82,7 +88,8 @@
 #' targeting its average propagation length.
 #'
 #' @return
-#' * `io_trophic_level()`: a `dibble` with one trophic level per industry.
+#' * `io_trophic_level()`: a `dibble` with one trophic level per industry, `NA`
+#'   for industries without transactions with any other industry.
 #' * `io_trophic_incoherence()`: a scalar numeric.
 #'
 #' @references
@@ -110,8 +117,12 @@ NULL
 #' @rdname io_trophic
 #' @export
 io_trophic_level <- function(data, paths = c("direct", "all")) {
-  trophic <- io_trophic(io_network(data, paths))
-  dibble::dibble(trophic$level, .dim_names = list(industry = trophic$dim_name))
+  network <- io_network(data, paths)
+  level <- io_network_expand(io_trophic(network)$level, network)
+  dibble::dibble(
+    as.vector(level),
+    .dim_names = list(industry = network$all_dim_name)
+  )
 }
 
 #' @rdname io_trophic

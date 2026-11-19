@@ -20,7 +20,8 @@ targeting its average propagation length.}
 }
 \value{
 \itemize{
-\item \code{io_trophic_level()}: a \code{dibble} with one trophic level per industry.
+\item \code{io_trophic_level()}: a \code{dibble} with one trophic level per industry, \code{NA}
+for industries without transactions with any other industry.
 \item \code{io_trophic_incoherence()}: a scalar numeric.
 }
 }
@@ -47,10 +48,16 @@ it sits downstream. Because \code{u} includes transactions within an industry,
 merging industries with equal levels leaves \code{u}'s total and therefore the
 levels of the other industries unchanged. The levels are obtained by solving
 the system together with this constraint, which has a unique solution when
-the network is connected. Trophic levels in separate parts of a disconnected
-network are not comparable, so both functions abort if the network
-(treating each transaction as an undirected link) is not connected, e.g.
-when an industry has no transactions with any other industry.
+the network is connected.
+
+Industries without transactions with any other industry (e.g. industries
+with zero output in a regional table) don't affect the levels of the others
+and have no level of their own, so they are left out of the network, with a
+message: \code{io_trophic_level()} returns \code{NA} for them, and
+\code{io_trophic_incoherence()} leaves out their transactions within the
+industry. Trophic levels in separate parts of a disconnected network are not
+comparable, so both functions abort if the remaining network (treating each
+transaction as an undirected link) is not connected.
 
 Value-added and final-demand sectors are not nodes and do not receive a
 trophic level, but they are \strong{not} ignored: because the table balances, an
