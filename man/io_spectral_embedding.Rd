@@ -29,7 +29,8 @@ see the "Direct and indirect paths" section of \code{\link[=io_trophic_level]{io
 }
 \value{
 A \code{dibble}. With \code{dims = 1}, one value per industry. With
-\code{dims > 1}, an \code{industry} by \code{component} array.
+\code{dims > 1}, an \code{industry} by \code{component} array. Industries without
+transactions with any other industry get \code{NA}.
 }
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
@@ -60,8 +61,11 @@ of \eqn{\Lambda} itself.
 In both cases the eigenvectors associated with the smallest non-zero
 eigenvalues are returned. With \code{dims = 1} this is the \strong{Fiedler vector}.
 A disconnected network has one zero eigenvalue per component, which makes
-the embedding arbitrary, so the function aborts if the network (treating
-each transaction as an undirected link) is not connected.
+the embedding arbitrary. Industries without transactions with any other
+industry (e.g. industries with zero output in a regional table) are
+therefore left out of the network, with a message, and get \code{NA}; the
+function aborts if the remaining network (treating each transaction as an
+undirected link) is not connected.
 
 Like \code{\link[=io_trophic_level]{io_trophic_level()}}, the table is first converted to a noncompetitive
 import type table with \code{\link[=io_table_to_noncompetitive_import]{io_table_to_noncompetitive_import()}} so that the

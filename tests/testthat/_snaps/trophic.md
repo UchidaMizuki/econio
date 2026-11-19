@@ -1,22 +1,17 @@
-# io_trophic_level aborts on an industry with no links to others
+# io_trophic_level returns NA for an industry with no links to others
+
+    Code
+      trophic_level <- io_trophic_level(iotable)
+    Message
+      Returning `NA` for 1 industry without domestic intermediate transactions with other industries: "industry_1".
+
+# io_trophic_level aborts when no industries have links to others
 
     Code
       io_trophic_level(iotable)
     Condition
       Error in `io_trophic_level()`:
-      ! The domestic production network must be connected.
-      i Results for separate parts of the network are not comparable.
-      i Remove or merge industries that are not linked to the others.
-
----
-
-    Code
-      io_trophic_incoherence(iotable)
-    Condition
-      Error in `io_trophic_incoherence()`:
-      ! The domestic production network must be connected.
-      i Results for separate parts of the network are not comparable.
-      i Remove or merge industries that are not linked to the others.
+      ! No industries have domestic intermediate transactions with other industries.
 
 # io_trophic aborts on separate components
 
