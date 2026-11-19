@@ -59,7 +59,7 @@ io_network_all <- function(
     cli::cli_abort(
       c(
         "The sums of transactions over all paths do not converge.",
-        "x" = "The spectral radius of the domestic input coefficient matrix is {format_number_near_one(spectral_radius)}, not less than 1.",
+        "x" = "The spectral radius of the domestic input coefficient matrix is {format_number(spectral_radius, compare_to = 1)}, not less than 1.",
         "i" = "It is less than 1 when every industry has positive value added plus imports."
       ),
       call = call

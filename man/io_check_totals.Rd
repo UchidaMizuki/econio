@@ -9,8 +9,9 @@ io_check_totals(data, total_tolerance = .Machine$double.eps^0.5)
 \arguments{
 \item{data}{An input-output table.}
 
-\item{total_tolerance}{A numeric. The tolerance for the total check. By
-default, \code{.Machine$double.eps^0.5}.}
+\item{total_tolerance}{A numeric. The tolerance for the total check,
+relative to the totals as in \code{\link[=all.equal]{all.equal()}}. By default,
+\code{.Machine$double.eps^0.5}.}
 }
 \value{
 An \code{econ_io_table} object.
