@@ -7,8 +7,8 @@
 #' `NULL`.
 #' @param from_col,to_col,weight_col Names of the columns in the
 #' reclassification data. Defaults are `"from"`, `"to"`, and `"weight"`.
-#' @param weight_tolerance Tolerance for checking that weights sum to 1.
-#' By default, `.Machine$double.eps^0.5`.
+#' @param weight_tolerance Tolerance for checking that weights sum to 1, as in
+#' [all.equal()]. By default, `.Machine$double.eps^0.5`.
 #' @param check_axes A scalar logical. If `TRUE`, the input and output axes are
 #' checked to be identical. By default, `TRUE`.
 #'
@@ -156,7 +156,8 @@ io_reclass_axis_data <- function(
   from_col,
   to_col,
   weight_col,
-  weight_tolerance
+  weight_tolerance,
+  call = rlang::caller_env()
 ) {
   axis_data_name <- rlang::as_label(rlang::enquo(axis_data))
 
@@ -175,12 +176,21 @@ io_reclass_axis_data <- function(
         weight = {{ weight_col }}
       )
     weight_total <- axis_data |>
-      dplyr::summarise(weight_total = sum(.data$weight), .by = "from")
-    if (any(abs(weight_total$weight_total - 1) > weight_tolerance)) {
-      cli::cli_abort(c(
-        "{.arg {axis_data_name}} has weights that do not sum to 1 for some {.var from} values.",
-        "i" = "Check the {.var weight} column or set {.arg weight_tolerance} to a higher value if appropriate."
-      ))
+      dplyr::summarise(weight_total = sum(.data$weight), .by = "from") |>
+      dplyr::filter(
+        !nearly_equal(.data$weight_total, 1, tolerance = weight_tolerance)
+      )
+    if (!vctrs::vec_is_empty(weight_total)) {
+      cli::cli_abort(
+        c(
+          "The weights in {.arg {axis_data_name}} must sum to 1 for each {.var from} value.",
+          glue::glue(
+            "{weight_total$from}: {format_number(weight_total$weight_total, compare_to = 1)}."
+          ) |>
+            rlang::set_names("x")
+        ),
+        call = call
+      )
     }
     if (type == "sector") {
       axis_data <- axis_data |>
