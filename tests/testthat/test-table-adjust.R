@@ -65,6 +65,17 @@ test_that("io_table_remove_reexport() leaves sectors with negative regional dema
   expect_identical(io_table_remove_reexport(iotable), iotable)
 })
 
+test_that("io_table_remove_reexport() doesn't warn when imports don't exceed regional demand", {
+  # Imports of 10 fall short of regional demand by 25, which is still above
+  # the exports of -50.
+  iotable <- get_iotable_reexport(
+    export_1 = c(export = -50, outflow = 0),
+    import_1 = c(import = -10, inflow = 0)
+  )
+  expect_no_warning(actual <- io_table_remove_reexport(iotable))
+  expect_identical(actual, iotable)
+})
+
 test_that("io_table_remove_reexport() removes all exports when re-exports equal exports", {
   iotable <- get_iotable_reexport(export_1 = c(export = 3.75, outflow = 1.25))
   export <- io_table_remove_reexport(iotable) |>
