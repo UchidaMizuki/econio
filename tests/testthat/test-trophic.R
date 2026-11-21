@@ -192,6 +192,35 @@ test_that("io_trophic_level agrees with numerically minimizing the trophic objec
   )
 })
 
+test_that("io_trophic_level agrees with numerically minimizing the trophic objective on a disconnected network", {
+  disconnected <- get_iotable_disconnected()
+  network <- io_network(disconnected$iotable)
+  weight <- network$weight
+
+  objective <- function(level) {
+    sum(weight * (outer(level, level, \(from, to) to - from) - 1)^2)
+  }
+  optimum <- optim(
+    rep(0, nrow(weight)),
+    objective,
+    method = "BFGS",
+    control = list(reltol = 1e-14)
+  )
+  expected <- center_within_parts(
+    optimum$par,
+    network$total_weight,
+    disconnected$part
+  )
+
+  actual <- as.numeric(as.matrix(io_trophic_level(disconnected$iotable)))
+  expect_equal(actual, expected, tolerance = 1e-4)
+  expect_lte(objective(actual), optimum$value * (1 + 1e-10))
+  expect_equal(
+    io_trophic_incoherence(disconnected$iotable),
+    optimum$value / sum(weight)
+  )
+})
+
 test_that("io_trophic_incoherence with paths = \"direct\" is F_0", {
   iotable <- read_iotable_dummy("regional_noncompetitive_import")
   weight <- io_network(iotable)$weight

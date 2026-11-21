@@ -168,6 +168,46 @@ test_that("io_spectral_embedding agrees with numerically minimizing the Dirichle
   }
 })
 
+test_that("io_spectral_embedding agrees with numerically minimizing the Dirichlet energy on a disconnected network", {
+  disconnected <- get_iotable_disconnected()
+  network <- io_network(disconnected$iotable)
+  laplacian <- network$laplacian
+
+  for (normalized in c(TRUE, FALSE)) {
+    constraint_weight <- if (normalized) {
+      network$total_weight
+    } else {
+      rep(1, nrow(laplacian))
+    }
+
+    # Minimize the Rayleigh quotient over h orthogonal to the constant vector
+    # of each part in the D inner product.
+    project <- function(z) {
+      center_within_parts(z, constraint_weight, disconnected$part)
+    }
+    quotient <- function(z) {
+      h <- project(z)
+      sum(h * (laplacian %*% h)) / sum(constraint_weight * h^2)
+    }
+    set.seed(1)
+    optimum <- optim(
+      rnorm(nrow(laplacian)),
+      quotient,
+      method = "BFGS",
+      control = list(reltol = 1e-16, maxit = 2000)
+    )
+    expected <- project(optimum$par)
+    expected <- expected / sqrt(sum(constraint_weight * expected^2))
+    expected <- expected * sign(expected[which.max(abs(expected))])
+
+    actual <- as.numeric(as.matrix(io_spectral_embedding(
+      disconnected$iotable,
+      normalized = normalized
+    )))
+    expect_equal(actual, expected, tolerance = 1e-4)
+  }
+})
+
 test_that("io_spectral_embedding with paths = \"all\" uses the all-path Laplacian", {
   iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
   network <- io_network(iotable, paths = "all")
