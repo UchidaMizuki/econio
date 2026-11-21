@@ -26,11 +26,6 @@ io_table_transfer_byproduct <- function(data) {
   inter_industry <- io_inter_industry(data)
   dim_names <- dimnames(inter_industry)
   transaction <- as.matrix(inter_industry)
-
-  if (sum(transaction < 0) == 0) {
-    return(data)
-  }
-
   transaction <- pmax(transaction, 0) + t(pmax(-transaction, 0))
   inter_industry <- dibble::dibble(
     as.vector(transaction),
@@ -82,13 +77,11 @@ io_table_remove_reexport <- function(data) {
   balance <- io_import_balance(data)
   # Re-exports can't be identified without positive regional demand.
   is_excess <- balance$excess > 0 & balance$regional_demand > 0
-  if (!any(is_excess)) {
-    return(data)
-  }
 
   over_export <- balance |>
     tibble::as_tibble() |>
     dplyr::filter(
+      .data$excess > 0,
       .data$regional_demand > 0,
       exceeds(.data$excess, .data$export)
     )
@@ -111,8 +104,7 @@ io_table_remove_reexport <- function(data) {
     0
   )
   import_scale <- 1 - safe_divide(reexport, balance$import)
-  # Rounding can leave the re-exports slightly above the exports.
-  export_scale <- pmax(1 - safe_divide(reexport, balance$export), 0)
+  export_scale <- 1 - safe_divide(reexport, balance$export)
 
   import <- data |>
     dplyr::filter(
