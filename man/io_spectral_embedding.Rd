@@ -58,10 +58,12 @@ orthogonal to the constant vector, and the minimizers are the eigenvectors
 of \eqn{\Lambda} itself.
 
 In both cases the eigenvectors associated with the smallest non-zero
-eigenvalues are returned. With \code{dims = 1} this is the \strong{Fiedler vector}.
-A disconnected network has one zero eigenvalue per component, which makes
-the embedding arbitrary, so the function aborts if the network (treating
-each transaction as an undirected link) is not connected.
+eigenvalues are returned. With \code{dims = 1} this is the \strong{Fiedler vector} of
+a connected network. A disconnected network (treating each transaction as an
+undirected link) has one zero eigenvalue per part, which are skipped, so
+each eigenvector is generally non-zero on only one part. An industry without
+transactions with any other industry (e.g. with zero output in a regional
+table) forms a part of its own, with 0 in every eigenvector.
 
 Like \code{\link[=io_trophic_level]{io_trophic_level()}}, the table is first converted to a noncompetitive
 import type table with \code{\link[=io_table_to_noncompetitive_import]{io_table_to_noncompetitive_import()}} so that the

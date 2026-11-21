@@ -117,16 +117,44 @@ test_that("io_trophic is invariant to the unit of the table", {
   }
 })
 
-test_that("io_trophic_level aborts on an industry with no links to others", {
-  iotable <- read_iotable_dummy("regional_noncompetitive_import")
-  iotable[1, 2:3] <- 0
-  iotable[2:3, 1] <- 0
-
-  expect_snapshot(io_trophic_level(iotable), error = TRUE)
-  expect_snapshot(io_trophic_incoherence(iotable), error = TRUE)
+test_that("io_trophic agrees with the bordered system on connected networks", {
+  # The levels solve `Λ h = v` subject to `sum(u * h) = 0`.
+  for (type in c(
+    "regional_noncompetitive_import",
+    "multiregional_competitive_import"
+  )) {
+    iotable <- read_iotable_dummy(type)
+    for (paths in c("direct", "all")) {
+      network <- io_network(iotable, paths)
+      length_weight <- network$weight * network$path_length
+      imbalance <- colSums(length_weight) - rowSums(length_weight)
+      u <- network$total_weight
+      n <- length(u)
+      bordered <- rbind(cbind(network$laplacian, u), c(u, 0))
+      expected <- solve(bordered, c(imbalance, 0))[seq_len(n)]
+      expect_equal(io_trophic(network)$level, unname(expected))
+    }
+  }
 })
 
-test_that("io_trophic aborts on separate components", {
+test_that("io_trophic_level gives 0 to an industry with no links to others", {
+  iotable <- read_iotable_dummy("regional_noncompetitive_import")
+  # Industry 1 keeps its own transactions.
+  iotable[1, 2:3] <- 0
+  iotable[2:3, 1] <- 0
+  weight <- as.matrix(io_inter_industry(iotable))
+  network <- io_network_direct(weight[-1, -1], tibble::tibble(sector = 2:3))
+  level <- c(0, io_trophic(network)$level)
+  level_diff <- outer(level, level, \(from, to) to - from)
+
+  expect_equal(as.vector(as.matrix(io_trophic_level(iotable))), level)
+  expect_equal(
+    io_trophic_incoherence(iotable),
+    sum(weight * (level_diff - 1)^2) / sum(weight)
+  )
+})
+
+test_that("io_trophic centers the levels within each part of a disconnected network", {
   weight <- rbind(
     c(0, 1, 0, 0),
     c(1, 0, 0, 0),
@@ -134,7 +162,7 @@ test_that("io_trophic aborts on separate components", {
     c(0, 0, 0, 0)
   )
   network <- io_network_direct(weight, tibble::tibble(sector = 1:4))
-  expect_snapshot(io_trophic(network), error = TRUE)
+  expect_equal(io_trophic(network)$level, c(0, 0, -0.5, 0.5))
 })
 
 test_that("io_trophic_level agrees with numerically minimizing the trophic objective", {
@@ -160,6 +188,35 @@ test_that("io_trophic_level agrees with numerically minimizing the trophic objec
   expect_lte(objective(actual), optimum$value * (1 + 1e-10))
   expect_equal(
     suppressMessages(io_trophic_incoherence(iotable)),
+    optimum$value / sum(weight)
+  )
+})
+
+test_that("io_trophic_level agrees with numerically minimizing the trophic objective on a disconnected network", {
+  disconnected <- get_iotable_disconnected()
+  network <- io_network(disconnected$iotable)
+  weight <- network$weight
+
+  objective <- function(level) {
+    sum(weight * (outer(level, level, \(from, to) to - from) - 1)^2)
+  }
+  optimum <- optim(
+    rep(0, nrow(weight)),
+    objective,
+    method = "BFGS",
+    control = list(reltol = 1e-14)
+  )
+  expected <- center_within_parts(
+    optimum$par,
+    network$total_weight,
+    disconnected$part
+  )
+
+  actual <- as.numeric(as.matrix(io_trophic_level(disconnected$iotable)))
+  expect_equal(actual, expected, tolerance = 1e-4)
+  expect_lte(objective(actual), optimum$value * (1 + 1e-10))
+  expect_equal(
+    io_trophic_incoherence(disconnected$iotable),
     optimum$value / sum(weight)
   )
 })

@@ -174,3 +174,30 @@ get_iotable_negative_demand <- function() {
     final_demand_1 = -20
   )
 }
+
+# A multiregional noncompetitive import type table whose network has three
+# parts: the industries of region 1, `industry_1` of region 2 without any
+# links, and the other industries of regions 2 and 3. `part` gives the part of
+# each industry.
+get_iotable_disconnected <- function() {
+  iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
+  iotable[1:3, c(7:9, 13:15)] <- 0
+  iotable[c(7:9, 13:15), 1:3] <- 0
+  iotable[7, c(1:3, 8:9, 13:15)] <- 0
+  iotable[c(1:3, 8:9, 13:15), 7] <- 0
+  list(iotable = iotable, part = c(1, 1, 1, 2, 3, 3, 3, 3, 3))
+}
+
+# Subtracts the mean of `x` weighted by `weight` within each part, giving 0 to
+# parts without weight.
+center_within_parts <- function(x, weight, part) {
+  for (p in unique(part)) {
+    i <- part == p
+    x[i] <- if (sum(weight[i]) > 0) {
+      x[i] - sum(weight[i] * x[i]) / sum(weight[i])
+    } else {
+      0
+    }
+  }
+  x
+}

@@ -94,17 +94,29 @@ io_network_weight <- function(weight, path_length, dim_name) {
   )
 }
 
-io_abort_disconnected <- function(network, call = rlang::caller_env()) {
-  industry <- io_axis_label(network$dim_name)[network$total_weight == 0]
-  cli::cli_abort(
-    c(
-      "The domestic production network must be connected.",
-      "x" = if (length(industry) > 0) {
-        "{length(industry)} industr{?y has/ies have} no domestic intermediate transactions: {.val {industry}}."
-      },
-      "i" = "Results for separate parts of the network are not comparable.",
-      "i" = "Remove or merge industries that are not linked to the others."
-    ),
-    call = call
+# Eigendecomposition of the Laplacian `Λ`, or with `normalized = TRUE` of the
+# normalized Laplacian `D^(-1/2) Λ D^(-1/2)` with `D = diag(u)`. `D^(-1/2)` is
+# the pseudo-inverse of `D^(1/2)`, i.e. 0 for industries with `u = 0`, and
+# `scale` is its diagonal. `zero` marks the eigenvalues that are 0 up to
+# rounding error, one per connected part of the network, with a tolerance of
+# `sqrt(eps)` relative to the largest eigenvalue, as in `MASS::ginv()`:
+# rounding can leave them a few times `eps` above 0.
+io_laplacian_eigen <- function(network, normalized = TRUE) {
+  total_weight <- network$total_weight
+  scale <- if (normalized) {
+    ifelse(total_weight > 0, 1 / sqrt(total_weight), 0)
+  } else {
+    rep(1, length(total_weight))
+  }
+  decomposition <- eigen(
+    network$laplacian * (scale %o% scale),
+    symmetric = TRUE
+  )
+  values <- decomposition$values
+  list(
+    values = values,
+    vectors = decomposition$vectors,
+    scale = scale,
+    zero = values <= .Machine$double.eps^0.5 * max(values)
   )
 }

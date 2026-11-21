@@ -45,12 +45,14 @@ weighted mean is 0, \eqn{\sum_i u_i h_i = 0}. A negative level means an
 industry sits upstream of the weighted average, and a positive level means
 it sits downstream. Because \code{u} includes transactions within an industry,
 merging industries with equal levels leaves \code{u}'s total and therefore the
-levels of the other industries unchanged. The levels are obtained by solving
-the system together with this constraint, which has a unique solution when
-the network is connected. Trophic levels in separate parts of a disconnected
-network are not comparable, so both functions abort if the network
-(treating each transaction as an undirected link) is not connected, e.g.
-when an industry has no transactions with any other industry.
+levels of the other industries unchanged.
+
+If the network (treating each transaction as an undirected link) has
+separate parts, the levels are centered within each part, and levels in
+different parts are not comparable. An industry without transactions with
+any other industry (e.g. with zero output in a regional table) forms a part
+of its own, with level 0. The trophic incoherence doesn't depend on the
+centering, so it covers all parts.
 
 Value-added and final-demand sectors are not nodes and do not receive a
 trophic level, but they are \strong{not} ignored: because the table balances, an

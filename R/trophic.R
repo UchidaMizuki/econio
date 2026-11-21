@@ -19,12 +19,14 @@
 #' industry sits upstream of the weighted average, and a positive level means
 #' it sits downstream. Because `u` includes transactions within an industry,
 #' merging industries with equal levels leaves `u`'s total and therefore the
-#' levels of the other industries unchanged. The levels are obtained by solving
-#' the system together with this constraint, which has a unique solution when
-#' the network is connected. Trophic levels in separate parts of a disconnected
-#' network are not comparable, so both functions abort if the network
-#' (treating each transaction as an undirected link) is not connected, e.g.
-#' when an industry has no transactions with any other industry.
+#' levels of the other industries unchanged.
+#'
+#' If the network (treating each transaction as an undirected link) has
+#' separate parts, the levels are centered within each part, and levels in
+#' different parts are not comparable. An industry without transactions with
+#' any other industry (e.g. with zero output in a regional table) forms a part
+#' of its own, with level 0. The trophic incoherence doesn't depend on the
+#' centering, so it covers all parts.
 #'
 #' Value-added and final-demand sectors are not nodes and do not receive a
 #' trophic level, but they are **not** ignored: because the table balances, an
@@ -124,29 +126,27 @@ io_trophic_incoherence <- function(data, paths = c("direct", "all")) {
     sum(network$weight * network$path_length^2)
 }
 
-io_trophic <- function(network, call = rlang::caller_env()) {
+io_trophic <- function(network) {
   # `v` in `Λ h = v`, which is in minus out for direct transactions.
   length_weight <- network$weight * network$path_length
   imbalance <- colSums(length_weight) - rowSums(length_weight)
-  total_weight <- network$total_weight
-  n_industry <- length(imbalance)
 
-  # The Laplacian is singular (its rows sum to 0), so the levels are only
-  # defined up to an additive constant, which is fixed by `sum(u * h) = 0`.
-  # Solve `Λ h = v` subject to this constraint as one bordered (KKT) system.
-  # Its multiplier is 0 because the imbalance sums to 0, and the system is
-  # singular exactly when the network is disconnected.
-  bordered_laplacian <- rbind(
-    cbind(network$laplacian, total_weight),
-    c(total_weight, 0)
-  )
-  solution <- rlang::try_fetch(
-    solve(bordered_laplacian, c(imbalance, 0)),
-    error = function(cnd) io_abort_disconnected(network, call = call)
-  )
+  # The Laplacian is singular, with one zero eigenvalue per connected part of
+  # the network, so the levels are only defined up to an additive constant in
+  # each part. The solution minimizing `h' D h` with `D = diag(u)` satisfies
+  # `sum(u * h) = 0` in each part. With `g = D^(1/2) h`, it is the
+  # minimum-norm solution of `N g = D^(-1/2) v` for the normalized Laplacian
+  # `N`, i.e. `h = D^(-1/2) N⁺ D^(-1/2) v` with its pseudo-inverse `N⁺`.
+  decomposition <- io_laplacian_eigen(network)
+  scale <- decomposition$scale
+  nonzero <- !decomposition$zero
+  vectors <- decomposition$vectors[, nonzero, drop = FALSE]
+  values <- decomposition$values[nonzero]
+  level <- scale *
+    (vectors %*% (crossprod(vectors, scale * imbalance) / values))
 
   list(
     dim_name = network$dim_name,
-    level = unname(solution[seq_len(n_industry)])
+    level = as.vector(level)
   )
 }

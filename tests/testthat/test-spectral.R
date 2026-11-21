@@ -53,22 +53,38 @@ test_that("io_spectral_embedding solves the normalized generalized eigenproblem"
   }
 })
 
-test_that("io_spectral_embedding aborts on a disconnected network", {
+test_that("io_spectral_embedding gives 0 to an industry with no links to others", {
   iotable <- read_iotable_dummy("regional_noncompetitive_import")
   iotable_isolated <- iotable
   iotable_isolated[1, 1:3] <- 0
   iotable_isolated[1:3, 1] <- 0
-  expect_snapshot(io_spectral_embedding(iotable_isolated), error = TRUE)
-
-  # Industry 1 keeps its own transactions, so its total weight is positive.
+  # Industry 1 keeps its own transactions, which don't affect the others.
   iotable_self_loop <- iotable
   iotable_self_loop[1, 2:3] <- 0
   iotable_self_loop[2:3, 1] <- 0
-  expect_snapshot(io_spectral_embedding(iotable_self_loop), error = TRUE)
-  expect_snapshot(
-    io_spectral_embedding(iotable_self_loop, normalized = FALSE),
-    error = TRUE
-  )
+
+  for (normalized in c(TRUE, FALSE)) {
+    h <- as.vector(as.matrix(
+      io_spectral_embedding(iotable_isolated, normalized = normalized)
+    ))
+    expect_equal(h[[1]], 0)
+    expect_equal(
+      as.vector(as.matrix(
+        io_spectral_embedding(iotable_self_loop, normalized = normalized)
+      )),
+      h
+    )
+  }
+})
+
+test_that("io_spectral_embedding is non-zero on one part of a disconnected network", {
+  iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
+  # No intermediate transactions between region 1 and the other regions.
+  iotable[1:3, c(7:9, 13:15)] <- 0
+  iotable[c(7:9, 13:15), 1:3] <- 0
+  h <- as.vector(as.matrix(io_spectral_embedding(iotable)))
+  region_1 <- 1:3
+  expect_lt(min(max(abs(h[region_1])), max(abs(h[-region_1]))), 1e-12)
 })
 
 test_that("io_spectral_embedding validates normalized", {
@@ -149,6 +165,46 @@ test_that("io_spectral_embedding agrees with numerically minimizing the Dirichle
       expect_equal(sum(actual * (laplacian %*% actual)), optimum$value)
       expect_equal(actual, expected, tolerance = 1e-4)
     }
+  }
+})
+
+test_that("io_spectral_embedding agrees with numerically minimizing the Dirichlet energy on a disconnected network", {
+  disconnected <- get_iotable_disconnected()
+  network <- io_network(disconnected$iotable)
+  laplacian <- network$laplacian
+
+  for (normalized in c(TRUE, FALSE)) {
+    constraint_weight <- if (normalized) {
+      network$total_weight
+    } else {
+      rep(1, nrow(laplacian))
+    }
+
+    # Minimize the Rayleigh quotient over h orthogonal to the constant vector
+    # of each part in the D inner product.
+    project <- function(z) {
+      center_within_parts(z, constraint_weight, disconnected$part)
+    }
+    quotient <- function(z) {
+      h <- project(z)
+      sum(h * (laplacian %*% h)) / sum(constraint_weight * h^2)
+    }
+    set.seed(1)
+    optimum <- optim(
+      rnorm(nrow(laplacian)),
+      quotient,
+      method = "BFGS",
+      control = list(reltol = 1e-16, maxit = 2000)
+    )
+    expected <- project(optimum$par)
+    expected <- expected / sqrt(sum(constraint_weight * expected^2))
+    expected <- expected * sign(expected[which.max(abs(expected))])
+
+    actual <- as.numeric(as.matrix(io_spectral_embedding(
+      disconnected$iotable,
+      normalized = normalized
+    )))
+    expect_equal(actual, expected, tolerance = 1e-4)
   }
 })
 
