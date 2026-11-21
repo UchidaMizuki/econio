@@ -25,10 +25,12 @@
 #' of \eqn{\Lambda} itself.
 #'
 #' In both cases the eigenvectors associated with the smallest non-zero
-#' eigenvalues are returned. With `dims = 1` this is the **Fiedler vector**.
-#' A disconnected network has one zero eigenvalue per component, which makes
-#' the embedding arbitrary, so the function aborts if the network (treating
-#' each transaction as an undirected link) is not connected.
+#' eigenvalues are returned. With `dims = 1` this is the **Fiedler vector** of
+#' a connected network. A disconnected network (treating each transaction as an
+#' undirected link) has one zero eigenvalue per part, which are skipped, so
+#' each eigenvector is generally non-zero on only one part. An industry without
+#' transactions with any other industry (e.g. with zero output in a regional
+#' table) forms a part of its own, with 0 in every eigenvector.
 #'
 #' Like [io_trophic_level()], the table is first converted to a noncompetitive
 #' import type table with [io_table_to_noncompetitive_import()] so that the
@@ -85,41 +87,20 @@ io_spectral_embedding <- function(
   rlang::check_bool(normalized)
 
   network <- io_network(data, paths)
-  n_industry <- ncol(network$laplacian)
 
-  rlang::check_number_whole(dims, min = 1, max = n_industry - 1)
-
-  total_weight <- network$total_weight
-  if (!normalized) {
-    scale <- rep(1, n_industry)
-  } else if (any(total_weight == 0)) {
-    io_abort_disconnected(network, call = rlang::current_env())
-  } else {
-    scale <- sqrt(total_weight)
-  }
   # With `normalized = TRUE`, solve the generalized problem
   # `Λ h = λ diag(u) h` via the symmetric matrix
   # `diag(u)^(-1/2) Λ diag(u)^(-1/2)`, then back-transform.
-  decomposition <- eigen(
-    network$laplacian / (scale %o% scale),
-    symmetric = TRUE
-  )
+  decomposition <- io_laplacian_eigen(network, normalized = normalized)
+  n_nonzero <- sum(!decomposition$zero)
 
-  # Eigenvalues are returned in decreasing order, so the trivial mode
-  # (eigenvalue ~ 0) is last. A disconnected network has one zero eigenvalue
-  # per component, so the second smallest must be numerically non-zero.
-  eigenvalues <- decomposition$values
-  if (
-    eigenvalues[[n_industry - 1L]] <=
-      n_industry * .Machine$double.eps * eigenvalues[[1]]
-  ) {
-    io_abort_disconnected(network, call = rlang::current_env())
-  }
+  rlang::check_number_whole(dims, min = 1, max = as.double(n_nonzero))
 
-  # Take the `dims` smallest non-zero eigenvectors, i.e. columns
-  # (n_industry - 1), (n_industry - 2), ..., the Fiedler vector first.
-  columns <- seq.int(n_industry - 1L, n_industry - dims)
-  eigenvectors <- decomposition$vectors[, columns, drop = FALSE] / scale
+  # Eigenvalues are returned in decreasing order, so take the `dims` smallest
+  # non-zero eigenvectors, the Fiedler vector first.
+  columns <- seq.int(n_nonzero, n_nonzero - dims + 1)
+  eigenvectors <- decomposition$vectors[, columns, drop = FALSE] *
+    decomposition$scale
 
   # The sign of an eigenvector is arbitrary; orient each so that its largest
   # magnitude entry is positive, for reproducible output.
