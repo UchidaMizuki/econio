@@ -175,6 +175,15 @@
       Error in `io_table_regional()`:
       ! `import_type` must be one of "competitive_import" or "noncompetitive_import", not "yes".
 
+# io_table_regional() checks totals relative to total output
+
+    Code
+      io_table_regional(add_zero_output_industry(data, 0.001), import_type = "competitive_import")
+    Condition
+      Error in `io_check_totals()`:
+      ! The total input values do not match.
+      x industry_4: 0.001 (`actual`) not nearly equal to 0 (`expected`).
+
 # io_check_totals() validates total_tolerance
 
     Code

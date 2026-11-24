@@ -180,16 +180,21 @@ test_that("io_table_to_noncompetitive_import() uses data_import", {
   }
 })
 
-test_that("io_table_to_noncompetitive_import() checks import totals relative to their size", {
-  # Amounts in yen are large, so floating-point errors exceed an absolute
-  # tolerance.
+test_that("io_table_to_noncompetitive_import() checks import totals relative to total imports", {
+  # Amounts in yen are large, so their floating-point errors are too.
   iotable <- read_iotable_dummy("regional_competitive_import") * 1e10
   import <- get_data_regional_demand(iotable) -
     get_data_regional_demand(io_table_to_noncompetitive_import(iotable))
-  import <- import * (1 + 1e-12)
   expect_s3_class(
-    io_table_to_noncompetitive_import(iotable, data_import = import),
+    io_table_to_noncompetitive_import(
+      iotable,
+      data_import = import * (1 + 1e-12)
+    ),
     "io_table_noncompetitive_import"
+  )
+  expect_snapshot(
+    io_table_to_noncompetitive_import(iotable, data_import = import * 1.01),
+    error = TRUE
   )
 })
 

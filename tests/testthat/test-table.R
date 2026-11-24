@@ -133,6 +133,32 @@ test_that("io_table_regional() validates its scalar arguments", {
   )
 })
 
+test_that("io_table_regional() checks totals relative to total output", {
+  data <- read_iotable_dummy_raw("regional_competitive_import")
+  expect_s3_class(
+    io_table_regional(
+      add_zero_output_industry(data, 1e-7),
+      import_type = "competitive_import"
+    ),
+    "io_table_regional"
+  )
+  expect_snapshot(
+    io_table_regional(
+      add_zero_output_industry(data, 1e-3),
+      import_type = "competitive_import"
+    ),
+    error = TRUE
+  )
+  expect_s3_class(
+    io_table_regional(
+      add_zero_output_industry(data, 1e-3),
+      import_type = "competitive_import",
+      total_tolerance = 1e-4
+    ),
+    "io_table_regional"
+  )
+})
+
 test_that("io_check_totals() validates total_tolerance", {
   iotable <- read_iotable_dummy("regional_competitive_import")
   expect_snapshot(io_check_totals(iotable, total_tolerance = "x"), error = TRUE)

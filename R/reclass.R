@@ -7,8 +7,8 @@
 #' `NULL`.
 #' @param from_col,to_col,weight_col Names of the columns in the
 #' reclassification data. Defaults are `"from"`, `"to"`, and `"weight"`.
-#' @param weight_tolerance Tolerance for checking that weights sum to 1, as in
-#' [all.equal()]. By default, `.Machine$double.eps^0.5`.
+#' @param weight_tolerance Tolerance for checking that weights sum to 1.
+#' By default, `.Machine$double.eps^0.5`.
 #' @param check_axes A scalar logical. If `TRUE`, the input and output axes are
 #' checked to be identical. By default, `TRUE`.
 #'
@@ -178,7 +178,7 @@ io_reclass_axis_data <- function(
     weight_total <- axis_data |>
       dplyr::summarise(weight_total = sum(.data$weight), .by = "from") |>
       dplyr::filter(
-        !nearly_equal(.data$weight_total, 1, tolerance = weight_tolerance)
+        !dplyr::near(.data$weight_total, 1, tol = weight_tolerance)
       )
     if (!vctrs::vec_is_empty(weight_total)) {
       cli::cli_abort(

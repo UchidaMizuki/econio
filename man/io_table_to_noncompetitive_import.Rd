@@ -20,8 +20,9 @@ io_table_to_noncompetitive_import(
 \code{NA_character_}.}
 
 \item{import_total_tolerance}{A numeric tolerance for checking import totals,
-relative to the totals as in \code{\link[=all.equal]{all.equal()}}. By default,
-\code{.Machine$double.eps^0.5}.}
+as a fraction of the sum of the import totals, i.e. total imports. By
+default, \code{.Machine$double.eps^0.5}, which allows only floating-point rounding
+error.}
 }
 \value{
 A noncompetitive import type input-output table.

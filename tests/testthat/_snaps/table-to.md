@@ -38,6 +38,17 @@
       x region_3/industry_2: 42 (`actual`) not nearly equal to 21 (`expected`).
       x region_3/industry_3: 72 (`actual`) not nearly equal to 36 (`expected`).
 
+# io_table_to_noncompetitive_import() checks import totals relative to total imports
+
+    Code
+      io_table_to_noncompetitive_import(iotable, data_import = import * 1.01)
+    Condition
+      Error in `io_table_to_noncompetitive_import()`:
+      ! The total import values do not match.
+      x industry_1: 8.08e+10 (`actual`) not nearly equal to 8e+10 (`expected`).
+      x industry_2: 1.01e+10 (`actual`) not nearly equal to 1e+10 (`expected`).
+      x industry_3: 6.06e+10 (`actual`) not nearly equal to 6e+10 (`expected`).
+
 # io_table_to_noncompetitive_import() warns but converts when import coefficients are above 1
 
     Code
