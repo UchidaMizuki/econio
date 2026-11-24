@@ -74,6 +74,26 @@ as_long_tibble <- function(x) {
   dplyr::bind_cols(unname(axes), value = value)
 }
 
+# Add `industry_4` without output to the raw dummy data, whose total input of 0
+# is off by `value_added`, e.g. from rounding.
+add_zero_output_industry <- function(data, value_added) {
+  data |>
+    dplyr::bind_rows(
+      tibble::tibble(
+        input_sector_type = c("industry", "value_added"),
+        input_sector_name = c("industry_4", "value_added_1"),
+        output_sector_type = "industry",
+        output_sector_name = "industry_4",
+        value = c(0, value_added)
+      )
+    ) |>
+    tidyr::complete(
+      tidyr::nesting(input_sector_type, input_sector_name),
+      tidyr::nesting(output_sector_type, output_sector_name),
+      fill = list(value = 0)
+    )
+}
+
 read_iotable_dummy <- function(name) {
   name <- rlang::arg_match(
     name,

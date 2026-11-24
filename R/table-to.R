@@ -5,8 +5,9 @@
 #' @param import_sector_name A name for the import sector. By default,
 #' `NA_character_`.
 #' @param import_total_tolerance A numeric tolerance for checking import totals,
-#' relative to the totals as in [all.equal()]. By default,
-#' `.Machine$double.eps^0.5`.
+#' as a fraction of the sum of the import totals, i.e. total imports. By
+#' default, `.Machine$double.eps^0.5`, which allows only floating-point rounding
+#' error.
 #'
 #' @return A competitive import type input-output table.
 #'
@@ -99,8 +100,9 @@ io_table_to_competitive_import <- function(
 #' @param import_sector_name A name for the import sector. By default,
 #' `NA_character_`.
 #' @param import_total_tolerance A numeric tolerance for checking import totals,
-#' relative to the totals as in [all.equal()]. By default,
-#' `.Machine$double.eps^0.5`.
+#' as a fraction of the sum of the import totals, i.e. total imports. By
+#' default, `.Machine$double.eps^0.5`, which allows only floating-point rounding
+#' error.
 #'
 #' @return A noncompetitive import type input-output table.
 #'
@@ -418,7 +420,7 @@ io_check_import_totals <- function(
   ) |>
     tibble::as_tibble() |>
     dplyr::filter(
-      !nearly_equal(
+      !nearly_equal_totals(
         .data$import_total_actual,
         .data$import_total_expected,
         tolerance = .env$import_total_tolerance

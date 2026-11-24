@@ -8,10 +8,12 @@ exceeds <- function(x, y, tolerance = .Machine$double.eps^0.5) {
   x - y > tolerance * abs(y)
 }
 
-# Whether `x` equals `y` up to rounding error, with a tolerance relative to `y`
-# as in `all.equal()`.
-nearly_equal <- function(x, y, tolerance = .Machine$double.eps^0.5) {
-  abs(x - y) <= tolerance * abs(y)
+# Whether the totals `actual` equal `expected` up to `tolerance` times the sum of
+# the totals, e.g. total output. Unlike a tolerance relative to each total, this
+# allows rounding error in totals of 0, and unlike an absolute tolerance, it
+# doesn't depend on the units of the table.
+nearly_equal_totals <- function(actual, expected, tolerance) {
+  abs(actual - expected) <= tolerance * sum(abs(expected))
 }
 
 # Format numbers for messages one by one, with the significant digits of

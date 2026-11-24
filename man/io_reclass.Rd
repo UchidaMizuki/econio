@@ -27,8 +27,8 @@ If \code{NULL}, no reclassification is performed for that axis. By default,
 \item{from_col, to_col, weight_col}{Names of the columns in the
 reclassification data. Defaults are \code{"from"}, \code{"to"}, and \code{"weight"}.}
 
-\item{weight_tolerance}{Tolerance for checking that weights sum to 1, as in
-\code{\link[=all.equal]{all.equal()}}. By default, \code{.Machine$double.eps^0.5}.}
+\item{weight_tolerance}{Tolerance for checking that weights sum to 1.
+By default, \code{.Machine$double.eps^0.5}.}
 
 \item{check_axes}{A scalar logical. If \code{TRUE}, the input and output axes are
 checked to be identical. By default, \code{TRUE}.}

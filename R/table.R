@@ -14,9 +14,11 @@ new_io_table <- function(data, ..., class = character()) {
 #' `"noncompetitive_import"`. By default, `NULL`, which infers the type from
 #' whether `"import"` appears in the input or output sector type column of
 #' `data`.
-#' @param total_tolerance A numeric. The tolerance for the total check,
-#' relative to the totals as in [all.equal()]. By default,
-#' `.Machine$double.eps^0.5`.
+#' @param total_tolerance A numeric. The tolerance for the total check, as a
+#' fraction of the sum of the totals, i.e. total output. Each total may differ
+#' from the sum of its components by up to this fraction of total output, so
+#' that the check doesn't depend on the units of the table. By default,
+#' `.Machine$double.eps^0.5`, which allows only floating-point rounding error.
 #' @param check_axes A scalar logical. If `TRUE`, the input and output axes are
 #' checked to be identical. By default, `TRUE`.
 #'
@@ -94,9 +96,11 @@ io_table_regional <- function(
 #' `"noncompetitive_import"`. By default, `NULL`, which infers the type from
 #' whether `"import"` appears in the input or output sector type column of
 #' `data`.
-#' @param total_tolerance A numeric. The tolerance for the total check,
-#' relative to the totals as in [all.equal()]. By default,
-#' `.Machine$double.eps^0.5`.
+#' @param total_tolerance A numeric. The tolerance for the total check, as a
+#' fraction of the sum of the totals, i.e. total output. Each total may differ
+#' from the sum of its components by up to this fraction of total output, so
+#' that the check doesn't depend on the units of the table. By default,
+#' `.Machine$double.eps^0.5`, which allows only floating-point rounding error.
 #' @param check_axes A scalar logical. If `TRUE`, the input and output axes are
 #' checked to be identical. By default, `TRUE`.
 #'
@@ -253,9 +257,11 @@ io_add_region <- function(data, axis, region) {
 #' Check input-output table totals
 #'
 #' @param data An input-output table.
-#' @param total_tolerance A numeric. The tolerance for the total check,
-#' relative to the totals as in [all.equal()]. By default,
-#' `.Machine$double.eps^0.5`.
+#' @param total_tolerance A numeric. The tolerance for the total check, as a
+#' fraction of the sum of the totals, i.e. total output. Each total may differ
+#' from the sum of its components by up to this fraction of total output, so
+#' that the check doesn't depend on the units of the table. By default,
+#' `.Machine$double.eps^0.5`, which allows only floating-point rounding error.
 #'
 #' @return An `econ_io_table` object.
 #'
@@ -302,7 +308,7 @@ io_check_totals <- function(data, total_tolerance = .Machine$double.eps^0.5) {
       ) |>
         tibble::as_tibble() |>
         dplyr::filter(
-          !nearly_equal(
+          !nearly_equal_totals(
             .data$total_actual,
             .data$total_expected,
             tolerance = .env$total_tolerance
