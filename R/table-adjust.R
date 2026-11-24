@@ -53,10 +53,7 @@ io_table_transfer_byproduct <- function(data) {
 #' and leaves its import coefficient above 1.
 #'
 #' Sectors whose imports are within their regional demand are left unchanged,
-#' and so are sectors whose regional demand is not positive. The Stone method
-#' lowers regional demand by recording byproducts as negative inputs, which
-#' overstates the excess, so convert such byproducts with
-#' [io_table_transfer_byproduct()] first.
+#' and so are sectors whose regional demand is not positive.
 #'
 #' @param data A competitive import type input-output table.
 #'
