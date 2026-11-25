@@ -13,8 +13,11 @@ io_downstreamness(data, open_economy = NULL, normalize = FALSE)
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
 
-\item{open_economy}{A scalar logical passed to \code{\link[=io_leontief_inverse]{io_leontief_inverse()}} /
-\code{\link[=io_ghosh_inverse]{io_ghosh_inverse()}}. If \code{TRUE}, open economy assumptions are used.}
+\item{open_economy}{A scalar logical passed to \code{\link[=io_ghosh_inverse]{io_ghosh_inverse()}} /
+\code{\link[=io_leontief_inverse]{io_leontief_inverse()}}. If \code{TRUE}, \code{io_upstreamness()} uses the
+open-economy adjustment of Antràs et al. (2012), and \code{io_downstreamness()}
+excludes imports from the input coefficients. See \code{\link[=io_output_coef]{io_output_coef()}} and
+\code{\link[=io_input_coef]{io_input_coef()}}.}
 
 \item{normalize}{A scalar logical. If \code{TRUE}, the measure is rescaled to
 have a mean of 1 across sectors. By default, \code{FALSE}.}
@@ -59,6 +62,10 @@ io_downstreamness(iotable, normalize = TRUE) # power of dispersion
 
 }
 \references{
+Antràs, P., Chor, D., Fally, T. and Hillberry, R. (2012). Measuring the
+upstreamness of production and trade flows. \emph{American Economic Review},
+102(3), 412-416.
+
 Antràs, P. and Chor, D. (2018). On the measurement of upstreamness and
 downstreamness in global value chains. NBER Working Paper No. 24185.
 

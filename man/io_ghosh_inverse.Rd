@@ -9,8 +9,9 @@ io_ghosh_inverse(data, open_economy = NULL)
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
 
-\item{open_economy}{A scalar logical. If \code{TRUE}, open economy assumptions are
-used.}
+\item{open_economy}{A scalar logical passed to \code{\link[=io_output_coef]{io_output_coef()}}. If \code{TRUE},
+the output coefficients are divided by the intermediate and final demand
+instead of total output.}
 }
 \value{
 An \code{econ_io_table} object of the Ghosh inverse matrix.
