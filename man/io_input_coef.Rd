@@ -10,8 +10,8 @@ io_input_coef(data, open_economy = NULL)
 \item{data}{An \code{econ_io_table} object.}
 
 \item{open_economy}{A scalar logical. If \code{TRUE}, imports are excluded from
-the coefficients (competitive import tables only). Must be \code{NULL} for
-noncompetitive import tables.}
+the coefficients (competitive import tables only). By default, \code{TRUE} for
+competitive import tables. Must be \code{NULL} for noncompetitive import tables.}
 }
 \value{
 An \code{econ_io_table} object of input coefficients with dimensions

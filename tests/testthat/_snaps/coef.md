@@ -1,3 +1,17 @@
+# open_economy defaults to TRUE for competitive import tables
+
+    Code
+      input_coef <- io_input_coef(iotable)
+    Message
+      Assuming `open_economy = TRUE`.
+
+---
+
+    Code
+      output_coef <- io_output_coef(iotable)
+    Message
+      Assuming `open_economy = TRUE`.
+
 # io_input_coef() and io_output_coef() handle invalid open_economy
 
     Code

@@ -10,7 +10,8 @@ io_leontief_inverse(data, open_economy = NULL)
 \item{data}{An \code{econ_io_table} object.}
 
 \item{open_economy}{A scalar logical passed to \code{\link[=io_input_coef]{io_input_coef()}}. If \code{TRUE},
-imports are excluded from the input coefficients.}
+imports are excluded from the input coefficients. By default, \code{TRUE} for
+competitive import tables.}
 }
 \value{
 An \code{econ_io_table} object of the Leontief inverse matrix.

@@ -2,7 +2,8 @@
 #'
 #' @param data An `econ_io_table` object.
 #' @param open_economy A scalar logical passed to [io_input_coef()]. If `TRUE`,
-#' imports are excluded from the input coefficients.
+#' imports are excluded from the input coefficients. By default, `TRUE` for
+#' competitive import tables.
 #'
 #' @return An `econ_io_table` object of the Leontief inverse matrix.
 #'
@@ -25,7 +26,7 @@ io_leontief_inverse <- function(data, open_economy = NULL) {
 #' @param data An `econ_io_table` object.
 #' @param open_economy A scalar logical passed to [io_output_coef()]. If `TRUE`,
 #' the output coefficients are divided by the intermediate and final demand
-#' instead of total output.
+#' instead of total output. By default, `TRUE` for competitive import tables.
 #'
 #' @return An `econ_io_table` object of the Ghosh inverse matrix.
 #'
@@ -64,7 +65,8 @@ io_ghosh_inverse <- function(data, open_economy = NULL) {
 #'
 #' @param data An `econ_io_table` object.
 #' @param open_economy A scalar logical passed to [io_leontief_inverse()]. If
-#'   `TRUE`, imports are excluded from the input coefficients.
+#'   `TRUE`, imports are excluded from the input coefficients. By default,
+#'   `TRUE` for competitive import tables.
 #'
 #' @return A `dibble` over the `output` industries with the columns
 #'   `final_demand`, `export` and, for competitive import type tables with

@@ -30,7 +30,7 @@
 #' [io_leontief_inverse()]. If `TRUE`, `io_upstreamness()` uses the
 #' open-economy adjustment of Antràs et al. (2012), and `io_downstreamness()`
 #' excludes imports from the input coefficients. See [io_output_coef()] and
-#' [io_input_coef()].
+#' [io_input_coef()]. By default, `TRUE` for competitive import tables.
 #' @param normalize A scalar logical. If `TRUE`, the measure is rescaled to
 #' have a mean of 1 across sectors. By default, `FALSE`.
 #'

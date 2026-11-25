@@ -18,8 +18,8 @@
 #'
 #' @param data An `econ_io_table` object.
 #' @param open_economy A scalar logical. If `TRUE`, imports are excluded from
-#' the coefficients (competitive import tables only). Must be `NULL` for
-#' noncompetitive import tables.
+#' the coefficients (competitive import tables only). By default, `TRUE` for
+#' competitive import tables. Must be `NULL` for noncompetitive import tables.
 #'
 #' @return An `econ_io_table` object of input coefficients with dimensions
 #' `c("input", "output")`.
@@ -78,7 +78,9 @@ io_input_coef <- function(data, open_economy = NULL) {
 #' final demand for the output of industry `i`. This is the open-economy
 #' adjustment of upstreamness by Antràs et al. (2012), which assumes that the
 #' imports and exports of each industry are used in the same proportions as its
-#' intermediate and final demand. Unlike `open_economy = TRUE` in
+#' intermediate and final demand. With total output, the coefficients of an
+#' industry whose imports exceed its final demand plus exports add up to more
+#' than 1. Unlike `open_economy = TRUE` in
 #' [io_input_coef()], it doesn't exclude imports, so the coefficients differ
 #' from those of the table converted with
 #' [io_table_to_noncompetitive_import()]. For noncompetitive import tables,
@@ -87,7 +89,8 @@ io_input_coef <- function(data, open_economy = NULL) {
 #' @param data An `econ_io_table` object.
 #' @param open_economy A scalar logical. If `TRUE`, the denominator is the
 #' intermediate and final demand instead of total output (competitive import
-#' tables only). Must be `NULL` for noncompetitive import tables.
+#' tables only). By default, `TRUE` for competitive import tables. Must be
+#' `NULL` for noncompetitive import tables.
 #'
 #' @return An `econ_io_table` object of output coefficients with dimensions
 #' `c("input", "output")`.
@@ -159,7 +162,7 @@ io_open_economy <- function(
     }
   } else if (inherits(data, "io_table_competitive_import")) {
     if (is.null(open_economy)) {
-      open_economy <- FALSE
+      open_economy <- TRUE
       cli::cli_inform(
         "Assuming {.code open_economy = {open_economy}}."
       )

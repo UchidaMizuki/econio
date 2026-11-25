@@ -11,7 +11,8 @@ io_output_coef(data, open_economy = NULL)
 
 \item{open_economy}{A scalar logical. If \code{TRUE}, the denominator is the
 intermediate and final demand instead of total output (competitive import
-tables only). Must be \code{NULL} for noncompetitive import tables.}
+tables only). By default, \code{TRUE} for competitive import tables. Must be
+\code{NULL} for noncompetitive import tables.}
 }
 \value{
 An \code{econ_io_table} object of output coefficients with dimensions
@@ -33,7 +34,9 @@ it is total output plus imports minus exports, i.e. the intermediate and
 final demand for the output of industry \code{i}. This is the open-economy
 adjustment of upstreamness by Antràs et al. (2012), which assumes that the
 imports and exports of each industry are used in the same proportions as its
-intermediate and final demand. Unlike \code{open_economy = TRUE} in
+intermediate and final demand. With total output, the coefficients of an
+industry whose imports exceed its final demand plus exports add up to more
+than 1. Unlike \code{open_economy = TRUE} in
 \code{\link[=io_input_coef]{io_input_coef()}}, it doesn't exclude imports, so the coefficients differ
 from those of the table converted with
 \code{\link[=io_table_to_noncompetitive_import]{io_table_to_noncompetitive_import()}}. For noncompetitive import tables,
