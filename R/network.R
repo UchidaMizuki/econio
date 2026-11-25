@@ -8,10 +8,8 @@ io_network <- function(
   data <- io_table_to_noncompetitive_import(data) |>
     io_check_axes()
   inter_industry <- io_inter_industry(data)
-  dim_name <- dimnames(inter_industry)$input
-  weight <- as.matrix(inter_industry)
 
-  n_negative <- sum(weight < 0)
+  n_negative <- sum(inter_industry < 0)
   if (n_negative > 0) {
     cli::cli_abort(
       c(
@@ -22,39 +20,36 @@ io_network <- function(
     )
   }
 
-  switch(
+  path <- switch(
     paths,
-    direct = io_network_direct(weight, dim_name),
-    all = io_network_all(
-      weight,
-      as.vector(io_total_input(data)),
-      dim_name,
-      call = call
-    )
+    direct = io_paths_direct(data),
+    all = io_paths_all(data, call = call)
+  )
+  io_network_weight(
+    path$weight,
+    path_length = path$path_length,
+    dim_name = dimnames(inter_industry)$input
   )
 }
 
 # Direct transactions span paths of length 1.
-io_network_direct <- function(weight, dim_name) {
-  io_network_weight(weight, path_length = 1, dim_name = dim_name)
+io_paths_direct <- function(data) {
+  list(weight = as.matrix(io_inter_industry(data)), path_length = 1)
 }
 
-# With `Z_n = A^n diag(x)` the transactions along paths of length `n`, the edge
-# weights are `W = sum_n Z_n = (L - I) diag(x)` and the path lengths are the
-# average propagation lengths `sum_n n Z_n / W = L (L - I) / (L - I)`
-# (elementwise), where `L` is the Leontief inverse.
-io_network_all <- function(
-  weight,
-  total_input,
-  dim_name,
-  call = rlang::caller_env()
-) {
-  eye <- diag(nrow(weight))
-  input_coef <- sweep(weight, 2, total_input, "/")
-  input_coef[, total_input == 0] <- 0
-
-  # The sums over paths converge only if the spectral radius of `A` is below 1.
-  spectral_radius <- max(Mod(eigen(input_coef, only.values = TRUE)$values))
+# With `Z_n = A^n diag(x) = A^(n - 1) Z` the transactions along paths of length
+# `n`, the edge weights are `W = sum_n Z_n = L Z` and the path lengths are the
+# average propagation lengths `sum_n n Z_n / W = L W / W` (elementwise), where
+# `L` is the Leontief inverse.
+io_paths_all <- function(data, call = rlang::caller_env()) {
+  # `L = I + A + A^2 + ...` converges, and `L` is then nonnegative, only if the
+  # spectral radius of `A` is below 1. Otherwise `solve()` can still give an
+  # inverse, but with meaningless, e.g. negative, weights.
+  eigenvalues <- eigen(
+    as.matrix(io_input_coef(data)),
+    only.values = TRUE
+  )$values
+  spectral_radius <- max(Mod(eigenvalues))
   if (spectral_radius >= 1) {
     cli::cli_abort(
       c(
@@ -65,17 +60,16 @@ io_network_all <- function(
       call = call
     )
   }
-  leontief <- solve(eye - input_coef)
 
-  path_sum <- leontief - eye
-  path_length <- leontief %*% path_sum / path_sum
+  # The products below chain transactions between one set of industries, which
+  # the separate `input` and `output` axes of the table can't express, so they
+  # use plain matrices.
+  leontief <- as.matrix(io_leontief_inverse(data))
+  path_weight <- leontief %*% as.matrix(io_inter_industry(data))
+  path_length <- leontief %*% path_weight / path_weight
   # Pairs without any path have no weight, so their length is irrelevant.
-  path_length[path_sum == 0] <- 0
-  io_network_weight(
-    sweep(path_sum, 2, total_input, "*"),
-    path_length = path_length,
-    dim_name = dim_name
-  )
+  path_length[path_weight == 0] <- 0
+  list(weight = path_weight, path_length = path_length)
 }
 
 # `path_length` is the target level difference of each edge (MacKay, Johnson

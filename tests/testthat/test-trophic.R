@@ -64,14 +64,14 @@ test_that("io_trophic_level matches the pseudo-inverse solution", {
 
 test_that("io_trophic gives exact levels for a coherent chain", {
   weight <- rbind(c(0, 5, 0), c(0, 0, 5), c(0, 0, 0))
-  network <- io_network_direct(weight, tibble::tibble(sector = 1:3))
+  network <- io_network(get_iotable_weight(weight))
   # u = (5, 10, 5), so the weighted mean of (0, 1, 2) is 1.
   expect_equal(io_trophic(network)$level, c(-1, 0, 1))
 })
 
 test_that("io_trophic matches the two-industry closed form", {
   weight <- rbind(c(4, 3), c(1, 7))
-  network <- io_network_direct(weight, tibble::tibble(sector = 1:2))
+  network <- io_network(get_iotable_weight(weight))
   # h_2 - h_1 = (3 - 1) / (3 + 1) = 0.5, centered with u = (12, 18).
   expect_equal(io_trophic(network)$level, c(-0.3, 0.2))
 })
@@ -84,22 +84,19 @@ test_that("io_trophic leaves other levels unchanged when merging industries with
     c(0, 1, 0, 1),
     c(0, 0, 0, 0)
   )
-  network <- io_network_direct(weight, tibble::tibble(sector = 1:4))
+  network <- io_network(get_iotable_weight(weight))
   level <- io_trophic(network)$level
   expect_equal(level[[2]], level[[3]])
 
   # Merging them turns their mutual transactions into a self-loop.
   merge <- rbind(c(1, 0, 0, 0), c(0, 1, 1, 0), c(0, 0, 0, 1))
   weight_merged <- merge %*% weight %*% t(merge)
-  network_merged <- io_network_direct(
-    weight_merged,
-    tibble::tibble(sector = 1:3)
-  )
+  network_merged <- io_network(get_iotable_weight(weight_merged))
   expect_equal(io_trophic(network_merged)$level, level[c(1, 2, 4)])
 })
 
 test_that("io_trophic returns 0 for a single industry", {
-  network <- io_network_direct(matrix(3), tibble::tibble(sector = 1))
+  network <- io_network(get_iotable_weight(matrix(3)))
   expect_equal(io_trophic(network)$level, 0)
 })
 
@@ -109,9 +106,10 @@ test_that("io_trophic is invariant to the unit of the table", {
   expected <- io_trophic(network)$level
 
   for (unit in c(1e-6, 1e9)) {
-    network_scaled <- io_network_direct(
+    network_scaled <- io_network_weight(
       network$weight * unit,
-      network$dim_name
+      path_length = 1,
+      dim_name = network$dim_name
     )
     expect_equal(io_trophic(network_scaled)$level, expected)
   }
@@ -143,7 +141,7 @@ test_that("io_trophic_level gives 0 to an industry with no links to others", {
   iotable[1, 2:3] <- 0
   iotable[2:3, 1] <- 0
   weight <- as.matrix(io_inter_industry(iotable))
-  network <- io_network_direct(weight[-1, -1], tibble::tibble(sector = 2:3))
+  network <- io_network(get_iotable_weight(weight[-1, -1]))
   level <- c(0, io_trophic(network)$level)
   level_diff <- outer(level, level, \(from, to) to - from)
 
@@ -161,7 +159,7 @@ test_that("io_trophic centers the levels within each part of a disconnected netw
     c(0, 0, 0, 2),
     c(0, 0, 0, 0)
   )
-  network <- io_network_direct(weight, tibble::tibble(sector = 1:4))
+  network <- io_network(get_iotable_weight(weight))
   expect_equal(io_trophic(network)$level, c(0, 0, -0.5, 0.5))
 })
 
@@ -252,11 +250,8 @@ test_that("io_trophic with paths = \"all\" leaves other levels unchanged when me
     c(0, 1, 0, 1),
     c(0, 0, 0, 0)
   )
-  network <- io_network_all(
-    weight,
-    c(3, 4, 4, 4),
-    tibble::tibble(sector = 1:4)
-  )
+  iotable <- get_iotable_weight(weight, c(3, 4, 4, 4))
+  network <- io_network(iotable, paths = "all")
   level <- io_trophic(network)$level
   expect_equal(level[[2]], level[[3]])
 

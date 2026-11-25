@@ -11,3 +11,35 @@ get_path_transactions <- function(iotable, n_paths) {
   )
   purrr::map(powers[-1], \(power) sweep(power, 2, total_input, "*"))
 }
+
+# A regional noncompetitive import type table with the domestic transactions
+# `weight` between industries, balanced to the total input `total_input` with
+# value added and final demand. By default, every industry has as much value
+# added and final demand as it has intermediate output and input.
+get_iotable_weight <- function(
+  weight,
+  total_input = rowSums(weight) + colSums(weight)
+) {
+  sector_name <- paste0("industry_", seq_len(nrow(weight)))
+  value <- rbind(
+    cbind(weight, total_input - rowSums(weight)),
+    c(total_input - colSums(weight), 0)
+  )
+  tidyr::expand_grid(
+    input = c(sector_name, "value_added_1"),
+    output = c(sector_name, "final_demand_1")
+  ) |>
+    dplyr::mutate(
+      input_sector_type = sub("_[0-9]+$", "", .data$input),
+      output_sector_type = sub("_[0-9]+$", "", .data$output),
+      value = as.vector(t(value))
+    ) |>
+    dplyr::select(
+      "input_sector_type",
+      input_sector_name = "input",
+      "output_sector_type",
+      output_sector_name = "output",
+      "value"
+    ) |>
+    io_table_regional(import_type = "noncompetitive_import")
+}
