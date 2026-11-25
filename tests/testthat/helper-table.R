@@ -1,7 +1,5 @@
 get_data_total_output <- function(iotable) {
-  # Imports are subtracted below, so the input coefficients must include them.
-  open_economy <- if (inherits(iotable, "io_table_competitive_import")) FALSE
-  input_coef <- io_input_coef(iotable, open_economy = open_economy)
+  input_coef <- io_input_coef(iotable)
   total_input <- io_total_input(iotable)
   list(
     actual = input_coef %*%

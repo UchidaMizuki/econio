@@ -17,7 +17,7 @@ io_downstreamness(data, open_economy = NULL, normalize = FALSE)
 \code{\link[=io_leontief_inverse]{io_leontief_inverse()}}. If \code{TRUE}, \code{io_upstreamness()} uses the
 open-economy adjustment of Antràs et al. (2012), and \code{io_downstreamness()}
 excludes imports from the input coefficients. See \code{\link[=io_output_coef]{io_output_coef()}} and
-\code{\link[=io_input_coef]{io_input_coef()}}. By default, \code{TRUE} for competitive import tables.}
+\code{\link[=io_input_coef]{io_input_coef()}}.}
 
 \item{normalize}{A scalar logical. If \code{TRUE}, the measure is rescaled to
 have a mean of 1 across sectors. By default, \code{FALSE}.}

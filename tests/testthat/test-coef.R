@@ -149,14 +149,6 @@ test_that("io_import_coef() divides imports by same-region demand for multiregio
   )
 })
 
-test_that("open_economy defaults to TRUE for competitive import tables", {
-  iotable <- read_iotable_dummy("regional_competitive_import")
-  expect_snapshot(input_coef <- io_input_coef(iotable))
-  expect_equal(input_coef, io_input_coef(iotable, open_economy = TRUE))
-  expect_snapshot(output_coef <- io_output_coef(iotable))
-  expect_equal(output_coef, io_output_coef(iotable, open_economy = TRUE))
-})
-
 test_that("io_input_coef() and io_output_coef() handle invalid open_economy", {
   iotable_noncomp <- read_iotable_dummy("regional_noncompetitive_import")
   expect_snapshot(

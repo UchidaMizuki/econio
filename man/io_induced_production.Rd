@@ -10,8 +10,7 @@ io_induced_production(data, open_economy = NULL)
 \item{data}{An \code{econ_io_table} object.}
 
 \item{open_economy}{A scalar logical passed to \code{\link[=io_leontief_inverse]{io_leontief_inverse()}}. If
-\code{TRUE}, imports are excluded from the input coefficients. By default,
-\code{TRUE} for competitive import tables.}
+\code{TRUE}, imports are excluded from the input coefficients.}
 }
 \value{
 A \code{dibble} over the \code{output} industries with the columns
