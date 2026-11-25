@@ -9,9 +9,9 @@ io_output_coef(data, open_economy = NULL)
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
 
-\item{open_economy}{A scalar logical. If \code{TRUE}, open economy assumptions
-are used (competitive import tables only). Must be \code{NULL} for noncompetitive
-import tables.}
+\item{open_economy}{A scalar logical. If \code{TRUE}, the denominator is the
+intermediate and final demand instead of total output (competitive import
+tables only). Must be \code{NULL} for noncompetitive import tables.}
 }
 \value{
 An \code{econ_io_table} object of output coefficients with dimensions
@@ -24,14 +24,22 @@ the allocation coefficient matrix or B matrix, used in the Ghosh model.
 \details{
 Each element \code{b[i, j]} represents the proportion of industry \code{i}'s output
 that is sold to industry \code{j}. The coefficient is calculated as the ratio
-of intermediate output to total output (gross output).
+of intermediate output to total output (gross output), or to intermediate
+and final demand when \code{open_economy = TRUE}.
 
-For competitive import type tables, \code{open_economy} controls the denominator
-calculation. When \code{open_economy = TRUE}, the denominator is adjusted to
-\code{total_output - (total_export - total_import)} to represent domestic
-production sold domestically. When \code{open_economy = FALSE}, the denominator
-is simply total output. For noncompetitive import tables, \code{open_economy}
-must be \code{NULL}.
+For competitive import type tables, \code{open_economy} controls the denominator.
+When \code{open_economy = FALSE}, it is total output. When \code{open_economy = TRUE},
+it is total output plus imports minus exports, i.e. the intermediate and
+final demand for the output of industry \code{i}. This is the open-economy
+adjustment of upstreamness by Antràs et al. (2012), which assumes that the
+imports and exports of each industry are used in the same proportions as its
+intermediate and final demand. It is meant for upstreamness: with it, the
+Ghosh inverse \code{G} no longer satisfies \verb{x' = v' G}, where \code{x} is total output
+and \code{v} value added. Unlike \code{open_economy = TRUE} in
+\code{\link[=io_input_coef]{io_input_coef()}}, it doesn't exclude imports, so the coefficients differ
+from those of the table converted with
+\code{\link[=io_table_to_noncompetitive_import]{io_table_to_noncompetitive_import()}}. For noncompetitive import tables,
+\code{open_economy} must be \code{NULL}.
 }
 \examples{
 \dontrun{
@@ -45,4 +53,9 @@ io_output_coef(iotable_comp, open_economy = FALSE)
 io_output_coef(iotable_comp, open_economy = TRUE)
 }
 
+}
+\references{
+Antràs, P., Chor, D., Fally, T. and Hillberry, R. (2012). Measuring the
+upstreamness of production and trade flows. \emph{American Economic Review},
+102(3), 412-416.
 }

@@ -26,14 +26,21 @@
 #' of the Leontief (not Ghosh) inverse.
 #'
 #' @param data An `econ_io_table` object.
-#' @param open_economy A scalar logical passed to [io_leontief_inverse()] /
-#' [io_ghosh_inverse()]. If `TRUE`, open economy assumptions are used.
+#' @param open_economy A scalar logical passed to [io_ghosh_inverse()] /
+#' [io_leontief_inverse()]. If `TRUE`, `io_upstreamness()` uses the
+#' open-economy adjustment of Antràs et al. (2012), and `io_downstreamness()`
+#' excludes imports from the input coefficients. See [io_output_coef()] and
+#' [io_input_coef()].
 #' @param normalize A scalar logical. If `TRUE`, the measure is rescaled to
 #' have a mean of 1 across sectors. By default, `FALSE`.
 #'
 #' @return An `econ_io_table` object with one value per industry.
 #'
 #' @references
+#' Antràs, P., Chor, D., Fally, T. and Hillberry, R. (2012). Measuring the
+#' upstreamness of production and trade flows. *American Economic Review*,
+#' 102(3), 412-416.
+#'
 #' Antràs, P. and Chor, D. (2018). On the measurement of upstreamness and
 #' downstreamness in global value chains. NBER Working Paper No. 24185.
 #'

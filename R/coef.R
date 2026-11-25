@@ -17,9 +17,9 @@
 #' `NULL` as imports are already separated.
 #'
 #' @param data An `econ_io_table` object.
-#' @param open_economy A scalar logical. If `TRUE`, open economy assumptions
-#' are used (competitive import tables only). Must be `NULL` for noncompetitive
-#' import tables.
+#' @param open_economy A scalar logical. If `TRUE`, imports are excluded from
+#' the coefficients (competitive import tables only). Must be `NULL` for
+#' noncompetitive import tables.
 #'
 #' @return An `econ_io_table` object of input coefficients with dimensions
 #' `c("input", "output")`.
@@ -69,22 +69,35 @@ io_input_coef <- function(data, open_economy = NULL) {
 #'
 #' Each element `b[i, j]` represents the proportion of industry `i`'s output
 #' that is sold to industry `j`. The coefficient is calculated as the ratio
-#' of intermediate output to total output (gross output).
+#' of intermediate output to total output (gross output), or to intermediate
+#' and final demand when `open_economy = TRUE`.
 #'
-#' For competitive import type tables, `open_economy` controls the denominator
-#' calculation. When `open_economy = TRUE`, the denominator is adjusted to
-#' `total_output - (total_export - total_import)` to represent domestic
-#' production sold domestically. When `open_economy = FALSE`, the denominator
-#' is simply total output. For noncompetitive import tables, `open_economy`
-#' must be `NULL`.
+#' For competitive import type tables, `open_economy` controls the denominator.
+#' When `open_economy = FALSE`, it is total output. When `open_economy = TRUE`,
+#' it is total output plus imports minus exports, i.e. the intermediate and
+#' final demand for the output of industry `i`. This is the open-economy
+#' adjustment of upstreamness by Antràs et al. (2012), which assumes that the
+#' imports and exports of each industry are used in the same proportions as its
+#' intermediate and final demand. It is meant for upstreamness: with it, the
+#' Ghosh inverse `G` no longer satisfies `x' = v' G`, where `x` is total output
+#' and `v` value added. Unlike `open_economy = TRUE` in
+#' [io_input_coef()], it doesn't exclude imports, so the coefficients differ
+#' from those of the table converted with
+#' [io_table_to_noncompetitive_import()]. For noncompetitive import tables,
+#' `open_economy` must be `NULL`.
 #'
 #' @param data An `econ_io_table` object.
-#' @param open_economy A scalar logical. If `TRUE`, open economy assumptions
-#' are used (competitive import tables only). Must be `NULL` for noncompetitive
-#' import tables.
+#' @param open_economy A scalar logical. If `TRUE`, the denominator is the
+#' intermediate and final demand instead of total output (competitive import
+#' tables only). Must be `NULL` for noncompetitive import tables.
 #'
 #' @return An `econ_io_table` object of output coefficients with dimensions
 #' `c("input", "output")`.
+#'
+#' @references
+#' Antràs, P., Chor, D., Fally, T. and Hillberry, R. (2012). Measuring the
+#' upstreamness of production and trade flows. *American Economic Review*,
+#' 102(3), 412-416.
 #'
 #' @examples
 #' \dontrun{

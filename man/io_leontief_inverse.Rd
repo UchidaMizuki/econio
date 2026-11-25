@@ -9,8 +9,8 @@ io_leontief_inverse(data, open_economy = NULL)
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
 
-\item{open_economy}{A scalar logical. If \code{TRUE}, open economy assumptions are
-used.}
+\item{open_economy}{A scalar logical passed to \code{\link[=io_input_coef]{io_input_coef()}}. If \code{TRUE},
+imports are excluded from the input coefficients.}
 }
 \value{
 An \code{econ_io_table} object of the Leontief inverse matrix.
