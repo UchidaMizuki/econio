@@ -24,10 +24,10 @@ test_that("io_network(paths = \"all\") gives all-path weights and average propag
   )
 })
 
-test_that("io_network_all() aborts when the sums over paths diverge", {
-  weight <- rbind(c(0, 2), c(2, 0))
+test_that("io_network(paths = \"all\") aborts when the sums over paths diverge", {
+  iotable <- get_iotable_weight(rbind(c(0, 2), c(2, 0)), c(1, 1))
   expect_snapshot(
-    io_network_all(weight, c(1, 1), tibble::tibble(sector = 1:2)),
+    io_network(iotable, paths = "all"),
     error = TRUE
   )
 })

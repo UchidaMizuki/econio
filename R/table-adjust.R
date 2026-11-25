@@ -24,13 +24,12 @@ io_table_transfer_byproduct <- function(data) {
   data <- io_check_axes(data)
 
   inter_industry <- io_inter_industry(data)
-  dim_names <- dimnames(inter_industry)
-  transaction <- as.matrix(inter_industry)
-  transaction <- pmax(transaction, 0) + t(pmax(-transaction, 0))
-  inter_industry <- dibble::dibble(
-    as.vector(transaction),
-    .dim_names = dim_names
-  )
+  # `t()` swaps the axes, which share their industries, so take back the
+  # original axes to put each negative transaction in the reverse-direction
+  # cell.
+  byproduct <- t(dibble::pmax(-inter_industry, 0))
+  dimnames(byproduct) <- dimnames(inter_industry)
+  inter_industry <- dibble::pmax(inter_industry, 0) + byproduct
 
   data |>
     dplyr::rows_update(inter_industry)

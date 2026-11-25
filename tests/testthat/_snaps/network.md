@@ -7,10 +7,10 @@
       ! Can't build the industry network from negative domestic intermediate transactions.
       x Found 1 negative transaction.
 
-# io_network_all() aborts when the sums over paths diverge
+# io_network(paths = "all") aborts when the sums over paths diverge
 
     Code
-      io_network_all(weight, c(1, 1), tibble::tibble(sector = 1:2))
+      io_network(iotable, paths = "all")
     Condition
       Error:
       ! The sums of transactions over all paths do not converge.
