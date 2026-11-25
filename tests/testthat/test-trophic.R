@@ -312,7 +312,7 @@ test_that("io_trophic with paths = \"all\" agrees with numerically minimizing th
 })
 
 test_that("io_trophic_incoherence satisfies 1 - F_0 = sum(W tau dh) / sum(W tau^2)", {
-  iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
+  iotable <- read_iotable_dummy("multiregional_competitive_import")
   for (paths in c("direct", "all")) {
     network <- io_network(iotable, paths = paths)
     level <- io_trophic(network)$level
