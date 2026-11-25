@@ -33,7 +33,9 @@ it is total output plus imports minus exports, i.e. the intermediate and
 final demand for the output of industry \code{i}. This is the open-economy
 adjustment of upstreamness by Antràs et al. (2012), which assumes that the
 imports and exports of each industry are used in the same proportions as its
-intermediate and final demand. Unlike \code{open_economy = TRUE} in
+intermediate and final demand. It is meant for upstreamness: with it, the
+Ghosh inverse \code{G} no longer satisfies \verb{x' = v' G}, where \code{x} is total output
+and \code{v} value added. Unlike \code{open_economy = TRUE} in
 \code{\link[=io_input_coef]{io_input_coef()}}, it doesn't exclude imports, so the coefficients differ
 from those of the table converted with
 \code{\link[=io_table_to_noncompetitive_import]{io_table_to_noncompetitive_import()}}. For noncompetitive import tables,

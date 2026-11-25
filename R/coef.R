@@ -78,7 +78,9 @@ io_input_coef <- function(data, open_economy = NULL) {
 #' final demand for the output of industry `i`. This is the open-economy
 #' adjustment of upstreamness by Antràs et al. (2012), which assumes that the
 #' imports and exports of each industry are used in the same proportions as its
-#' intermediate and final demand. Unlike `open_economy = TRUE` in
+#' intermediate and final demand. It is meant for upstreamness: with it, the
+#' Ghosh inverse `G` no longer satisfies `x' = v' G`, where `x` is total output
+#' and `v` value added. Unlike `open_economy = TRUE` in
 #' [io_input_coef()], it doesn't exclude imports, so the coefficients differ
 #' from those of the table converted with
 #' [io_table_to_noncompetitive_import()]. For noncompetitive import tables,
