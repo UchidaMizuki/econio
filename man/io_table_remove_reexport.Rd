@@ -4,31 +4,43 @@
 \alias{io_table_remove_reexport}
 \title{Remove re-exports from an input-output table}
 \usage{
-io_table_remove_reexport(data)
+io_table_remove_reexport(data, exclude_negative = FALSE)
 }
 \arguments{
 \item{data}{A competitive import type input-output table.}
+
+\item{exclude_negative}{A logical scalar. If \code{TRUE}, negative transactions,
+e.g. byproducts recorded as negative inputs (the Stone method) or decreases
+in inventories, are set to 0, i.e. treated as domestic rather than as uses
+of the product, so that they get no share of the imports. By default,
+\code{FALSE}, so that the sums by input sector are those of
+\code{io_total_output(data, output_sector_type = c("industry", "final_demand"), same_region = TRUE)}.}
 }
 \value{
 An input-output table with re-exports removed from its imports and
 exports.
 }
 \description{
-Treats the imports of each sector that exceed its regional demand
-(intermediate plus final demand within the same region) as re-exports, i.e.
-goods that are imported and then exported again, and subtracts them from
-both the imports and the exports of the sector. The excess is split over the
-import columns (e.g. imports and inflows) and the export columns (e.g.
-exports and outflows) of the sector in proportion to their values.
+Treats the imports of each sector that exceed its regional demand as
+re-exports, i.e. goods that are imported and then exported again, and
+subtracts them from both the imports and the exports of the sector. The
+excess is split over the import columns (e.g. imports and inflows) and the
+export columns (e.g. exports and outflows) of the sector in proportion to
+their values.
 }
 \details{
 Total output and regional demand stay the same, and the import coefficient
-of each such sector (see \code{\link[=io_import_coef]{io_import_coef()}}) becomes 1, so that
-\code{\link[=io_table_to_noncompetitive_import]{io_table_to_noncompetitive_import()}} no longer makes its domestic
-transactions negative. Re-exports can't exceed exports: if the excess is
-larger than the exports of a sector, this removes all of its exports, warns,
-and leaves its import coefficient above 1.
+that \code{\link[=io_table_to_noncompetitive_import]{io_table_to_noncompetitive_import()}} uses for each such sector becomes
+1, so that the conversion no longer makes its domestic transactions negative.
+Re-exports can't exceed exports: if the excess is larger than the exports of
+a sector, this removes all of its exports, warns, and leaves its import
+coefficient above 1. Sectors whose imports are within their regional demand
+are left unchanged. By default, so are sectors whose regional demand is zero
+or negative, since their re-exports can't be identified. With
+\code{exclude_negative = TRUE}, a sector without positive transactions has a
+regional demand of zero, and all its imports are removed, up to its exports.
 
-Sectors whose imports are within their regional demand are left unchanged,
-and so are sectors whose regional demand is not positive.
+Pass the same \code{exclude_negative} to \code{\link[=io_table_to_noncompetitive_import]{io_table_to_noncompetitive_import()}}.
+Use \code{exclude_negative = TRUE} before \code{\link[=io_table_transfer_byproduct]{io_table_transfer_byproduct()}}, so that
+the byproducts stay domestic.
 }

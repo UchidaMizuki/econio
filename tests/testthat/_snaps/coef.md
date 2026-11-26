@@ -1,3 +1,11 @@
+# io_import_coef() validates exclude_negative
+
+    Code
+      io_import_coef(get_iotable_negative_demand(), exclude_negative = "yes")
+    Condition
+      Error in `io_import_coef()`:
+      ! `exclude_negative` must be `TRUE` or `FALSE`, not the string "yes".
+
 # io_input_coef() and io_output_coef() handle invalid open_economy
 
     Code

@@ -8,13 +8,15 @@ io_table_to_noncompetitive_import(
   data,
   data_import = NULL,
   import_sector_name = NA_character_,
-  import_total_tolerance = .Machine$double.eps^0.5
+  import_total_tolerance = .Machine$double.eps^0.5,
+  exclude_negative = FALSE
 )
 }
 \arguments{
 \item{data}{An input-output table.}
 
-\item{data_import}{An optional import table. By default, \code{NULL}.}
+\item{data_import}{An optional import table. By default, \code{NULL}. Its totals
+by sector must match the imports of \code{data}.}
 
 \item{import_sector_name}{A name for the import sector. By default,
 \code{NA_character_}.}
@@ -23,24 +25,39 @@ io_table_to_noncompetitive_import(
 as a fraction of the sum of the import totals, i.e. total imports. By
 default, \code{.Machine$double.eps^0.5}, which allows only floating-point rounding
 error.}
+
+\item{exclude_negative}{A logical scalar. If \code{TRUE}, negative transactions,
+e.g. byproducts recorded as negative inputs (the Stone method) or decreases
+in inventories, are set to 0, i.e. treated as domestic rather than as uses
+of the product, so that they get no share of the imports. By default,
+\code{FALSE}, so that the sums by input sector are those of
+\code{io_total_output(data, output_sector_type = c("industry", "final_demand"), same_region = TRUE)}.}
 }
 \value{
 A noncompetitive import type input-output table.
 }
 \description{
 Without \code{data_import}, the imports of each sector are split over its
-intermediate and final demand by its import coefficient (see
-\code{\link[=io_import_coef]{io_import_coef()}}), i.e. imports divided by regional demand (intermediate
-plus final demand within the same region).
+intermediate and final demand within the same region by its import
+coefficient from \code{\link[=io_import_coef]{io_import_coef()}}, i.e. imports divided by regional demand.
 }
 \details{
+With \code{exclude_negative = TRUE}, regional demand is the sum of the positive
+transactions only, and imports are split over those transactions only.
+Negative transactions then get no imports and stay as negative domestic
+transactions. Those in the intermediate block, e.g. byproducts recorded as
+negative inputs (the Stone method), can be converted to the transfer method
+afterwards with \code{\link[=io_table_transfer_byproduct]{io_table_transfer_byproduct()}}. Both give the same result
+for tables without negative transactions.
+
 If an import coefficient is above 1 or negative, some domestic or imported
 transactions become negative. This warns but still converts the table, so
 that it can be used for impact analysis as is. Import coefficients above 1
 often come from re-exports, which \code{\link[=io_table_remove_reexport]{io_table_remove_reexport()}} removes, and
-ones just above 1 from rounding in published tables. Negative regional
-demand, which makes import coefficients negative or above 1, often comes from
-byproducts recorded as negative inputs (the Stone method) in final demand. If
-a sector has imports but zero regional demand, its import coefficient can't
-be computed, so this aborts; supply \code{data_import} instead.
+ones just above 1 from rounding in published tables, which are set to 1.
+By default, negative transactions, e.g. byproducts recorded as negative
+inputs, can make import coefficients negative or above 1, and so can
+negative imports. If a sector has
+imports but zero regional demand, its import coefficient can't be computed,
+so this aborts; supply \code{data_import} instead.
 }

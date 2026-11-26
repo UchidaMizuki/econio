@@ -7,6 +7,15 @@
       ! The weights in `input_sector_data` must sum to 1 for each `from` value.
       x industry_2: 1.1.
 
+# io_reclass() rejects missing weights
+
+    Code
+      io_reclass(iotable, input_sector_data = input_sector_data)
+    Condition
+      Error in `io_reclass()`:
+      ! The weights in `input_sector_data` must sum to 1 for each `from` value.
+      x industry_2: NA.
+
 # io_reclass() validates its scalar arguments
 
     Code

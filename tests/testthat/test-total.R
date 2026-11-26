@@ -53,3 +53,46 @@ test_that("same_region = TRUE has no effect on regional tables", {
     io_total_input(iotable)
   )
 })
+
+test_that("io_regional_demand() drops negative transactions with exclude_negative = TRUE", {
+  iotable <- get_iotable_negative_demand()
+  expect_equal(as.vector(io_regional_demand(iotable)), c(10, 4, 5, 6, -20, 30))
+  expect_equal(
+    as.vector(io_regional_demand(iotable, exclude_negative = TRUE)),
+    c(10, 4, 5, 6, 0, 30)
+  )
+})
+
+test_that("io_regional_demand() sums to same-region demand in multiregional tables", {
+  iotable <- read_iotable_dummy("multiregional_noncompetitive_import")
+  expect_equal(
+    io_regional_demand(iotable) |> dibble::apply("input", sum),
+    io_total_output(
+      iotable,
+      output_sector_type = c("industry", "final_demand"),
+      same_region = TRUE
+    )
+  )
+})
+
+test_that("io_regional_demand() validates exclude_negative", {
+  expect_snapshot(
+    io_regional_demand(get_iotable_negative_demand(), exclude_negative = "yes"),
+    error = TRUE
+  )
+})
+
+test_that("io_commodity_balance() balances total output", {
+  for (name in c(
+    "regional_competitive_import",
+    "multiregional_competitive_import"
+  )) {
+    balance <- io_commodity_balance(read_iotable_dummy(name))
+    expect_equal(
+      balance$total_output,
+      balance$total_regional_demand +
+        balance$total_export -
+        balance$total_import
+    )
+  }
+})

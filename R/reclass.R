@@ -177,8 +177,9 @@ io_reclass_axis_data <- function(
       )
     weight_total <- axis_data |>
       dplyr::summarise(weight_total = sum(.data$weight), .by = "from") |>
-      dplyr::filter(
-        !dplyr::near(.data$weight_total, 1, tol = weight_tolerance)
+      # Keep missing totals, which can't be checked, as mismatches.
+      dplyr::filter_out(
+        dplyr::near(.data$weight_total, 1, tol = weight_tolerance)
       )
     if (!vctrs::vec_is_empty(weight_total)) {
       cli::cli_abort(

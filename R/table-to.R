@@ -81,22 +81,32 @@ io_table_to_competitive_import <- function(
 #' Convert an input-output table to a noncompetitive import type table
 #'
 #' Without `data_import`, the imports of each sector are split over its
-#' intermediate and final demand by its import coefficient (see
-#' [io_import_coef()]), i.e. imports divided by regional demand (intermediate
-#' plus final demand within the same region).
+#' intermediate and final demand within the same region by its import
+#' coefficient from [io_import_coef()], i.e. imports divided by regional demand.
+#'
+#' With `exclude_negative = TRUE`, regional demand is the sum of the positive
+#' transactions only, and imports are split over those transactions only.
+#' Negative transactions then get no imports and stay as negative domestic
+#' transactions. Those in the intermediate block, e.g. byproducts recorded as
+#' negative inputs (the Stone method), can be converted to the transfer method
+#' afterwards with [io_table_transfer_byproduct()]. Both give the same result
+#' for tables without negative transactions.
 #'
 #' If an import coefficient is above 1 or negative, some domestic or imported
 #' transactions become negative. This warns but still converts the table, so
 #' that it can be used for impact analysis as is. Import coefficients above 1
 #' often come from re-exports, which [io_table_remove_reexport()] removes, and
-#' ones just above 1 from rounding in published tables. Negative regional
-#' demand, which makes import coefficients negative or above 1, often comes from
-#' byproducts recorded as negative inputs (the Stone method) in final demand. If
-#' a sector has imports but zero regional demand, its import coefficient can't
-#' be computed, so this aborts; supply `data_import` instead.
+#' ones just above 1 from rounding in published tables, which are set to 1.
+#' By default, negative transactions, e.g. byproducts recorded as negative
+#' inputs, can make import coefficients negative or above 1, and so can
+#' negative imports. If a sector has
+#' imports but zero regional demand, its import coefficient can't be computed,
+#' so this aborts; supply `data_import` instead.
 #'
 #' @param data An input-output table.
-#' @param data_import An optional import table. By default, `NULL`.
+#' @param data_import An optional import table. By default, `NULL`. Its totals
+#'   by sector must match the imports of `data`.
+#' @inheritParams io_regional_demand
 #' @param import_sector_name A name for the import sector. By default,
 #' `NA_character_`.
 #' @param import_total_tolerance A numeric tolerance for checking import totals,
@@ -111,16 +121,18 @@ io_table_to_noncompetitive_import <- function(
   data,
   data_import = NULL,
   import_sector_name = NA_character_,
-  import_total_tolerance = .Machine$double.eps^0.5
+  import_total_tolerance = .Machine$double.eps^0.5,
+  exclude_negative = FALSE
 ) {
   rlang::check_string(import_sector_name, allow_na = TRUE)
   rlang::check_number_decimal(import_total_tolerance, min = 0)
+  rlang::check_bool(exclude_negative)
 
   if (inherits(data, "io_table_noncompetitive_import")) {
     return(data)
   }
 
-  regional_demand <- data |>
+  demand <- data |>
     dplyr::filter(
       io_sector_type(.data$input) == "industry",
       io_sector_type(.data$output) %in% c("industry", "final_demand")
@@ -137,8 +149,8 @@ io_table_to_noncompetitive_import <- function(
         import_total_tolerance = import_total_tolerance
       )
   } else {
-    io_check_import_coef(data)
-    import_coef <- io_import_coef(data)
+    io_check_import_coef(data, exclude_negative = exclude_negative)
+    import_coef <- io_import_coef(data, exclude_negative = exclude_negative)
     # Removing re-exports can leave coefficients just above 1 by rounding.
     import_coef <- dibble::ifelse(
       import_coef > 1 & !exceeds(import_coef, 1),
@@ -147,14 +159,14 @@ io_table_to_noncompetitive_import <- function(
     )
 
     import <- dibble::broadcast(
-      regional_demand * io_same_region(regional_demand) * import_coef,
+      io_regional_demand(data, exclude_negative) * import_coef,
       dim_names = c("input", "output")
     )
   }
 
-  regional_demand <- regional_demand - import
+  demand <- demand - import
 
-  dim_names <- dimnames(regional_demand)
+  dim_names <- dimnames(demand)
   dim_names$input$sector <- io_input_sector(
     "import",
     import_sector_name,
@@ -183,7 +195,7 @@ io_table_to_noncompetitive_import <- function(
   out <- data |>
     dibble::broadcast(dim_names = dim_names) |>
     dibble::broadcast(dim_names = c("input", "output")) |>
-    dplyr::rows_update(regional_demand) |>
+    dplyr::rows_update(demand) |>
     dplyr::rows_update(import) |>
     tidyr::replace_na(0)
   class(out)[
@@ -419,8 +431,8 @@ io_check_import_totals <- function(
       sign_data_import_total_expected,
   ) |>
     tibble::as_tibble() |>
-    dplyr::filter(
-      !nearly_equal_totals(
+    dplyr::filter_out(
+      nearly_equal_totals(
         .data$import_total_actual,
         .data$import_total_expected,
         tolerance = .env$import_total_tolerance
@@ -442,18 +454,22 @@ io_check_import_totals <- function(
   data_import
 }
 
-io_check_import_coef <- function(data, call = rlang::caller_env()) {
-  balance <- io_import_balance(data) |>
+io_check_import_coef <- function(
+  data,
+  exclude_negative = FALSE,
+  call = rlang::caller_env()
+) {
+  balance <- io_commodity_balance(data, exclude_negative = exclude_negative) |>
     tibble::as_tibble()
 
   zero_demand <- balance |>
-    dplyr::filter(.data$regional_demand == 0, .data$import != 0)
+    dplyr::filter(.data$total_regional_demand == 0, .data$total_import != 0)
   if (!vctrs::vec_is_empty(zero_demand)) {
     cli::cli_abort(
       c(
         "Can't compute import coefficients for sectors with imports but zero regional demand.",
         glue::glue(
-          "{io_axis_label(zero_demand$input)}: imports {format_number(zero_demand$import)}."
+          "{io_axis_label(zero_demand$input)}: imports {format_number(zero_demand$total_import)}."
         ) |>
           rlang::set_names("x"),
         "i" = "Supply an import table with {.arg data_import}."
@@ -463,8 +479,10 @@ io_check_import_coef <- function(data, call = rlang::caller_env()) {
   }
 
   invalid_coef <- balance |>
-    dplyr::filter(.data$regional_demand != 0) |>
-    dplyr::mutate(import_coef = .data$import / .data$regional_demand) |>
+    dplyr::filter(.data$total_regional_demand != 0) |>
+    dplyr::mutate(
+      import_coef = .data$total_import / .data$total_regional_demand
+    ) |>
     dplyr::filter(exceeds(.data$import_coef, 1) | .data$import_coef < 0)
   if (vctrs::vec_is_empty(invalid_coef)) {
     return(invisible(data))
@@ -474,7 +492,7 @@ io_check_import_coef <- function(data, call = rlang::caller_env()) {
     c(
       "Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.",
       glue::glue(
-        "{io_axis_label(invalid_coef$input)}: import coefficient {format_number(invalid_coef$import_coef, compare_to = 1)} (imports {format_number(invalid_coef$import)}, regional demand {format_number(invalid_coef$regional_demand)})."
+        "{io_axis_label(invalid_coef$input)}: import coefficient {format_number(invalid_coef$import_coef, compare_to = 1)} (imports {format_number(invalid_coef$total_import)}, regional demand {format_number(invalid_coef$total_regional_demand)})."
       ) |>
         rlang::set_names("*")
     )

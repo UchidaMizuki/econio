@@ -307,12 +307,14 @@ io_check_totals <- function(data, total_tolerance = .Machine$double.eps^0.5) {
         total_expected = data_total_expected,
       ) |>
         tibble::as_tibble() |>
-        dplyr::filter(
-          !nearly_equal_totals(
-            .data$total_actual,
-            .data$total_expected,
-            tolerance = .env$total_tolerance
-          )
+        # Sectors without a recorded total can't be checked, so drop them too.
+        dplyr::filter_out(
+          is.na(.data$total_expected) |
+            nearly_equal_totals(
+              .data$total_actual,
+              .data$total_expected,
+              tolerance = .env$total_tolerance
+            )
         )
 
       if (!vctrs::vec_is_empty(data_total)) {

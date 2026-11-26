@@ -49,6 +49,15 @@
       x industry_2: 1.01e+10 (`actual`) not nearly equal to 1e+10 (`expected`).
       x industry_3: 6.06e+10 (`actual`) not nearly equal to 6e+10 (`expected`).
 
+# io_table_to_noncompetitive_import() rejects data_import with totals that aren't finite
+
+    Code
+      io_table_to_noncompetitive_import(iotable, data_import = import)
+    Condition
+      Error in `io_table_to_noncompetitive_import()`:
+      ! The total import values do not match.
+      x industry_1: NaN (`actual`) not nearly equal to 8 (`expected`).
+
 # io_table_to_noncompetitive_import() warns but converts when import coefficients are above 1
 
     Code
@@ -89,6 +98,25 @@
 
     Code
       io_table_to_noncompetitive_import(iotable)
+    Condition
+      Error in `io_table_to_noncompetitive_import()`:
+      ! Can't compute import coefficients for sectors with imports but zero regional demand.
+      x industry_1: imports 25.
+      i Supply an import table with `data_import`.
+
+# io_table_to_noncompetitive_import() warns when byproducts leave import coefficients above 1 with exclude_negative = TRUE
+
+    Code
+      out <- io_table_to_noncompetitive_import(iotable, exclude_negative = TRUE)
+    Condition
+      Warning:
+      Some import coefficients are above 1 or negative, so some domestic or imported transactions become negative.
+      * industry_1: import coefficient 1.333333 (imports 20, regional demand 15).
+
+# io_table_to_noncompetitive_import() errors when imports have no positive regional demand with exclude_negative = TRUE
+
+    Code
+      io_table_to_noncompetitive_import(iotable, exclude_negative = TRUE)
     Condition
       Error in `io_table_to_noncompetitive_import()`:
       ! Can't compute import coefficients for sectors with imports but zero regional demand.
