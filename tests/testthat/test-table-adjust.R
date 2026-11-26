@@ -76,6 +76,36 @@ test_that("io_table_remove_reexport() doesn't warn when imports don't exceed reg
   expect_identical(actual, iotable)
 })
 
+test_that("io_table_remove_reexport() doesn't warn about an excess from rounding error without exports", {
+  iotable <- get_iotable_reexport()
+  iotable[1, 4:7] <- c(0, 0, -35 * (1 + 1e-12), 0)
+  expect_no_warning(io_table_remove_reexport(iotable))
+})
+
+test_that("io_table_remove_reexport() counts only positive uses with regional_demand = \"positive\"", {
+  iotable <- get_iotable_negative_demand()
+  actual <- io_table_remove_reexport(iotable, regional_demand = "positive")
+
+  # Imports of 20 exceed the positive uses of 15 by 5, split 3:1.
+  expected <- get_iotable_reexport(
+    export_1 = c(export = 41.25, outflow = 13.75),
+    import_1 = c(import = -11.25, inflow = -3.75),
+    final_demand_1 = -20
+  )
+  expect_equal(actual, expected)
+})
+
+test_that("io_table_remove_reexport() removes all imports without positive uses with regional_demand = \"positive\"", {
+  iotable <- get_iotable_no_positive_demand()
+  actual <- io_table_remove_reexport(iotable, regional_demand = "positive")
+
+  expected <- get_iotable_no_positive_demand(
+    export_1 = c(export = 26.25, outflow = 8.75),
+    import_1 = c(import = 0, inflow = 0)
+  )
+  expect_equal(actual, expected)
+})
+
 test_that("io_table_remove_reexport() removes all exports when re-exports equal exports", {
   iotable <- get_iotable_reexport(export_1 = c(export = 3.75, outflow = 1.25))
   export <- io_table_remove_reexport(iotable) |>
@@ -98,4 +128,12 @@ test_that("io_table_remove_reexport() warns and removes up to the exports when t
 test_that("io_table_remove_reexport() errors for noncompetitive import type tables", {
   iotable <- read_iotable_dummy("regional_noncompetitive_import")
   expect_snapshot(io_table_remove_reexport(iotable), error = TRUE)
+})
+
+test_that("io_table_remove_reexport() validates regional_demand", {
+  iotable <- get_iotable_reexport()
+  expect_snapshot(
+    io_table_remove_reexport(iotable, regional_demand = "x"),
+    error = TRUE
+  )
 })

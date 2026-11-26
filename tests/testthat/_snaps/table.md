@@ -184,6 +184,15 @@
       ! The total input values do not match.
       x industry_4: 0.001 (`actual`) not nearly equal to 0 (`expected`).
 
+# io_table_regional() checks the other totals when a total is missing
+
+    Code
+      io_table_regional(data, import_type = "competitive_import")
+    Condition
+      Error in `io_check_totals()`:
+      ! The total output values do not match.
+      x industry_2: 28 (`actual`) not nearly equal to 28.28 (`expected`).
+
 # io_check_totals() validates total_tolerance
 
     Code

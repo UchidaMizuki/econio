@@ -11,9 +11,13 @@ exceeds <- function(x, y, tolerance = .Machine$double.eps^0.5) {
 # Whether the totals `actual` equal `expected` up to `tolerance` times the sum of
 # the totals, e.g. total output. Unlike a tolerance relative to each total, this
 # allows rounding error in totals of 0, and unlike an absolute tolerance, it
-# doesn't depend on the units of the table.
+# doesn't depend on the units of the table. Totals that aren't finite are left
+# out of the sum, so that one of them doesn't make every other comparison NA or
+# TRUE. A comparison with NA or NaN, e.g. from dividing by zero, is NA, so drop
+# the matching totals with `dplyr::filter_out()` to keep it as a mismatch.
 nearly_equal_totals <- function(actual, expected, tolerance) {
-  abs(actual - expected) <= tolerance * sum(abs(expected))
+  scale <- sum(abs(expected[is.finite(expected)]))
+  abs(actual - expected) <= tolerance * scale
 }
 
 # Format numbers for messages one by one, with the significant digits of

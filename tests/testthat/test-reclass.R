@@ -64,6 +64,19 @@ test_that("io_reclass() names the values whose weights don't sum to 1", {
   )
 })
 
+test_that("io_reclass() rejects missing weights", {
+  iotable <- read_iotable_dummy("regional_noncompetitive_import")
+  input_sector_data <- tibble::tribble(
+    ~from        , ~to            , ~weight ,
+    "industry_2" , "industry_2_1" , 0.5     ,
+    "industry_2" , "industry_2_2" , NA
+  )
+  expect_snapshot(
+    io_reclass(iotable, input_sector_data = input_sector_data),
+    error = TRUE
+  )
+})
+
 test_that("io_reclass() aggregates regions", {
   region_data <- tibble::tribble(
     ~from      , ~to    , ~weight ,

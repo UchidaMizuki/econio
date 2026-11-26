@@ -17,3 +17,11 @@
       ! `data` must be a competitive import type input-output table.
       i Re-exports can only be identified when imports are recorded by product.
 
+# io_table_remove_reexport() validates regional_demand
+
+    Code
+      io_table_remove_reexport(iotable, regional_demand = "x")
+    Condition
+      Error in `io_table_remove_reexport()`:
+      ! `regional_demand` must be one of "all" or "positive", not "x".
+

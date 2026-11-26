@@ -159,6 +159,18 @@ test_that("io_table_regional() checks totals relative to total output", {
   )
 })
 
+test_that("io_table_regional() checks the other totals when a total is missing", {
+  data <- read_iotable_dummy_raw("regional_competitive_import")
+  is_total <- data$output_sector_type == "total"
+  data$value[is_total & data$input_sector_name %in% "industry_1"] <- NA
+  is_total_2 <- is_total & data$input_sector_name %in% "industry_2"
+  data$value[is_total_2] <- data$value[is_total_2] * 1.01
+  expect_snapshot(
+    io_table_regional(data, import_type = "competitive_import"),
+    error = TRUE
+  )
+})
+
 test_that("io_check_totals() validates total_tolerance", {
   iotable <- read_iotable_dummy("regional_competitive_import")
   expect_snapshot(io_check_totals(iotable, total_tolerance = "x"), error = TRUE)

@@ -12,7 +12,7 @@ Imports:
     broom,
     cli,
     dibble (>= 0.3.1.9000),
-    dplyr,
+    dplyr (>= 1.2.0),
     ggplot2,
     glue,
     lifecycle,
