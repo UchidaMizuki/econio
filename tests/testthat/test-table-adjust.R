@@ -82,9 +82,9 @@ test_that("io_table_remove_reexport() doesn't warn about an excess from rounding
   expect_no_warning(io_table_remove_reexport(iotable))
 })
 
-test_that("io_table_remove_reexport() counts only positive uses with regional_demand = \"positive\"", {
+test_that("io_table_remove_reexport() counts only positive uses with exclude_negative = TRUE", {
   iotable <- get_iotable_negative_demand()
-  actual <- io_table_remove_reexport(iotable, regional_demand = "positive")
+  actual <- io_table_remove_reexport(iotable, exclude_negative = TRUE)
 
   # Imports of 20 exceed the positive uses of 15 by 5, split 3:1.
   expected <- get_iotable_reexport(
@@ -95,9 +95,9 @@ test_that("io_table_remove_reexport() counts only positive uses with regional_de
   expect_equal(actual, expected)
 })
 
-test_that("io_table_remove_reexport() removes all imports without positive uses with regional_demand = \"positive\"", {
+test_that("io_table_remove_reexport() removes all imports without positive uses with exclude_negative = TRUE", {
   iotable <- get_iotable_no_positive_demand()
-  actual <- io_table_remove_reexport(iotable, regional_demand = "positive")
+  actual <- io_table_remove_reexport(iotable, exclude_negative = TRUE)
 
   expected <- get_iotable_no_positive_demand(
     export_1 = c(export = 26.25, outflow = 8.75),
@@ -130,10 +130,10 @@ test_that("io_table_remove_reexport() errors for noncompetitive import type tabl
   expect_snapshot(io_table_remove_reexport(iotable), error = TRUE)
 })
 
-test_that("io_table_remove_reexport() validates regional_demand", {
+test_that("io_table_remove_reexport() validates exclude_negative", {
   iotable <- get_iotable_reexport()
   expect_snapshot(
-    io_table_remove_reexport(iotable, regional_demand = "x"),
+    io_table_remove_reexport(iotable, exclude_negative = "yes"),
     error = TRUE
   )
 })

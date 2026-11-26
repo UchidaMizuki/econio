@@ -149,6 +149,34 @@ test_that("io_import_coef() divides imports by same-region demand for multiregio
   )
 })
 
+test_that("io_import_coef() divides imports by positive regional demand with exclude_negative = TRUE", {
+  iotable <- get_iotable_negative_demand()
+  expect_equal(as.numeric(io_import_coef(iotable)), c(-4, 0.375))
+  expect_equal(
+    as.numeric(io_import_coef(iotable, exclude_negative = TRUE)),
+    c(20 / 15, 0.375)
+  )
+
+  iotable <- read_iotable_dummy("regional_noncompetitive_import")
+  iotable[2, 1] <- -2
+  coef_all <- io_import_coef(iotable, axis = "output")
+  coef_excluded <- io_import_coef(
+    iotable,
+    axis = "output",
+    exclude_negative = TRUE
+  )
+  expect_equal(as.numeric(coef_all)[1], 1)
+  expect_equal(as.numeric(coef_excluded)[1], 0.8)
+  expect_equal(as.numeric(coef_excluded)[-1], as.numeric(coef_all)[-1])
+})
+
+test_that("io_import_coef() validates exclude_negative", {
+  expect_snapshot(
+    io_import_coef(get_iotable_negative_demand(), exclude_negative = "yes"),
+    error = TRUE
+  )
+})
+
 test_that("io_input_coef() and io_output_coef() handle invalid open_economy", {
   iotable_noncomp <- read_iotable_dummy("regional_noncompetitive_import")
   expect_snapshot(

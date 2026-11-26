@@ -4,7 +4,7 @@
 \alias{io_import_coef}
 \title{Import coefficients}
 \usage{
-io_import_coef(data, axis = c("input", "output"))
+io_import_coef(data, axis = c("input", "output"), exclude_negative = FALSE)
 }
 \arguments{
 \item{data}{An \code{econ_io_table} object.}
@@ -12,6 +12,13 @@ io_import_coef(data, axis = c("input", "output"))
 \item{axis}{A scalar character. Either \code{"input"} (default) or \code{"output"},
 specifying whether to calculate import coefficients by input industry or by
 output category.}
+
+\item{exclude_negative}{A logical scalar. If \code{TRUE}, negative transactions,
+e.g. byproducts recorded as negative inputs (the Stone method) or decreases
+in inventories, are set to 0, i.e. treated as domestic rather than as uses
+of the product, so that they get no share of the imports. By default,
+\code{FALSE}, so that the sums by input sector are those of
+\code{io_total_output(data, output_sector_type = c("industry", "final_demand"), same_region = TRUE)}.}
 }
 \value{
 An \code{econ_io_table} object of import coefficients. The dimensions
@@ -46,6 +53,9 @@ io_import_coef(iotable_noncomp, axis = "output") # import shares by output
 # Competitive import table
 io_import_coef(iotable_comp, axis = "input")  # import shares by input
 io_import_coef(iotable_comp, axis = "output") # all zeros
+
+# Byproducts recorded as negative entries get no share of the imports
+io_import_coef(iotable_comp, exclude_negative = TRUE)
 }
 
 }

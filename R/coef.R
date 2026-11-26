@@ -196,6 +196,7 @@ io_open_economy <- function(
 #' @param axis A scalar character. Either `"input"` (default) or `"output"`,
 #' specifying whether to calculate import coefficients by input industry or by
 #' output category.
+#' @inheritParams io_regional_demand
 #'
 #' @return An `econ_io_table` object of import coefficients. The dimensions
 #' depend on `axis` and the table type.
@@ -209,11 +210,19 @@ io_open_economy <- function(
 #' # Competitive import table
 #' io_import_coef(iotable_comp, axis = "input")  # import shares by input
 #' io_import_coef(iotable_comp, axis = "output") # all zeros
+#'
+#' # Byproducts recorded as negative entries get no share of the imports
+#' io_import_coef(iotable_comp, exclude_negative = TRUE)
 #' }
 #'
 #' @export
-io_import_coef <- function(data, axis = c("input", "output")) {
+io_import_coef <- function(
+  data,
+  axis = c("input", "output"),
+  exclude_negative = FALSE
+) {
   axis <- rlang::arg_match(axis, c("input", "output"))
+  rlang::check_bool(exclude_negative)
 
   if (inherits(data, "io_table_noncompetitive_import")) {
     if (axis == "input") {
@@ -221,51 +230,21 @@ io_import_coef <- function(data, axis = c("input", "output")) {
         dplyr::filter(io_sector_type(.data$input) == "industry") |>
         dibble::apply("input", \(x) 0)
     } else if (axis == "output") {
-      same_region <- io_same_region(data)
-
       import <- data |>
         dplyr::filter(
           io_sector_type(.data$input) == "import",
           io_sector_type(.data$output) %in% c("industry", "final_demand")
         ) |>
         dibble::apply("output", sum)
-
-      regional_demand <- data |>
-        dplyr::filter(
-          io_sector_type(.data$input) == "industry",
-          io_sector_type(.data$output) %in% c("industry", "final_demand")
-        )
-      regional_demand_same_region <- dibble::broadcast(
-        regional_demand * same_region,
-        dim_names = dimnames(regional_demand)
-      ) |>
+      total_regional_demand <- io_regional_demand(data, exclude_negative) |>
         dibble::apply("output", sum)
 
-      safe_divide(import, regional_demand_same_region)
+      safe_divide(import, total_regional_demand)
     }
   } else if (inherits(data, "io_table_competitive_import")) {
     if (axis == "input") {
-      same_region <- io_same_region(data)
-
-      import <- data |>
-        dplyr::filter(
-          io_sector_type(.data$input) == "industry",
-          io_sector_type(.data$output) == "import"
-        ) |>
-        dibble::apply("input", sum)
-
-      regional_demand <- data |>
-        dplyr::filter(
-          io_sector_type(.data$input) == "industry",
-          io_sector_type(.data$output) %in% c("industry", "final_demand")
-        )
-      regional_demand_same_region <- dibble::broadcast(
-        regional_demand * same_region,
-        dim_names = dimnames(regional_demand)
-      ) |>
-        dibble::apply("input", sum)
-
-      -safe_divide(import, regional_demand_same_region)
+      balance <- io_commodity_balance(data, exclude_negative = exclude_negative)
+      safe_divide(balance$total_import, balance$total_regional_demand)
     } else if (axis == "output") {
       data |>
         dplyr::filter(
